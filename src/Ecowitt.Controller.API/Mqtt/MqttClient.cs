@@ -1,13 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MQTTnet;
 using MQTTnet.Client;
-using MQTTnet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Ecowitt.Controller.MQTT
+namespace Ecowitt.Controller.Mqtt
 {
     public interface IMqttClient
     {

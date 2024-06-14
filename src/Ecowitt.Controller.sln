@@ -3,11 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35004.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecowitt.Controller.API", "Ecowitt.Controller.API\Ecowitt.Controller.API.csproj", "{111037E1-D578-489F-8F82-BF41F9F9A70F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecowitt.Controller.MQTT", "Ecowitt.Controller.MQTT\Ecowitt.Controller.MQTT.csproj", "{FA432334-6F8A-4211-BFAF-BDA68C48AE9D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecowitt.Controller.SubDevice", "Ecowitt.Controller.SubDevice\Ecowitt.Controller.SubDevice.csproj", "{077BEF91-B1FF-4CA4-A675-FE25DDC2753D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ecowitt.Controller", "Ecowitt.Controller.API\Ecowitt.Controller.csproj", "{111037E1-D578-489F-8F82-BF41F9F9A70F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{B3658F9B-BB28-4B44-A07B-793FCE094BB3}"
 	ProjectSection(SolutionItems) = preProject
@@ -25,14 +21,6 @@ Global
 		{111037E1-D578-489F-8F82-BF41F9F9A70F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{111037E1-D578-489F-8F82-BF41F9F9A70F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{111037E1-D578-489F-8F82-BF41F9F9A70F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FA432334-6F8A-4211-BFAF-BDA68C48AE9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FA432334-6F8A-4211-BFAF-BDA68C48AE9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FA432334-6F8A-4211-BFAF-BDA68C48AE9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FA432334-6F8A-4211-BFAF-BDA68C48AE9D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{077BEF91-B1FF-4CA4-A675-FE25DDC2753D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{077BEF91-B1FF-4CA4-A675-FE25DDC2753D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{077BEF91-B1FF-4CA4-A675-FE25DDC2753D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{077BEF91-B1FF-4CA4-A675-FE25DDC2753D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
