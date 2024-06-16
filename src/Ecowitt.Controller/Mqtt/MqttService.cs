@@ -1,6 +1,9 @@
-﻿namespace Ecowitt.Controller.Mqtt
+﻿using Ecowitt.Controller.Model;
+using SlimMessageBus;
+
+namespace Ecowitt.Controller.Mqtt
 {
-    public class MqttService : IHostedService
+    public class MqttService : IHostedService, IConsumer<ApiData>, IConsumer<SubdeviceData>
     {
         private readonly ILogger<MqttService> logger;
         private readonly MqttClient mqttClient;
@@ -121,6 +124,16 @@
             //    this.logger.LogWarning($"message received from {e.ClientId} on topic {e.Topic}. Payload: {e.Payload}");
             //}
 
+        }
+
+        public async Task OnHandle(ApiData message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task OnHandle(SubdeviceData message)
+        {
+            throw new NotImplementedException();
         }
     }
 }

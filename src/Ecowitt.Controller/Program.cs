@@ -1,14 +1,20 @@
+using System.Net.Mime;
 using System.Reflection;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Subdevice;
+using Ecowitt.Controller.Validator;
+using FluentValidation;
+using Microsoft.AspNetCore.Diagnostics;
 using MQTTnet;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Serilog;
+using SlimMessageBus;
 using SlimMessageBus.Host;
+using SlimMessageBus.Host.FluentValidation;
 using SlimMessageBus.Host.Memory;
 using SlimMessageBus.Host.Serialization.Json;
 
@@ -16,7 +22,7 @@ namespace Ecowitt.Controller
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -44,23 +50,32 @@ namespace Ecowitt.Controller
                     cfg.EnableMessageSerialization = true;
                 });
                 smb.AddJsonSerializer();
+                smb.AddAspNet();
+                smb.AddFluentValidation(cfg =>
+                {
+                    cfg.AddProducerValidatorsFromAssemblyContaining<ApiDataValidator>();
+                    //if i ever want to map the validation errors into a custom exception
+                    //cfg.AddValidationErrorsHandler(errors => new ApplicationException("Custom Validation Exception"));
+                });
                 smb.Produce<ApiData>(x => x.DefaultTopic("api-data"));
                 smb.Produce<SubdeviceData>(x => x.DefaultTopic("subdevice-data"));
                 smb.Produce<SubdeviceCommand>(x => x.DefaultTopic("subdevice-command"));
                 smb.Consume<ApiData>(x => x
                     .Topic("api-data")
-                    .WithConsumer<ApiDataConsumer>()
+                    .WithConsumer<MqttService>()
                 );
                 smb.Consume<SubdeviceData>(x => x
                     .Topic("subdevice-data")
-                    .WithConsumer<SubdeviceDataConsumer>()
+                    .WithConsumer<MqttService>()
                 );
                 smb.Consume<SubdeviceCommand>(x => x
                     .Topic("subdevice-command")
-                    .WithConsumer<SubdeviceCommandConsumer>()
+                    .WithConsumer<SubdeviceService>()
                 );
             });
-
+            //builder.Services.AddValidatorsFromAssemblyContaining<ApiDataValidator>();
+            builder.Services.AddScoped<IValidator<ApiData>, ApiDataValidator>();
+            
             builder.Services.AddTransient<MqttFactory>();
             builder.Services.AddSingleton<IMqttClient, MqttClient>();
             builder.Services.AddHostedService<MqttService>();
@@ -78,12 +93,33 @@ namespace Ecowitt.Controller
             builder.Services.AddHostedService<SubdeviceDiscoveryService>();
             builder.Services.AddHostedService<SubdeviceService>();
 
-            builder.Services.AddControllers();
+            // Required for SlimMessageBus.Host.AspNetCore package
+            builder.Services.AddHttpContextAccessor();
+            
+            //builder.Services.AddControllers();
+            
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
+            // Translates the ValidationException into a 400 bad request
+            app.UseExceptionHandler(exceptionHandlerApp =>
+            {
+                exceptionHandlerApp.Run(async context =>
+                {
+                    var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                    if (exceptionHandlerPathFeature?.Error is ValidationException e)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                        context.Response.ContentType = MediaTypeNames.Application.Json;
+                        await context.Response.WriteAsJsonAsync(new { e.Errors });
+                    }
+                });
+            });
+            
+            
+            
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -93,12 +129,9 @@ namespace Ecowitt.Controller
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            app.MapPost("report/data", (ApiData data, IMessageBus bus) => bus.Publish(data));
 
-
-            app.MapControllers();
-
-            app.Run();
+            await app.RunAsync();
         }
 
         private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(int retries)
