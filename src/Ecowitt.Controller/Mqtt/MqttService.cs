@@ -9,9 +9,9 @@ namespace Ecowitt.Controller.Mqtt
         private readonly MqttClient mqttClient;
         private readonly IConfigurationSection mqttConfig;
         private readonly IServiceProvider services;
-        private readonly string statusTopic;
+        private readonly string cmdTopic;
         private readonly string heartbeatTopic;
-        private readonly string responseTopic;
+        private bool isRunning;
 
         public MqttService(IConfiguration config, ILogger<MqttService> logger, IServiceProvider services, IMqttClient mqttClient)
         {
@@ -20,9 +20,7 @@ namespace Ecowitt.Controller.Mqtt
             this.mqttConfig = config.GetSection("mqtt");
             if (!this.mqttConfig.Exists()) throw new Exception("missing mqtt configuration");
 
-            this.statusTopic = $"{mqttConfig.GetValue<string>("topic")}/status/";
-            this.heartbeatTopic = $"{mqttConfig.GetValue<string>("topic")}/heartbeat/";
-            this.responseTopic = $"{mqttConfig.GetValue<string>("topic")}/response/";
+            this.cmdTopic = $"{mqttConfig.GetValue<string>("topic")}/cmd/";
 
             this.mqttClient = (MqttClient)mqttClient; //TODO: i feel bad for the hard cast
             this.mqttClient.OnMessageReceived += OnMessageReceived;
@@ -36,10 +34,11 @@ namespace Ecowitt.Controller.Mqtt
                 this.mqttConfig.GetValue<string>("user"), this.mqttConfig.GetValue<string>("password"));
             this.logger.LogInformation("Connected");
 
-            await mqttClient.Subscribe($"{this.statusTopic}#");
-            await mqttClient.Subscribe($"{this.heartbeatTopic}#");
-            await mqttClient.Subscribe($"{this.responseTopic}#");
+            await mqttClient.Subscribe($"{this.cmdTopic}#");
             this.logger.LogInformation("subscribed to all topics");
+            
+            //emit a heartbeat every 30 seconds
+            
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)

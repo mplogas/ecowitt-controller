@@ -80,16 +80,28 @@ namespace Ecowitt.Controller
             builder.Services.AddSingleton<IMqttClient, MqttClient>();
             builder.Services.AddHostedService<MqttService>();
 
-            builder.Services.AddHttpClient("ecowitt-client", client =>
-            {
-                client.BaseAddress =
-                    new Uri(configuration.GetValue<string>("ecowitt:endpoint") ?? "http://localhost:5000");
-                var apiKey = configuration.GetValue<string>("endpoint:apikey") ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(apiKey))
-                {
-                    client.DefaultRequestHeaders.Add("Authorization", apiKey);
+            //TODO: get the gateways from the configuration, the straight-forward approach below didn't work
+            var gateways = configuration.GetSection("ecowitt:gateways").Get<Gateway[]>();
+            
+            
+            
+            if (gateways == null) builder.Services.AddHttpClient();
+            else {
+                foreach (var gw in gateways)  
+                {            
+                    builder.Services.AddHttpClient($"ecowitt-client-{gw.Name}", client =>
+                    {
+                        var uriBuilder = new UriBuilder
+                        {
+                            Scheme = "http",
+                            Host = gw.Ip,
+                            Port = gw.Port
+                        };
+                        client.BaseAddress = uriBuilder.Uri; //new Uri(configuration.GetValue<string>(gw.Ip) ?? "http://localhost:5000");
+                    }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
                 }
-            }).AddPolicyHandler(GetRetryPolicy(configuration.GetValue<int>("ecowitt:retries")));
+            }
+
             builder.Services.AddHostedService<SubdeviceDiscoveryService>();
             builder.Services.AddHostedService<SubdeviceService>();
 
