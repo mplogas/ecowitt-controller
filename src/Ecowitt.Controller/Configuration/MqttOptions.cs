@@ -7,5 +7,6 @@
         public string User { get; set; }
         public string Password { get; set; }
         public string BaseTopic { get; set; }
+        public string ClientId { get; set; }
     }
 }

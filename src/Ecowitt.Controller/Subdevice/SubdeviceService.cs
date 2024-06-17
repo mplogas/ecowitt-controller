@@ -15,17 +15,20 @@ namespace Ecowitt.Controller.Subdevice
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            _logger.LogInformation("Starting SubdeviceService");
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            _logger.LogInformation("Stopping SubdeviceService");
         }
 
         public async Task OnHandle(SubdeviceCommand message)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            _logger.LogInformation($"Received SubdeviceCommand: {message.Cmd} for device {message.Id}");
         }
     }
 }

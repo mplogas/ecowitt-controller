@@ -1,41 +1,38 @@
-﻿using Ecowitt.Controller.Model;
+﻿using Ecowitt.Controller.Configuration;
+using Ecowitt.Controller.Model;
+using Microsoft.Extensions.Options;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Mqtt
 {
-    public class MqttService : IHostedService, IConsumer<ApiData>, IConsumer<SubdeviceData>
+    public class MqttService : IHostedService
     {
-        private readonly ILogger<MqttService> logger;
-        private readonly MqttClient mqttClient;
-        private readonly IConfigurationSection mqttConfig;
-        private readonly IServiceProvider services;
-        private readonly string cmdTopic;
-        private readonly string heartbeatTopic;
-        private bool isRunning;
+        private readonly ILogger<MqttService> _logger;
+        private readonly MqttClient _mqttClient;
+        private readonly IOptions<MqttOptions> _mqttConfig;
+        private readonly IMessageBus _messageBus;
+        private const string CmdTopic = "cmd";
+        private const string HeartbeatTopic = "heartbeat";
 
-        public MqttService(IConfiguration config, ILogger<MqttService> logger, IServiceProvider services, IMqttClient mqttClient)
+        public MqttService(IOptions<MqttOptions> config, ILogger<MqttService> logger, IMqttClient mqttClient, IMessageBus messageBus)
         {
-            this.logger = logger;
-            this.services = services;
-            this.mqttConfig = config.GetSection("mqtt");
-            if (!this.mqttConfig.Exists()) throw new Exception("missing mqtt configuration");
-
-            this.cmdTopic = $"{mqttConfig.GetValue<string>("topic")}/cmd/";
-
-            this.mqttClient = (MqttClient)mqttClient; //TODO: i feel bad for the hard cast
-            this.mqttClient.OnMessageReceived += OnMessageReceived;
-            this.mqttClient.OnClientDisconnected += OnClientDisconnected;
-            this.mqttClient.OnClientConnected += OnClientConnected;
+            this._logger = logger;
+            this._mqttConfig = config;
+            this._messageBus = messageBus;
+            
+            this._mqttClient = (MqttClient)mqttClient; //TODO: i feel bad for the hard cast
+            this._mqttClient.OnMessageReceived += OnMessageReceived;
+            this._mqttClient.OnClientDisconnected += OnClientDisconnected;
+            this._mqttClient.OnClientConnected += OnClientConnected;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await this.mqttClient.Connect(this.mqttConfig.GetValue<string>("host"), this.mqttConfig.GetValue<string>("clientid"),
-                this.mqttConfig.GetValue<string>("user"), this.mqttConfig.GetValue<string>("password"));
-            this.logger.LogInformation("Connected");
+            await this._mqttClient.Connect(_mqttConfig.Value.Host, _mqttConfig.Value.ClientId, _mqttConfig.Value.User, _mqttConfig.Value.Password);
+            this._logger.LogInformation("Connected");
 
-            await mqttClient.Subscribe($"{this.cmdTopic}#");
-            this.logger.LogInformation("subscribed to all topics");
+            await _mqttClient.Subscribe($"{_mqttConfig.Value.BaseTopic}/{CmdTopic}/#");
+            this._logger.LogInformation("subscribed to all topics");
             
             //emit a heartbeat every 30 seconds
             
@@ -43,96 +40,25 @@ namespace Ecowitt.Controller.Mqtt
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await this.mqttClient.Disconnect();
-            this.logger.LogInformation("Disconnected");
+            await this._mqttClient.Disconnect();
+            this._logger.LogInformation("Disconnected");
         }
 
         private void OnClientConnected(object sender, EventArgs e)
         {
-            this.logger.LogInformation("onconnect");
+            this._logger.LogInformation("onconnect");
         }
 
         private void OnClientDisconnected(object sender, EventArgs e)
         {
-            this.logger.LogInformation("ondisconnect");
+            this._logger.LogInformation("ondisconnect");
         }
 
         private async void OnMessageReceived(object sender, MqttMessageReceivedEventArgs e)
         {
-            //await using var scope = this.services.CreateAsyncScope();
-            //var scopedHub = scope.ServiceProvider.GetRequiredService<IHubContext<MessageHub>>();
-
-            //if (e.Topic.StartsWith(this.statusTopic))
-            //{
-            //    var definition = new { device_id = string.Empty, value = 0, spool_id = string.Empty };
-            //    var payload = JsonConvert.DeserializeAnonymousType(e.Payload, definition);
-            //    if (!string.IsNullOrWhiteSpace(payload.device_id))
-            //    {
-            //        if (Guid.TryParse(payload.spool_id, out var spoolId))
-            //        {
-            //            if (payload.value > 0)
-            //            {
-            //                var scopedDbContext = scope.ServiceProvider.GetRequiredService<SmartMassDbContext>();
-            //                var entry = new HistoryEventDto(spoolId, payload.value, DateTime.UtcNow);
-            //                scopedDbContext.MqttValues.Add(entry);
-            //                await scopedDbContext.SaveChangesAsync();
-            //            }
-            //            await scopedHub.Clients.All.SendAsync("KnownStatus", payload.device_id, payload.value, spoolId);
-            //        }
-            //        else
-            //        {
-            //            await scopedHub.Clients.All.SendAsync("Status", payload.device_id, payload.value);
-            //        }
-            //    }
-            //}
-            //else if (e.Topic.StartsWith(this.heartbeatTopic))
-            //{
-            //    var definition = new { device_id = string.Empty, status = "N/A" };
-            //    var payload = JsonConvert.DeserializeAnonymousType(e.Payload, definition);
-            //    if (!string.IsNullOrWhiteSpace(payload.device_id))
-            //    {
-            //        var scopedDbContext = scope.ServiceProvider.GetRequiredService<SmartMassDbContext>();
-            //        var discoveredDevices = scope.ServiceProvider.GetRequiredService<IDiscoveredDevices>();
-
-            //        if (!discoveredDevices.Contains(payload.device_id) &&
-            //            !scopedDbContext.Devices.Any(d => d.ClientId == payload.device_id))
-            //        {
-            //            discoveredDevices.Add(payload.device_id);
-            //        }
-            //        else if (scopedDbContext.Devices.Any(d => d.ClientId == payload.device_id))
-            //        {
-            //            // cleanup 
-            //            if (discoveredDevices.Contains(payload.device_id)) discoveredDevices.Remove(payload.device_id);
-
-            //            //only notify the client for registered devices
-            //            await scopedHub.Clients.All.SendAsync("Heartbeat", payload.device_id, payload.status);
-            //        }
-            //    }
-            //}
-            //else if (e.Topic.StartsWith(this.responseTopic))
-            //{
-            //    var definition = new { device_id = string.Empty, result = 0 };
-            //    var payload = JsonConvert.DeserializeAnonymousType(e.Payload, definition);
-            //    if (!string.IsNullOrWhiteSpace(payload.device_id))
-            //    {
-            //        await scopedHub.Clients.All.SendAsync("Response", payload.device_id, payload.result);
-            //    }
-            //}
-            //else
-            //{
-            //    this.logger.LogWarning($"message received from {e.ClientId} on topic {e.Topic}. Payload: {e.Payload}");
-            //}
-
-        }
-
-        public async Task OnHandle(ApiData message)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task OnHandle(SubdeviceData message)
-        {
-            throw new NotImplementedException();
+            this._logger.LogInformation("Received message on topic {Topic} with payload {Payload}", e.Topic, e.Payload);
+            this._messageBus.Publish(new SubdeviceCommand()
+                { Cmd = "test", Id = 12345, Model = 2, Payload = string.Empty });
         }
     }
 }

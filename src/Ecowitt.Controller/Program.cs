@@ -1,12 +1,14 @@
 using System.Net.Mime;
 using System.Reflection;
 using Ecowitt.Controller.Configuration;
+using Ecowitt.Controller.Consumer;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Subdevice;
 using Ecowitt.Controller.Validator;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using MQTTnet;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -50,40 +52,29 @@ namespace Ecowitt.Controller
                     cfg.EnableMessageSerialization = true;
                 });
                 smb.AddJsonSerializer();
-                smb.AddAspNet();
-                smb.AddFluentValidation(cfg =>
-                {
-                    cfg.AddProducerValidatorsFromAssemblyContaining<ApiDataValidator>();
-                    //if i ever want to map the validation errors into a custom exception
-                    //cfg.AddValidationErrorsHandler(errors => new ApplicationException("Custom Validation Exception"));
-                });
                 smb.Produce<ApiData>(x => x.DefaultTopic("api-data"));
                 smb.Produce<SubdeviceData>(x => x.DefaultTopic("subdevice-data"));
                 smb.Produce<SubdeviceCommand>(x => x.DefaultTopic("subdevice-command"));
                 smb.Consume<ApiData>(x => x
                     .Topic("api-data")
-                    .WithConsumer<MqttService>()
+                    .WithConsumer<ApiDataConsumer>()
                 );
                 smb.Consume<SubdeviceData>(x => x
                     .Topic("subdevice-data")
-                    .WithConsumer<MqttService>()
+                    .WithConsumer<SubdeviceDataConsumer>()
                 );
                 smb.Consume<SubdeviceCommand>(x => x
                     .Topic("subdevice-command")
                     .WithConsumer<SubdeviceService>()
                 );
+                smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
             });
-            //builder.Services.AddValidatorsFromAssemblyContaining<ApiDataValidator>();
-            builder.Services.AddScoped<IValidator<ApiData>, ApiDataValidator>();
             
             builder.Services.AddTransient<MqttFactory>();
             builder.Services.AddSingleton<IMqttClient, MqttClient>();
             builder.Services.AddHostedService<MqttService>();
 
-            //TODO: get the gateways from the configuration, the straight-forward approach below didn't work
-            var gateways = configuration.GetSection("ecowitt:gateways").Get<Gateway[]>();
-            
-            
+            var gateways = configuration.GetSection("ecowitt:gateways").Get<List<Gateway>>();
             
             if (gateways == null) builder.Services.AddHttpClient();
             else {
@@ -97,40 +88,21 @@ namespace Ecowitt.Controller
                             Host = gw.Ip,
                             Port = gw.Port
                         };
-                        client.BaseAddress = uriBuilder.Uri; //new Uri(configuration.GetValue<string>(gw.Ip) ?? "http://localhost:5000");
+                        client.BaseAddress = uriBuilder.Uri; 
                     }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
                 }
             }
 
             builder.Services.AddHostedService<SubdeviceDiscoveryService>();
             builder.Services.AddHostedService<SubdeviceService>();
-
-            // Required for SlimMessageBus.Host.AspNetCore package
-            builder.Services.AddHttpContextAccessor();
             
-            //builder.Services.AddControllers();
+            builder.Services.AddControllers();
             
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
 
-            // Translates the ValidationException into a 400 bad request
-            app.UseExceptionHandler(exceptionHandlerApp =>
-            {
-                exceptionHandlerApp.Run(async context =>
-                {
-                    var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
-                    if (exceptionHandlerPathFeature?.Error is ValidationException e)
-                    {
-                        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                        context.Response.ContentType = MediaTypeNames.Application.Json;
-                        await context.Response.WriteAsJsonAsync(new { e.Errors });
-                    }
-                });
-            });
-            
-            
             
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -141,8 +113,10 @@ namespace Ecowitt.Controller
 
             app.UseHttpsRedirection();
 
-            app.MapPost("report/data", (ApiData data, IMessageBus bus) => bus.Publish(data));
+            //fromquery binding to POCOs is not supported in minimal api
+            //app.MapPost("report/data", ([FromQuery()] ApiData data, IMessageBus bus) => bus.Publish(data));
 
+            app.MapControllers();
             await app.RunAsync();
         }
 
