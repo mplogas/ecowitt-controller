@@ -1,7 +1,6 @@
-﻿namespace Ecowitt.Controller.Model
+﻿namespace Ecowitt.Controller.Model;
+
+public class SubdeviceData
 {
-    public class SubdeviceData
-    {
-        public List<Subdevice> Subdevices { get; set; } = new List<Subdevice>();
-    }
+    public List<Subdevice> Subdevices { get; set; } = new();
 }

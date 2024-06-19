@@ -9,7 +9,7 @@ public class CommandConsumer : IConsumer<SubdeviceCommand>
 
     public CommandConsumer(ILogger<CommandConsumer> logger)
     {
-        this._logger = logger;
+        _logger = logger;
     }
 
     public async Task OnHandle(SubdeviceCommand message)

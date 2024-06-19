@@ -4,27 +4,20 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Subdevice;
 
-public abstract class SubdeviceBaseService  : IHostedService, IDisposable
+public abstract class SubdeviceBaseService : IHostedService, IDisposable
 {
+    protected readonly IHttpClientFactory _httpClientFactory;
     protected readonly ILogger _logger;
     protected readonly IMessageBus _messageBus;
-    protected readonly IHttpClientFactory _httpClientFactory;
     protected readonly EcowittOptions _options;
-    
-    public SubdeviceBaseService(ILogger logger, IMessageBus messageBus, IHttpClientFactory httpClientFactory, IOptions<EcowittOptions> options)
+
+    public SubdeviceBaseService(ILogger logger, IMessageBus messageBus, IHttpClientFactory httpClientFactory,
+        IOptions<EcowittOptions> options)
     {
         _logger = logger;
         _messageBus = messageBus;
         _httpClientFactory = httpClientFactory;
         _options = options.Value;
-    }
-    
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            // TODO release managed resources here
-        }
     }
 
     public void Dispose()
@@ -35,4 +28,12 @@ public abstract class SubdeviceBaseService  : IHostedService, IDisposable
 
     public abstract Task StartAsync(CancellationToken cancellationToken);
     public abstract Task StopAsync(CancellationToken cancellationToken);
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // TODO release managed resources here
+        }
+    }
 }

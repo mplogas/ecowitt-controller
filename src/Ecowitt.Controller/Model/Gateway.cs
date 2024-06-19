@@ -9,7 +9,7 @@ public class Gateway
     public string Freq { get; set; }
     public string Model { get; set; }
     public string IpAddress { get; set; }
-    
+
     public double? TempIndoor { get; set; }
     public int? HumidityIndoor { get; set; }
     public double? BaromRelativeIndoor { get; set; }
@@ -23,9 +23,9 @@ public class Gateway
     public double? SolarRadiation { get; set; }
     public int? Uv { get; set; }
     public double? RainRate { get; set; }
-    public double? EventRain { get; set; } 
+    public double? EventRain { get; set; }
     public double? HourlyRain { get; set; }
-    public double? DailyRain { get; set; } 
+    public double? DailyRain { get; set; }
     public double? WeeklyRain { get; set; }
     public double? MonthlyRain { get; set; }
     public double? YearlyRain { get; set; }

@@ -1,40 +1,40 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>a86b1f49-380d-4c8c-8812-1f07670a6652</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>a86b1f49-380d-4c8c-8812-1f07670a6652</UserSecretsId>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.6" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1" />
-    <PackageReference Include="MQTTnet" Version="4.3.6.1152" />
-    <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageReference Include="Serilog" Version="4.0.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
-    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.0" />
-    <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="SlimMessageBus" Version="2.0.2" />
-    <PackageReference Include="SlimMessageBus.Host" Version="2.3.5" />
-    <PackageReference Include="SlimMessageBus.Host.AspNetCore" Version="2.3.5" />
-    <PackageReference Include="SlimMessageBus.Host.FluentValidation" Version="2.3.2" />
-    <PackageReference Include="SlimMessageBus.Host.Memory" Version="2.3.5" />
-    <PackageReference Include="SlimMessageBus.Host.Serialization.Json" Version="2.3.5" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2"/>
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.6"/>
+        <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.20.1"/>
+        <PackageReference Include="MQTTnet" Version="4.3.6.1152"/>
+        <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1"/>
+        <PackageReference Include="Serilog" Version="4.0.0"/>
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1"/>
+        <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.0"/>
+        <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0"/>
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.1"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
+        <PackageReference Include="SlimMessageBus" Version="2.0.2"/>
+        <PackageReference Include="SlimMessageBus.Host" Version="2.3.5"/>
+        <PackageReference Include="SlimMessageBus.Host.AspNetCore" Version="2.3.5"/>
+        <PackageReference Include="SlimMessageBus.Host.FluentValidation" Version="2.3.2"/>
+        <PackageReference Include="SlimMessageBus.Host.Memory" Version="2.3.5"/>
+        <PackageReference Include="SlimMessageBus.Host.Serialization.Json" Version="2.3.5"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="Consumer\ApiDataConsumer.cs" />
-    <Compile Remove="Consumer\SubdeviceDataConsumer.cs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Consumer\ApiDataConsumer.cs"/>
+        <Compile Remove="Consumer\SubdeviceDataConsumer.cs"/>
+    </ItemGroup>
 
 
 </Project>

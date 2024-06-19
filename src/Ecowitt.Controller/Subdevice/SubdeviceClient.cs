@@ -1,6 +1,5 @@
-﻿namespace Ecowitt.Controller.Subdevice
+﻿namespace Ecowitt.Controller.Subdevice;
+
+internal class SubdeviceClient
 {
-    internal class SubdeviceClient
-    {
-    }
 }

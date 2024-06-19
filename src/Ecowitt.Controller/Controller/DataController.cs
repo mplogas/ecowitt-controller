@@ -1,5 +1,4 @@
 using Ecowitt.Controller.Model;
-using Ecowitt.Controller.Mapping;
 using Microsoft.AspNetCore.Mvc;
 using SlimMessageBus;
 
@@ -13,8 +12,8 @@ public class DataController : ControllerBase
 
     public DataController(ILogger<DataController> logger, IMessageBus messageBus)
     {
-        this._logger = logger;
-        this._messageBus = messageBus;
+        _logger = logger;
+        _messageBus = messageBus;
     }
 
     // [Route("**")]
@@ -28,7 +27,7 @@ public class DataController : ControllerBase
     //     
     //     return Ok();
     // }
-    
+
     [HttpPost("data/report")]
     [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -37,18 +36,20 @@ public class DataController : ControllerBase
     public async Task<IActionResult> PostData([FromForm] ApiData data)
     {
         var ip = Request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
-        if(string.IsNullOrWhiteSpace(ip)) _logger.LogWarning("Could not determine IP address of request.");
+        if (string.IsNullOrWhiteSpace(ip))
+        {
+            _logger.LogWarning("Could not determine IP address of request.");
+        }
         else
         {
             _logger.LogInformation($"Received data from IP {ip} ({data.StationType}).");
             data.IpAddress = ip;
-            
         }
-        Request.Form.Keys.ToList().ForEach(k => _logger.LogInformation($"Form key: {k}"));
-        
-        await this._messageBus.Publish(data);
-    
+
+        Request.Form.Keys.ToList().ForEach(k => _logger.LogDebug($"Form key: {k}"));
+
+        await _messageBus.Publish(data);
+
         return Ok();
     }
-    
 }
