@@ -38,6 +38,7 @@ public class ApiData
     public int? Humidity3 { get; set; }
     public double? Temp4F { get; set; }
     public int? Humidity4 { get; set; }
+    public int? Humidity5 { get; set; }
     public double? Temp5F { get; set; }
     public double? Temp6F { get; set; }
     public int? Humidity6 { get; set; }
