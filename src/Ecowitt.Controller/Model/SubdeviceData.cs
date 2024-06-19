@@ -2,6 +2,6 @@
 {
     public class SubdeviceData
     {
-        List<Subdevice> Subdevices { get; set; } = new List<Subdevice>();
+        public List<Subdevice> Subdevices { get; set; } = new List<Subdevice>();
     }
 }

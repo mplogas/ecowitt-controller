@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Ecowitt.Controller.Model
 {
@@ -10,7 +11,7 @@ namespace Ecowitt.Controller.Model
         public DateTime DateUtc { get; set; }
         public string Freq { get; set; }
         public string Model { get; set; }
-        public int Interval { get; set; }
+        public string? IpAddress { get; set; }
         
         public double? TempInf { get; set; }
         public int? HumidityIn { get; set; }
@@ -45,6 +46,8 @@ namespace Ecowitt.Controller.Model
         public int? Humidity6 { get; set; }
         public double? Temp7F { get; set; }
         public int? Humidity7 { get; set; }
+        public double? Temp8F { get; set; }
+        public int? Humidity8 { get; set; }
         public int? SoilMoisture1 { get; set; }
         public int? SoilAd1 { get; set; }
         public int? SoilMoisture2 { get; set; }
@@ -57,10 +60,18 @@ namespace Ecowitt.Controller.Model
         public int? SoilAd5 { get; set; }
         public int? SoilMoisture6 { get; set; }
         public int? SoilAd6 { get; set; }
+        public int? SoilMoisture7 { get; set; }
+        public int? SoilAd7 { get; set; }
+        public int? SoilMoisture8 { get; set; }
+        public int? SoilAd8 { get; set; }
         public double? Pm25Ch1 { get; set; }
         public double? Pm25Avg24hCh1 { get; set; }
         public double? Pm25Ch2 { get; set; }
         public double? Pm25Avg24hCh2 { get; set; }
+        public double? Pm25Ch3 { get; set; }
+        public double? Pm25Avg24hCh3 { get; set; }
+        public double? Pm25Ch4 { get; set; }
+        public double? Pm25Avg24hCh4 { get; set; }
         public double? TfCo2 { get; set; }
         public int? HumiCo2 { get; set; }
         public double? Pm25Co2 { get; set; }
@@ -87,14 +98,19 @@ namespace Ecowitt.Controller.Model
         public int? Batt5 { get; set; }
         public int? Batt6 { get; set; }
         public int? Batt7 { get; set; }
+        public int? Batt8 { get; set; }
         public double? SoilBatt1 { get; set; }
         public double? SoilBatt2 { get; set; }
         public double? SoilBatt3 { get; set; }
         public double? SoilBatt4 { get; set; }
         public double? SoilBatt5 { get; set; }
         public double? SoilBatt6 { get; set; }
+        public double? SoilBatt7 { get; set; }
+        public double? SoilBatt8 { get; set; }
         public int? Pm25Batt1 { get; set; }
         public int? Pm25Batt2 { get; set; }
+        public int? Pm25Batt3 { get; set; }
+        public int? Pm25Batt4 { get; set; }
         public int? Wh57Batt { get; set; }
         public int? LeakBatt2 { get; set; }
         public double? TfBatt1 { get; set; }

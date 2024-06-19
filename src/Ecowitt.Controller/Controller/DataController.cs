@@ -1,11 +1,11 @@
 using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Mapping;
 using Microsoft.AspNetCore.Mvc;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Controller;
 
 [ApiController]
-[Route("[controller]")]
 public class DataController : ControllerBase
 {
     private readonly ILogger<DataController> _logger;
@@ -16,19 +16,39 @@ public class DataController : ControllerBase
         this._logger = logger;
         this._messageBus = messageBus;
     }
+
+    // [Route("**")]
+    // public IActionResult CatchAll()
+    // {
+    //     var qryParams = Request.Query.Count();
+    //     var formParams = Request.Form.Count();
+    //     var bodyParams = Request.Body.Length;
+    //     
+    //     _logger.LogInformation($"Received data from {Request.Path} with {qryParams} query parameters, {formParams} form parameters and {bodyParams} bytes in body.");
+    //     
+    //     return Ok();
+    // }
     
-    [HttpPost]
-    [ActionName("report")]
+    [HttpPost("data/report")]
+    [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> PostData([FromQuery] ApiData data)
+    public async Task<IActionResult> PostData([FromForm] ApiData data)
     {
-        //TODO: add plausibility checks here
+        var ip = Request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
+        if(string.IsNullOrWhiteSpace(ip)) _logger.LogWarning("Could not determine IP address of request.");
+        else
+        {
+            _logger.LogInformation($"Received data from IP {ip} ({data.StationType}).");
+            data.IpAddress = ip;
+            
+        }
+        Request.Form.Keys.ToList().ForEach(k => _logger.LogInformation($"Form key: {k}"));
         
-        this._logger.LogInformation("Received data from {StationType} station.", data.StationType);
         await this._messageBus.Publish(data);
-
+    
         return Ok();
     }
+    
 }

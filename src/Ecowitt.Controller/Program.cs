@@ -1,22 +1,15 @@
-using System.Net.Mime;
 using System.Reflection;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Consumer;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Subdevice;
-using Ecowitt.Controller.Validator;
-using FluentValidation;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using MQTTnet;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Serilog;
-using SlimMessageBus;
 using SlimMessageBus.Host;
-using SlimMessageBus.Host.FluentValidation;
 using SlimMessageBus.Host.Memory;
 using SlimMessageBus.Host.Serialization.Json;
 
@@ -43,7 +36,7 @@ namespace Ecowitt.Controller
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
-            builder.Services.AddLogging(c => c.AddSerilog().AddConsole());
+            builder.Services.AddLogging(c => c.AddSerilog().AddConsole().AddDebug());
 
             builder.Services.AddSlimMessageBus(smb =>
             {
@@ -57,15 +50,15 @@ namespace Ecowitt.Controller
                 smb.Produce<SubdeviceCommand>(x => x.DefaultTopic("subdevice-command"));
                 smb.Consume<ApiData>(x => x
                     .Topic("api-data")
-                    .WithConsumer<ApiDataConsumer>()
+                    .WithConsumer<DataConsumer>()
                 );
                 smb.Consume<SubdeviceData>(x => x
                     .Topic("subdevice-data")
-                    .WithConsumer<SubdeviceDataConsumer>()
+                    .WithConsumer<DataConsumer>()
                 );
                 smb.Consume<SubdeviceCommand>(x => x
                     .Topic("subdevice-command")
-                    .WithConsumer<SubdeviceService>()
+                    .WithConsumer<CommandConsumer>()
                 );
                 smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
             });
@@ -74,7 +67,7 @@ namespace Ecowitt.Controller
             builder.Services.AddSingleton<IMqttClient, MqttClient>();
             builder.Services.AddHostedService<MqttService>();
 
-            var gateways = configuration.GetSection("ecowitt:gateways").Get<List<Gateway>>();
+            var gateways = configuration.GetSection("ecowitt:gateways").Get<List<Configuration.Gateway>>();
             
             if (gateways == null) builder.Services.AddHttpClient();
             else {
@@ -110,11 +103,6 @@ namespace Ecowitt.Controller
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseHttpsRedirection();
-
-            //fromquery binding to POCOs is not supported in minimal api
-            //app.MapPost("report/data", ([FromQuery()] ApiData data, IMessageBus bus) => bus.Publish(data));
 
             app.MapControllers();
             await app.RunAsync();
