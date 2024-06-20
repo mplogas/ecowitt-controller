@@ -33,6 +33,7 @@ public class Program
         builder.Configuration.AddConfiguration(configuration);
         builder.Services.Configure<EcowittOptions>(configuration.GetSection("ecowitt"));
         builder.Services.Configure<MqttOptions>(configuration.GetSection("mqtt"));
+        builder.Services.Configure<ControllerOptions>(configuration.GetSection("controller"));
 
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
@@ -79,9 +80,8 @@ public class Program
                         Port = gw.Port
                     };
                     client.BaseAddress = uriBuilder.Uri;
-                }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
+                });//.AddPolicyHandler(GetRetryPolicy(gw.Retries));
 
-        builder.Services.AddHostedService<SubdeviceDiscoveryService>();
         builder.Services.AddHostedService<SubdeviceService>();
 
         builder.Services.AddControllers();

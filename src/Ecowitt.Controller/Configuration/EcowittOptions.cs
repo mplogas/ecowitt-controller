@@ -2,6 +2,7 @@
 
 public class EcowittOptions
 {
+    public int PollingInterval { get; set; } = 30;
     public List<GatewayOptions> Gateways { get; set; } = new();
 }
 

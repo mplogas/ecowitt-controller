@@ -8,12 +8,13 @@ public class Subdevice
     public int RfnetState { get; set; }
     public int Battery { get; set; }
     public int Signal { get; set; }
-    public string Payload { get; set; }
+    public string GwIp { get; set; }
+    public string Payload { get; set; } = string.Empty;
 }
 
 public enum SubdeviceType
 {
-    unknown = 0,
+    Unknown = 0,
     WFC01 = 1,
     AC1100 = 2
 }
