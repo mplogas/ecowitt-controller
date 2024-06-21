@@ -9,6 +9,7 @@ public class Gateway
     public string Freq { get; set; }
     public string Model { get; set; }
     public string IpAddress { get; set; }
+    public List<Subdevice> Subdevices { get; set; } = new();
 
     public double? TempIndoor { get; set; }
     public int? HumidityIndoor { get; set; }

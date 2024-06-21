@@ -4,6 +4,7 @@ using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Consumer;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
+using Ecowitt.Controller.Store;
 using Ecowitt.Controller.Subdevice;
 using MQTTnet;
 using Polly;
@@ -39,6 +40,8 @@ public class Program
             .ReadFrom.Configuration(configuration)
             .CreateLogger();
         builder.Services.AddLogging(c => c.AddSerilog().AddConsole().AddDebug());
+
+        builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
 
         builder.Services.AddSlimMessageBus(smb =>
         {
@@ -80,7 +83,7 @@ public class Program
                         Port = gw.Port
                     };
                     client.BaseAddress = uriBuilder.Uri;
-                });//.AddPolicyHandler(GetRetryPolicy(gw.Retries));
+                }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
 
         builder.Services.AddHostedService<SubdeviceService>();
 
@@ -91,13 +94,15 @@ public class Program
 
         var app = builder.Build();
 
+        app.UseSwagger();
+        app.UseSwaggerUI();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        // // Configure the HTTP request pipeline.
+        // if (app.Environment.IsDevelopment())
+        // {
+        //     app.UseSwagger();
+        //     app.UseSwaggerUI();
+        // }
 
         app.MapControllers();
         await app.RunAsync();
@@ -105,7 +110,7 @@ public class Program
 
     private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy(int retries)
     {
-        var delay = Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(1), retries, fastFirst: true);
+        var delay = Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromSeconds(2), retries, fastFirst: true);
 
         return HttpPolicyExtensions
             .HandleTransientHttpError()

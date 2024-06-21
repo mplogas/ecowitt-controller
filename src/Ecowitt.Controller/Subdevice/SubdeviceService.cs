@@ -65,7 +65,12 @@ internal class SubdeviceService : IHostedService, IDisposable
                             if (response.IsSuccessStatusCode)
                             {
                                 var c = await response.Content.ReadAsStringAsync(cancellationToken);
-                                if(!string.IsNullOrWhiteSpace(c)) subdevice.Payload = await response.Content.ReadAsStringAsync(cancellationToken);
+                                if (!string.IsNullOrWhiteSpace(c))
+                                {
+                                    var s = await response.Content.ReadAsStringAsync(cancellationToken);
+                                    _logger.LogInformation($"payload received for {subdevice.Id} ({subdevice.Model.ToString()}): {s}");
+                                    subdevice.Payload = s;
+                                }
                             }
 
                             subdevices.Subdevices.Add(subdevice);
