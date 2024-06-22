@@ -11,6 +11,7 @@ using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Serilog;
+using Serilog.Events;
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Memory;
 using SlimMessageBus.Host.Serialization.Json;
@@ -23,6 +24,12 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+        
         var configuration = new ConfigurationBuilder()
             .SetBasePath(File.Exists("/config/appsettings.json") ? "/config" : builder.Environment.ContentRootPath)
             .AddJsonFile("appsettings.json", false, true)
@@ -35,11 +42,34 @@ public class Program
         builder.Services.Configure<EcowittOptions>(configuration.GetSection("ecowitt"));
         builder.Services.Configure<MqttOptions>(configuration.GetSection("mqtt"));
         builder.Services.Configure<ControllerOptions>(configuration.GetSection("controller"));
+        
+        var gateways = configuration.GetSection("ecowitt:gateways").Get<List<GatewayOptions>>();
 
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .CreateLogger();
-        builder.Services.AddLogging(c => c.AddSerilog().AddConsole().AddDebug());
+        if (gateways == null) builder.Services.AddHttpClient();
+        else
+            foreach (var gw in gateways)
+                builder.Services.AddHttpClient($"ecowitt-client-{gw.Name}", client =>
+                {
+                    var uriBuilder = new UriBuilder
+                    {
+                        Scheme = "http",
+                        Host = gw.Ip,
+                        Port = gw.Port
+                    };
+                    client.BaseAddress = uriBuilder.Uri;
+                }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
+            
+        builder.Services.AddSerilog((services, lc) => lc
+                .ReadFrom.Configuration(builder.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext()
+                //.WriteTo.Console()
+                .WriteTo.Debug()
+                .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
+                .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
+                .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Debug)
+                .MinimumLevel.Override("Microsoft.AspNetCore.Mvc", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Debug));
 
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
 
@@ -67,44 +97,41 @@ public class Program
 
         builder.Services.AddTransient<MqttFactory>();
         builder.Services.AddSingleton<IMqttClient, MqttClient>();
+        
         builder.Services.AddHostedService<MqttService>();
-
-        var gateways = configuration.GetSection("ecowitt:gateways").Get<List<GatewayOptions>>();
-
-        if (gateways == null) builder.Services.AddHttpClient();
-        else
-            foreach (var gw in gateways)
-                builder.Services.AddHttpClient($"ecowitt-client-{gw.Name}", client =>
-                {
-                    var uriBuilder = new UriBuilder
-                    {
-                        Scheme = "http",
-                        Host = gw.Ip,
-                        Port = gw.Port
-                    };
-                    client.BaseAddress = uriBuilder.Uri;
-                }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
-
         builder.Services.AddHostedService<SubdeviceService>();
 
         builder.Services.AddControllers();
-
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
-
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
-        // // Configure the HTTP request pipeline.
-        // if (app.Environment.IsDevelopment())
-        // {
-        //     app.UseSwagger();
-        //     app.UseSwaggerUI();
-        // }
-
+        app.UseSerilogRequestLogging(options =>
+        {
+            // Customize the message template
+            options.MessageTemplate = "Handled {RequestPath}";
+    
+            // Emit debug-level events instead of the defaults
+            options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
+    
+            // Attach additional properties to the request completion event
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            {
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            };
+        });
+        
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        
+        app.UseHttpsRedirection();
+        app.UseAuthorization();
         app.MapControllers();
+        
         await app.RunAsync();
     }
 
