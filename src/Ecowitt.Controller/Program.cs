@@ -92,14 +92,15 @@ public class Program
                 .Topic("subdevice-command")
                 .WithConsumer<CommandConsumer>()
             );
-            smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
+            //smb.AddAspNet();
+            //smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
         builder.Services.AddTransient<MqttFactory>();
         builder.Services.AddSingleton<IMqttClient, MqttClient>();
         
-        builder.Services.AddHostedService<MqttService>();
-        builder.Services.AddHostedService<SubdeviceService>();
+        //builder.Services.AddHostedService<MqttService>();
+        //builder.Services.AddHostedService<SubdeviceService>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
