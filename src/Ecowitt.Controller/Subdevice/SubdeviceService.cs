@@ -25,66 +25,78 @@ internal class SubdeviceService : IHostedService, IDisposable
         _options = options.Value;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting SubdeviceService");
-        _timer = new PeriodicTimer(TimeSpan.FromSeconds(_options.PollingInterval));
-        while (await _timer.WaitForNextTickAsync(cancellationToken))
+        Task.Run(async () =>
         {
-            _logger.LogInformation("Polling subdevices");
-            var subdevices = new SubdeviceData();
-            foreach (var gateway in _options.Gateways)
+            _timer = new PeriodicTimer(TimeSpan.FromSeconds(_options.PollingInterval));
+            while (await _timer.WaitForNextTickAsync(cancellationToken) && !cancellationToken.IsCancellationRequested)
             {
-                using var client = _httpClientFactory.CreateClient($"ecowitt-client-{gateway.Name}");
-                var response = await client.GetAsync("get_iot_device_list", cancellationToken);
-                if (response.IsSuccessStatusCode)
+                _logger.LogInformation("Polling subdevices");
+                var subdevices = new SubdeviceData();
+                foreach (var gateway in _options.Gateways)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    dynamic data = JsonConvert.DeserializeObject(content);
-                    if (data is not null && data.command is not null)
+                    using var client = _httpClientFactory.CreateClient($"ecowitt-client-{gateway.Name}");
+                    var response = await client.GetAsync("get_iot_device_list", cancellationToken);
+                    if (response.IsSuccessStatusCode)
                     {
-                        //[{"cmd":"read_quick","model":1,"id":13441,"ver":113,"rfnet_state":1,"battery":5,"signal":4},
-                        foreach (var device in data.command)
+                        var content = await response.Content.ReadAsStringAsync();
+                        dynamic data = JsonConvert.DeserializeObject(content);
+                        if (data is not null && data.command is not null)
                         {
-                            var subdevice = new Model.Subdevice
+                            //[{"cmd":"read_quick","model":1,"id":13441,"ver":113,"rfnet_state":1,"battery":5,"signal":4},
+                            foreach (var device in data.command)
                             {
-                                Id = device.id,
-                                Model = device.model,
-                                Ver = device.ver,
-                                RfnetState = device.rfnet_state,
-                                Battery = device.battery,
-                                Signal = device.signal,
-                                GwIp = gateway.Ip
-                            };
-                            _logger.LogInformation($"subdevice {subdevice.Id} ({subdevice.Model.ToString()}) found on {gateway.Ip}");
-
-                            //{"command":[{"cmd":"read_device","id":10695,"model":2}]}
-                            var payload = new { command = new[] { new {cmd = "read_device", id = subdevice.Id, model = subdevice.Model} }};
-                            var sContent = new StringContent(JsonConvert.SerializeObject(payload));
-                            response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
-                            if (response.IsSuccessStatusCode)
-                            {
-                                var c = await response.Content.ReadAsStringAsync(cancellationToken);
-                                if (!string.IsNullOrWhiteSpace(c))
+                                var subdevice = new Model.Subdevice
                                 {
-                                    var s = await response.Content.ReadAsStringAsync(cancellationToken);
-                                    _logger.LogInformation($"payload received for {subdevice.Id} ({subdevice.Model.ToString()}): {s}");
-                                    subdevice.Payload = s;
-                                }
-                            }
+                                    Id = device.id,
+                                    Model = device.model,
+                                    Ver = device.ver,
+                                    RfnetState = device.rfnet_state,
+                                    Battery = device.battery,
+                                    Signal = device.signal,
+                                    GwIp = gateway.Ip
+                                };
+                                _logger.LogInformation(
+                                    $"subdevice {subdevice.Id} ({subdevice.Model.ToString()}) found on {gateway.Ip}");
 
-                            subdevices.Subdevices.Add(subdevice);
+                                //{"command":[{"cmd":"read_device","id":10695,"model":2}]}
+                                var payload = new
+                                {
+                                    command = new[]
+                                        { new { cmd = "read_device", id = subdevice.Id, model = subdevice.Model } }
+                                };
+                                var sContent = new StringContent(JsonConvert.SerializeObject(payload));
+                                response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    var c = await response.Content.ReadAsStringAsync(cancellationToken);
+                                    if (!string.IsNullOrWhiteSpace(c))
+                                    {
+                                        var s = await response.Content.ReadAsStringAsync(cancellationToken);
+                                        _logger.LogInformation(
+                                            $"payload received for {subdevice.Id} ({subdevice.Model.ToString()}): {s}");
+                                        subdevice.Payload = s;
+                                    }
+                                }
+
+                                subdevices.Subdevices.Add(subdevice);
+                            }
                         }
                     }
                 }
+
+                await _messageBus.Publish(subdevices, cancellationToken: cancellationToken);
             }
-            await _messageBus.Publish(subdevices, cancellationToken: cancellationToken);
-        }
+        }, cancellationToken);
+
+        return Task.CompletedTask;
+
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        //throw new NotImplementedException();
         _logger.LogInformation("Stopping SubdeviceService");
         return Task.CompletedTask;
     }
