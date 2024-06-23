@@ -66,14 +66,17 @@ public class SubdeviceService : BackgroundService
         await _messageBus.Publish(subdevices, cancellationToken: cancellationToken);
     }
     
-    private async Task<List<Model.Subdevice>> GetSubdeviceData(string ipAddress, CancellationToken cancellationToken, string username = "", string password = "")
+    private async Task<List<Model.Subdevice>> GetSubdeviceData(string ipAddress, CancellationToken cancellationToken)
     {
         var subdevices = new List<Model.Subdevice>();
-        using var client = _httpClientFactory.CreateClient();
+        using var client = _httpClientFactory.CreateClient("ecowitt-client");
         client.BaseAddress = new Uri($"http://{ipAddress}");
+        
+        var username = _options.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Username;
+        var password = _options.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Password;
         if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
         {
-            // authentication header, need to test
+            //TODO: authentication header, need to test
             //client.DefaultRequestHeaders.Add();
         }
 

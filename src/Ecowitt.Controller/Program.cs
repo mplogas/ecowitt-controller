@@ -42,22 +42,8 @@ public class Program
         builder.Services.Configure<EcowittOptions>(configuration.GetSection("ecowitt"));
         builder.Services.Configure<MqttOptions>(configuration.GetSection("mqtt"));
         builder.Services.Configure<ControllerOptions>(configuration.GetSection("controller"));
-        
-        var gateways = configuration.GetSection("ecowitt:gateways").Get<List<GatewayOptions>>();
 
-        if (gateways == null) builder.Services.AddHttpClient();
-        else
-            foreach (var gw in gateways)
-                builder.Services.AddHttpClient($"ecowitt-client-{gw.Name}", client =>
-                {
-                    var uriBuilder = new UriBuilder
-                    {
-                        Scheme = "http",
-                        Host = gw.Ip,
-                        Port = gw.Port
-                    };
-                    client.BaseAddress = uriBuilder.Uri;
-                }).AddPolicyHandler(GetRetryPolicy(gw.Retries));
+        builder.Services.AddHttpClient("ecowitt-client").AddPolicyHandler(GetRetryPolicy(2));
             
         builder.Services.AddSerilog((services, lc) => lc
                 .ReadFrom.Configuration(builder.Configuration)
