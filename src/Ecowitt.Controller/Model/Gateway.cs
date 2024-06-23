@@ -10,6 +10,7 @@ public class Gateway
     public string Model { get; set; }
     public string IpAddress { get; set; }
     public List<Subdevice> Subdevices { get; set; } = new();
+    public DateTime TimestampUtc { get; set; }
 
     public double? TempIndoor { get; set; }
     public int? HumidityIndoor { get; set; }

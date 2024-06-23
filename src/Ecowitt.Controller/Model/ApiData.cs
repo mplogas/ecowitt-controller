@@ -9,6 +9,7 @@ public class ApiData
     public string Freq { get; set; }
     public string Model { get; set; }
     public string? IpAddress { get; set; }
+    public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
     public double? TempInf { get; set; }
     public int? HumidityIn { get; set; }

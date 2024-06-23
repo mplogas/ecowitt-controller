@@ -6,8 +6,9 @@ namespace Ecowitt.Controller.Store;
 public interface IDeviceStore
 {
     Gateway? GetGateway(string ipAddress);
-    bool UpsertGateway(Gateway gateway);
+    bool UpsertGateway(Gateway data);
     void Clear();
+    Dictionary<string, string> GetGatewaysShort();
 }
 
 public class DeviceStore : IDeviceStore
@@ -20,22 +21,27 @@ public class DeviceStore : IDeviceStore
         _logger = logger;
     }
     
+    public Dictionary<string, string> GetGatewaysShort()
+    {
+        return _gateways.ToArray().ToDictionary(gateway => gateway.Key, gateway => gateway.Value.Model);
+    }
+    
     public Gateway? GetGateway(string ipAddress)
     {
         return _gateways.TryGetValue(ipAddress, out var gateway) ? gateway : null;
     }
     
-    public bool UpsertGateway(Gateway gateway)
+    public bool UpsertGateway(Gateway data)
     {
-        if (_gateways.ContainsKey(gateway.IpAddress))
+        if (_gateways.TryGetValue(data.IpAddress, out var gateway))
         {
-            _logger.LogInformation($"Updateing Gateway {gateway.IpAddress} ({gateway.Model})");
-            return _gateways.TryUpdate(gateway.IpAddress, gateway, _gateways[gateway.IpAddress]);
+            _logger.LogInformation($"Updateing Gateway {data.IpAddress} ({data.Model})");
+            return _gateways.TryUpdate(data.IpAddress, data, gateway);
         }
         else
         {
-            _logger.LogInformation($"Adding Gateway {gateway.IpAddress} ({gateway.Model})");
-            return _gateways.TryAdd(gateway.IpAddress, gateway);
+            _logger.LogInformation($"Adding Gateway {data.IpAddress} ({data.Model})");
+            return _gateways.TryAdd(data.IpAddress, data);
         }
     }
     

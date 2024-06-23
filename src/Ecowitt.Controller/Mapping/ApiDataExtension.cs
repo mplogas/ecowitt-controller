@@ -16,6 +16,7 @@ public static class ApiDataExtension
             Freq = apiData.Freq,
             DateUtc = apiData.DateUtc,
             IpAddress = apiData.IpAddress ?? string.Empty,
+            TimestampUtc = apiData.TimestampUtc,
             TempIndoor = !isMetric ? apiData.TempInf : F2C(apiData.TempInf),
             HumidityIndoor = apiData.HumidityIn,
             BaromRelativeIndoor = apiData.BaromRelIn,
