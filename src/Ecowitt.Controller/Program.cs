@@ -66,7 +66,6 @@ public class Program
                 //.WriteTo.Console()
                 .WriteTo.Debug()
                 .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
-                .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Debug)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Mvc", LogEventLevel.Warning)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Debug));
@@ -128,8 +127,6 @@ public class Program
             app.UseSwaggerUI();
         }
         
-        app.UseHttpsRedirection();
-        app.UseAuthorization();
         app.MapControllers();
         
         await app.RunAsync();

@@ -5,7 +5,7 @@ using SlimMessageBus;
 namespace Ecowitt.Controller.Controller;
 
 [ApiController]
-[Route("[controller]")]
+//[Route("[controller]")]
 public class DataController : ControllerBase
 {
     private readonly ILogger<DataController> _logger;
@@ -29,7 +29,7 @@ public class DataController : ControllerBase
     //     return Ok();
     // }
 
-    [HttpPost("report")]
+    [HttpPost("/data/report")]
     [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
