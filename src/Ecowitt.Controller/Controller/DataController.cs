@@ -9,12 +9,12 @@ namespace Ecowitt.Controller.Controller;
 public class DataController : ControllerBase
 {
     private readonly ILogger<DataController> _logger;
-    //private readonly IMessageBus _messageBus;
+    private readonly IMessageBus _messageBus;
 
-    public DataController(ILogger<DataController> logger/*, IMessageBus messageBus*/)
+    public DataController(ILogger<DataController> logger, IMessageBus messageBus)
     {
         _logger = logger;
-        //_messageBus = messageBus;
+        _messageBus = messageBus;
     }
 
     // [Route("**")]
@@ -49,7 +49,7 @@ public class DataController : ControllerBase
 
         Request.Form.Keys.ToList().ForEach(k => _logger.LogDebug($"Form key: {k}"));
 
-        //await _messageBus.Publish(data);
+        await _messageBus.Publish(data);
 
         return Ok();
     }
