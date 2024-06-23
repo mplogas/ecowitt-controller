@@ -58,6 +58,6 @@ public class MqttService : IHostedService
     private async void OnMessageReceived(object sender, MqttMessageReceivedEventArgs e)
     {
         _logger.LogInformation("Received message on topic {Topic} with payload {Payload}", e.Topic, e.Payload);
-        _messageBus.Publish(new SubdeviceCommand { Cmd = "test", Id = 12345, Model = 2, Payload = string.Empty });
+        await _messageBus.Publish(new SubdeviceCommand { Cmd = "test", Id = 12345, Model = 2, Payload = string.Empty });
     }
 }

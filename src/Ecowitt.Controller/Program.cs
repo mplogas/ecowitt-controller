@@ -92,7 +92,6 @@ public class Program
                 .Topic("subdevice-command")
                 .WithConsumer<CommandConsumer>()
             );
-            //smb.AddAspNet();
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
