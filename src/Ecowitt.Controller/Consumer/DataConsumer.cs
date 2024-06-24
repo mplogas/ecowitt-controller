@@ -3,6 +3,7 @@ using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Store;
+using Microsoft.Extensions.Options;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Consumer;
@@ -13,11 +14,11 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
     private readonly IDeviceStore _deviceStore;
     private readonly EcowittOptions _options;
 
-    public DataConsumer(ILogger<DataConsumer> logger, IDeviceStore deviceStore, EcowittOptions options)
+    public DataConsumer(ILogger<DataConsumer> logger, IDeviceStore deviceStore, IOptions<EcowittOptions> options)
     {
         _logger = logger;
         _deviceStore = deviceStore;
-        _options = options;
+        _options = options.Value;
     }
 
     public async Task OnHandle(ApiData message)
@@ -34,6 +35,8 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
         // rinse and repeat for all subdevies groups
 
         var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
+        
+        
 
         message.Subdevices.ForEach(d =>
         {

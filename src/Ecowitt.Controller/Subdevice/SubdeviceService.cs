@@ -4,8 +4,6 @@ using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using SlimMessageBus;
-using System.Net;
-using System.Threading;
 
 namespace Ecowitt.Controller.Subdevice;
 
@@ -39,7 +37,7 @@ public class SubdeviceService : BackgroundService
                 await SubDevicePolling(stoppingToken, _options.AutoDiscovery);
             }
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException)
         {
             _logger.LogInformation("Stopping SubdeviceService");
         }
@@ -52,9 +50,10 @@ public class SubdeviceService : BackgroundService
 
         if (autoDiscovery)
         {
-            foreach (var gw_kwp in _store.GetGatewaysShort().Where(gw_kwp => !gw_kwp.Value.StartsWith("GW1000A")))
+            // TODO: remove reference to _store and replace it with req/resp through smb
+            foreach (var gwKvp in _store.GetGatewaysShort().Where(kvp => !kvp.Value.StartsWith("GW1000A")))
             {
-                subdevices.Subdevices.AddRange(await GetSubdeviceData(gw_kwp.Key, cancellationToken));
+                subdevices.Subdevices.AddRange(await GetSubdeviceData(gwKvp.Key, cancellationToken));
             }
         }
         else
@@ -92,53 +91,77 @@ public class SubdeviceService : BackgroundService
     private async Task <List<Model.Subdevice>> GetSubdevicesOverview(string ipAddress, CancellationToken cancellationToken)
     {
         var subdevices = new List<Model.Subdevice>();
-        using var client = _httpClientFactory.CreateClient("ecowitt-client");
-        client.BaseAddress = new Uri($"http://{ipAddress}");
+        using var client = CreateHttpClient(ipAddress);
 
-        var username = _options.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Username;
-        var password = _options.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Password;
-        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+        try
         {
-            //TODO: authentication header, need to test
-            //client.DefaultRequestHeaders.Add();
-        }
-
-        var response = await client.GetAsync("get_iot_device_list", cancellationToken);
-        if (response.IsSuccessStatusCode)
-        {
-            var content = await response.Content.ReadAsStringAsync();
-            dynamic data = JsonConvert.DeserializeObject(content);
-            if (data is not null && data.command is not null)
+            var response = await client.GetAsync("get_iot_device_list", cancellationToken);
+            if (response.IsSuccessStatusCode)
             {
-                foreach (var device in data.command)
+                var content = await response.Content.ReadAsStringAsync();
+                dynamic data = JsonConvert.DeserializeObject(content);
+                if (data is not null && data.command is not null)
                 {
-                    var subdevice = new Model.Subdevice
+                    foreach (var device in data.command)
                     {
-                        Id = device.id,
-                        Model = device.model,
-                        Ver = device.ver,
-                        RfnetState = device.rfnet_state,
-                        Battery = device.battery,
-                        Signal = device.signal,
-                        GwIp = ipAddress,
-                        TimestampUtc = DateTime.UtcNow
-                    };
-                    _logger.LogInformation($"Subdevice: {subdevice.Id} ({subdevice.Model})");
-                    subdevices.Add(subdevice);
+                        var subdevice = new Model.Subdevice
+                        {
+                            Id = device.id,
+                            Model = device.model,
+                            Ver = device.ver,
+                            RfnetState = device.rfnet_state,
+                            Battery = device.battery,
+                            Signal = device.signal,
+                            GwIp = ipAddress,
+                            TimestampUtc = DateTime.UtcNow
+                        };
+                        _logger.LogInformation($"Subdevice: {subdevice.Id} ({subdevice.Model})");
+                        subdevices.Add(subdevice);
+                    }
                 }
             }
+            else
+            {
+                _logger.LogWarning($"Failed to get subdevices from {ipAddress}");
+            }
         }
-        else
+        catch (Exception e)
         {
-            _logger.LogWarning($"Failed to get subdevices from {ipAddress}");
+            _logger.LogError(e, $"Exception while trying to get subdevices from {ipAddress}");
         }
+        
 
         return subdevices;
     }
 
     private async Task<string> GetSubDevicePayload(string ipAddress, int subdeviceId, int model, CancellationToken cancellationToken)
     {
-        using var client = _httpClientFactory.CreateClient("ecowitt-client");
+        using var client = CreateHttpClient(ipAddress);
+        try
+        {
+            var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model = model } } };
+            var sContent = new StringContent(JsonConvert.SerializeObject(payload));
+            var response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync(cancellationToken);
+            }
+            else
+            {
+                _logger.LogWarning($"Could not get payload from {ipAddress} for subdevice {subdeviceId}");
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, $"Exception while trying to get payload from {ipAddress} for subdevice {subdeviceId}");
+        }
+        
+        return string.Empty;
+    }
+    
+    private HttpClient CreateHttpClient(string ipAddress)
+    {
+        var client = _httpClientFactory.CreateClient("ecowitt-client");
         client.BaseAddress = new Uri($"http://{ipAddress}");
 
         var username = _options.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Username;
@@ -148,18 +171,6 @@ public class SubdeviceService : BackgroundService
             //TODO: authentication header, need to test
             //client.DefaultRequestHeaders.Add();
         }
-
-        var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model = model } } };
-        var sContent = new StringContent(JsonConvert.SerializeObject(payload));
-        var response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadAsStringAsync(cancellationToken);
-        }
-        else
-        {
-            _logger.LogWarning($"Could not get payload from {ipAddress} for subdevice {subdeviceId}");
-            return string.Empty;
-        }
+        return client;
     }
 }
