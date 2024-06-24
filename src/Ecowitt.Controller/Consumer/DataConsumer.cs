@@ -1,3 +1,4 @@
+using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Mqtt;
@@ -10,11 +11,13 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
 {
     private readonly ILogger<DataConsumer> _logger;
     private readonly IDeviceStore _deviceStore;
+    private readonly EcowittOptions _options;
 
-    public DataConsumer(ILogger<DataConsumer> logger, IDeviceStore deviceStore)
+    public DataConsumer(ILogger<DataConsumer> logger, IDeviceStore deviceStore, EcowittOptions options)
     {
         _logger = logger;
         _deviceStore = deviceStore;
+        _options = options;
     }
 
     public async Task OnHandle(ApiData message)
@@ -26,13 +29,27 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
 
     public Task OnHandle(SubdeviceData message)
     {
+        //optimization: get all subdevices per gateway at once
+        // then iterate over the list of subdevices and update the gateway
+        // rinse and repeat for all subdevies groups
+
+        var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
+
         message.Subdevices.ForEach(d =>
         {
-            var gw =_deviceStore.GetGateway(d.GwIp);
+            var gw = _deviceStore.GetGateway(d.GwIp);
             if (gw == null)
             {
-                _logger.LogWarning($"Gateway {d.GwIp} not found. Not updating subdevice {d.Id} ({d.Model})");
-                return;
+                if (_options.AutoDiscovery)
+                {
+                    _logger.LogWarning($"Gateway {d.GwIp} not found. Not updating subdevice {d.Id} ({d.Model})");
+                    return;
+                }
+                else
+                {
+                    gw = new Gateway {IpAddress = d.GwIp};
+                    _logger.LogWarning($"Gateway {d.GwIp} not found, auto-discovery disabled. Creating new empty gateway");
+                }
             }
             
             var subdevice = gw.Subdevices.FirstOrDefault(sd => sd.Id == d.Id);
@@ -51,6 +68,8 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
                 
                 _logger.LogInformation($"subdevice updated: {d.Id} ({d.Model})");
             }
+            
+            _deviceStore.UpsertGateway(gw);
         });
         
         return Task.CompletedTask;
