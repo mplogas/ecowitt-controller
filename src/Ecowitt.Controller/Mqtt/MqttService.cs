@@ -22,7 +22,7 @@ public class MqttService : BackgroundService
         _mqttConfig = config.Value;
         _messageBus = messageBus;
 
-        _mqttClient = mqttClient; //TODO: i feel bad for the hard cast
+        _mqttClient = mqttClient;
         _mqttClient.OnMessageReceived += OnMessageReceived;
     }
 
