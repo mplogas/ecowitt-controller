@@ -5,38 +5,50 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Mqtt;
 
-public class MqttService : IHostedService
+public class MqttService : BackgroundService
 {
     private const string CmdTopic = "cmd";
     private const string HeartbeatTopic = "heartbeat";
     private readonly ILogger<MqttService> _logger;
     private readonly IMessageBus _messageBus;
     private readonly MqttClient _mqttClient;
-    private readonly IOptions<MqttOptions> _mqttConfig;
+    private readonly MqttOptions _mqttConfig;
 
     public MqttService(IOptions<MqttOptions> config, ILogger<MqttService> logger, IMqttClient mqttClient,
         IMessageBus messageBus)
     {
         _logger = logger;
-        _mqttConfig = config;
+        _mqttConfig = config.Value;
         _messageBus = messageBus;
 
         _mqttClient = (MqttClient)mqttClient; //TODO: i feel bad for the hard cast
         _mqttClient.OnMessageReceived += OnMessageReceived;
-        _mqttClient.OnClientDisconnected += OnClientDisconnected;
-        _mqttClient.OnClientConnected += OnClientConnected;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _mqttClient.Connect(_mqttConfig.Value.Host, _mqttConfig.Value.ClientId, _mqttConfig.Value.User,
-            _mqttConfig.Value.Password);
-        _logger.LogInformation("Connected");
+        _logger.LogInformation("Starting MqttService");
+        
+        await Connect();
+        
+        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try
+        {
+            while(await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                await _mqttClient.Publish($"{_mqttConfig.BaseTopic}/{HeartbeatTopic}", @"{ ""service"": ""ok"" }");
+                _logger.LogInformation("Sent heartbeat");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Stopping MqttService");
+        }
+    }
 
-        await _mqttClient.Subscribe($"{_mqttConfig.Value.BaseTopic}/{CmdTopic}/#");
-        _logger.LogInformation("subscribed to all topics");
-
-        //emit a heartbeat every 30 seconds
+    public override void Dispose()
+    {
+        _mqttClient.Dispose();
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -45,19 +57,18 @@ public class MqttService : IHostedService
         _logger.LogInformation("Disconnected");
     }
 
-    private void OnClientConnected(object sender, EventArgs e)
-    {
-        _logger.LogInformation("onconnect");
-    }
-
-    private void OnClientDisconnected(object sender, EventArgs e)
-    {
-        _logger.LogInformation("ondisconnect");
-    }
-
     private async void OnMessageReceived(object sender, MqttMessageReceivedEventArgs e)
     {
         _logger.LogInformation("Received message on topic {Topic} with payload {Payload}", e.Topic, e.Payload);
         await _messageBus.Publish(new SubdeviceCommand { Cmd = "test", Id = 12345, Model = 2, Payload = string.Empty });
+    }
+
+    private async Task Connect()
+    {
+        await _mqttClient.Connect();
+        _logger.LogInformation("Connected");
+
+        await _mqttClient.Subscribe($"{_mqttConfig.BaseTopic}/{CmdTopic}/#");
+        _logger.LogInformation("subscribed to all topics");
     }
 }

@@ -1,14 +1,16 @@
-﻿using MQTTnet;
+﻿using Ecowitt.Controller.Configuration;
+using Microsoft.Extensions.Options;
+using MQTTnet;
 using MQTTnet.Client;
 
 namespace Ecowitt.Controller.Mqtt;
 
 public interface IMqttClient
 {
-    Task Connect(string broker, string clientId, string username, string password);
+    Task Connect();
     Task Disconnect();
     Task Subscribe(string topic);
-    Task Publish(string topic, string message);
+    Task<bool> Publish(string topic, string message);
 }
 
 public class MqttMessageReceivedEventArgs : EventArgs
@@ -25,64 +27,74 @@ public class MqttMessageReceivedEventArgs : EventArgs
     public string ClientId { get; }
 }
 
-public class MqttClient : IMqttClient
+public class MqttClient : IMqttClient, IDisposable
 {
-    private readonly MQTTnet.Client.IMqttClient client;
-    private readonly ILogger<MqttClient> logger;
+    private readonly MQTTnet.Client.IMqttClient _client;
+    private readonly ILogger<MqttClient> _logger;
     public EventHandler? OnClientConnected;
     public EventHandler? OnClientDisconnected;
     public EventHandler<MqttMessageReceivedEventArgs>? OnMessageReceived;
+    private readonly MqttOptions _options;
 
-    public MqttClient(ILogger<MqttClient> logger, MqttFactory factory)
+
+    public MqttClient(ILogger<MqttClient> logger, MqttFactory factory, IOptions<MqttOptions> options)
     {
-        this.logger = logger;
-        client = factory.CreateMqttClient();
-        client.ConnectedAsync += ClientOnConnectedAsync;
-        client.DisconnectedAsync += ClientOnDisconnectedAsync;
-        client.ApplicationMessageReceivedAsync += ClientOnApplicationMessageReceivedAsync;
+        _logger = logger;
+        _options = options.Value;
+        _client = factory.CreateMqttClient();
+        _client.ConnectedAsync += ClientOnConnectedAsync;
+        _client.DisconnectedAsync += ClientOnDisconnectedAsync;
+        _client.ApplicationMessageReceivedAsync += ClientOnApplicationMessageReceivedAsync;
     }
 
-    public async Task Connect(string broker, string clientId, string username, string password)
+    public async Task Connect()
     {
         var clientOptions = new MqttClientOptionsBuilder()
-            .WithTcpServer(broker)
-            .WithCredentials(username, password)
-            .WithClientId(clientId)
+            .WithTcpServer(_options.Host, _options.Port)
+            .WithCredentials(_options.User, _options.Password)
+            .WithClientId(_options.ClientId)
+            .WithCleanSession()
             .Build();
 
-        if (!client.IsConnected) await client.ConnectAsync(clientOptions);
-        else logger.LogWarning("Can't connect. Client already connected.");
+        if (!_client.IsConnected) await _client.ConnectAsync(clientOptions);
+        else _logger.LogWarning("Can't connect. Client already connected.");
     }
 
     public async Task Disconnect()
     {
-        if (client.IsConnected) await client.DisconnectAsync();
-        else logger.LogWarning("Can't disconnect. Client not connected.");
+        if (_client.IsConnected) await _client.DisconnectAsync();
+        else _logger.LogWarning("Can't disconnect. Client not connected.");
     }
 
     public async Task Subscribe(string topic)
     {
         var topicFilter = new MqttTopicFilterBuilder().WithTopic(topic).Build();
-
-        if (client.IsConnected) await client.SubscribeAsync(topicFilter);
-        else logger.LogWarning($"Can't subscribe to topic {topic}. Client not connected.");
+        
+        if (_client.IsConnected) await _client.SubscribeAsync(topicFilter);
+        else _logger.LogWarning($"Can't subscribe to topic {topic}. Client not connected.");
     }
 
-    public async Task Publish(string topic, string message)
+    public async Task<bool> Publish(string topic, string message)
     {
         var mqttPayload = new MqttApplicationMessageBuilder()
             .WithTopic(topic)
             .WithPayload(message)
             .Build();
 
-        if (client.IsConnected) await client.PublishAsync(mqttPayload);
-        else logger.LogWarning($"Can't publish message {message} to topic {topic}. Client not connected.");
+        if (_client.IsConnected)
+        {
+            var result = await _client.PublishAsync(mqttPayload);
+            if(result.IsSuccess) return true;
+            else _logger.LogWarning($"Failed to publish message {message} to topic {topic}. Reason: {result.ReasonCode}");
+        }
+        else _logger.LogWarning($"Can't publish message {message} to topic {topic}. Client not connected.");
+        return false;
     }
 
     private Task ClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
     {
         var payload = arg.ApplicationMessage.ConvertPayloadToString();
-        logger.LogDebug($"Message received for topic {arg.ApplicationMessage.Topic}: {payload}");
+        _logger.LogDebug($"Message received for topic {arg.ApplicationMessage.Topic}: {payload}");
 
         OnMessageReceived?.Invoke(this,
             new MqttMessageReceivedEventArgs(payload, arg.ApplicationMessage.Topic, arg.ClientId));
@@ -90,17 +102,39 @@ public class MqttClient : IMqttClient
         return Task.CompletedTask;
     }
 
-    private Task ClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)
+    private async Task ClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)
     {
-        logger.LogDebug($"Client disconnected. Reason: {arg.ReasonString}");
+        _logger.LogInformation($"MQTT client disconnected. Reason: {arg.Reason}");
         OnClientDisconnected?.Invoke(this, EventArgs.Empty);
-        return Task.CompletedTask;
+
+        if (_options.Reconnect)
+        {
+            for (var i = 0; i < _options.ReconnectAttempts; i++)
+            {
+                try
+                {
+                    await Connect();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"Reconnect attempt {i + 1} failed.");
+                }
+            }
+        }
+        else _logger.LogWarning("Reconnect is disabled, no reconnect attempt");
     }
 
     private Task ClientOnConnectedAsync(MqttClientConnectedEventArgs arg)
     {
-        logger.LogDebug("Client connected.");
+        _logger.LogInformation("MQTT client connected.");
         OnClientConnected?.Invoke(this, EventArgs.Empty);
         return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        if (_client.IsConnected) _client.DisconnectAsync().GetAwaiter().GetResult();
+        _client.Dispose();
     }
 }
