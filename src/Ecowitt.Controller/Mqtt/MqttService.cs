@@ -1,6 +1,8 @@
-﻿using Ecowitt.Controller.Configuration;
+﻿using System.Reflection;
+using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Mqtt;
@@ -31,12 +33,13 @@ public class MqttService : BackgroundService
         
         await Connect();
         
-        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
         try
         {
             while(await timer.WaitForNextTickAsync(stoppingToken))
             {
-                await _mqttClient.Publish($"{_mqttConfig.BaseTopic}/{HeartbeatTopic}", @"{ ""service"": ""ok"" }");
+                // because i can't figure out how to escape the special chars for the heartbeat payload :(
+                await _mqttClient.Publish($"{_mqttConfig.BaseTopic}/{HeartbeatTopic}", JsonConvert.SerializeObject(new { service = DateTime.UtcNow }));
                 _logger.LogInformation("Sent heartbeat");
             }
         }
