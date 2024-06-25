@@ -33,7 +33,7 @@ public class MqttService : BackgroundService
         
         await Connect();
         
-        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
         try
         {
             while(await timer.WaitForNextTickAsync(stoppingToken))
