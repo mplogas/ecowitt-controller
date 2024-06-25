@@ -5,12 +5,16 @@ using MQTTnet.Client;
 
 namespace Ecowitt.Controller.Mqtt;
 
-public interface IMqttClient
+public interface IMqttClient : IDisposable
 {
     Task Connect();
     Task Disconnect();
     Task Subscribe(string topic);
     Task<bool> Publish(string topic, string message);
+    
+    event EventHandler? OnClientConnected;
+    event EventHandler? OnClientDisconnected;
+    event EventHandler<MqttMessageReceivedEventArgs>? OnMessageReceived;
 }
 
 public class MqttMessageReceivedEventArgs : EventArgs
@@ -27,13 +31,14 @@ public class MqttMessageReceivedEventArgs : EventArgs
     public string ClientId { get; }
 }
 
-public class MqttClient : IMqttClient, IDisposable
+public class MqttClient : IMqttClient
 {
     private readonly MQTTnet.Client.IMqttClient _client;
     private readonly ILogger<MqttClient> _logger;
-    public EventHandler? OnClientConnected;
-    public EventHandler? OnClientDisconnected;
-    public EventHandler<MqttMessageReceivedEventArgs>? OnMessageReceived;
+    public event EventHandler? OnClientConnected;
+    public event EventHandler? OnClientDisconnected;
+    public event EventHandler<MqttMessageReceivedEventArgs>? OnMessageReceived;
+    
     private readonly MqttOptions _options;
 
 

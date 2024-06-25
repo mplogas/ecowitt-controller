@@ -12,7 +12,7 @@ public class MqttService : BackgroundService
     private const string HeartbeatTopic = "heartbeat";
     private readonly ILogger<MqttService> _logger;
     private readonly IMessageBus _messageBus;
-    private readonly MqttClient _mqttClient;
+    private readonly IMqttClient _mqttClient;
     private readonly MqttOptions _mqttConfig;
 
     public MqttService(IOptions<MqttOptions> config, ILogger<MqttService> logger, IMqttClient mqttClient,
@@ -22,7 +22,7 @@ public class MqttService : BackgroundService
         _mqttConfig = config.Value;
         _messageBus = messageBus;
 
-        _mqttClient = (MqttClient)mqttClient; //TODO: i feel bad for the hard cast
+        _mqttClient = mqttClient; //TODO: i feel bad for the hard cast
         _mqttClient.OnMessageReceived += OnMessageReceived;
     }
 
