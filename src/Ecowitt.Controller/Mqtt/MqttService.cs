@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Ecowitt.Controller.Configuration;
+﻿using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
