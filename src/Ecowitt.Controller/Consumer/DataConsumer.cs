@@ -1,7 +1,6 @@
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mapping;
-using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
@@ -21,59 +20,56 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
         _options = options.Value;
     }
 
-    public async Task OnHandle(ApiData message)
+    public Task OnHandle(ApiData message)
     {
         _logger.LogInformation($"Received ApiData: {message.PASSKEY}");
         var gw = message.Map();
         if(!_deviceStore.UpsertGateway(gw)) _logger.LogWarning($"failed to store {gw.IpAddress} ({gw.Model}) update");
+        
+        return Task.CompletedTask;
     }
 
     public Task OnHandle(SubdeviceData message)
     {
-        //optimization: get all subdevices per gateway at once
-        // then iterate over the list of subdevices and update the gateway
-        // rinse and repeat for all subdevies groups
-
         var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
-        
-        
-
-        message.Subdevices.ForEach(d =>
+        foreach (var ip in ips)
         {
-            var gw = _deviceStore.GetGateway(d.GwIp);
+            var gw = _deviceStore.GetGateway(ip);
             if (gw == null)
             {
                 if (_options.AutoDiscovery)
                 {
-                    _logger.LogWarning($"Gateway {d.GwIp} not found. Not updating subdevice {d.Id} ({d.Model})");
-                    return;
+                    _logger.LogWarning($"Gateway {ip} not found while in autodiscovery mode. Not updating subdevices. (Try turning off autodiscovery)");
+                    return Task.CompletedTask;
+                }
+                
+                gw = new Gateway {IpAddress = ip};
+            }
+
+            var devices = message.Subdevices.Where(sd => sd.GwIp == ip);
+            foreach (var device in devices)
+            {
+                var gwDevice = gw.Subdevices.FirstOrDefault(gwsd => gwsd.Id == device.Id);
+                if (gwDevice != null)
+                {
+                    gwDevice.Battery = device.Battery;
+                    gwDevice.RfnetState = device.RfnetState;
+                    gwDevice.Signal = device.Signal;
+                    gwDevice.Ver = device.Ver;
+                    gwDevice.TimestampUtc = device.TimestampUtc;
+                    gwDevice.Payload = device.Payload;
+                
+                    _logger.LogInformation($"subdevice updated: {device.Id} ({device.Model})");
                 }
                 else
                 {
-                    gw = new Gateway {IpAddress = d.GwIp};
-                    _logger.LogWarning($"Gateway {d.GwIp} not found, auto-discovery disabled. Creating new empty gateway");
+                    gw.Subdevices.Add(device);
+                    _logger.LogInformation($"subdevice added: {device.Id} ({device.Model})");
                 }
             }
             
-            var subdevice = gw.Subdevices.FirstOrDefault(sd => sd.Id == d.Id);
-            if (subdevice == null)
-            {
-                gw.Subdevices.Add(d);
-                _logger.LogInformation($"subdevice added: {d.Id} ({d.Model})");
-            }
-            else
-            {
-                subdevice.Battery = d.Battery;
-                subdevice.RfnetState = d.RfnetState;
-                subdevice.Signal = d.Signal;
-                subdevice.Ver = d.Ver;
-                subdevice.Payload = d.Payload;
-                
-                _logger.LogInformation($"subdevice updated: {d.Id} ({d.Model})");
-            }
-            
             _deviceStore.UpsertGateway(gw);
-        });
+        }
         
         return Task.CompletedTask;
     }
