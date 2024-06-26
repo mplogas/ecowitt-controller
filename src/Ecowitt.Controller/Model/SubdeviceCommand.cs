@@ -11,14 +11,14 @@ public class SubdeviceCommand
 
 public enum Command
 {
-    Start,
-    Stop
+    Start = 0,
+    Stop = 1
 }
 
 public enum DurationUnit
 {
-    Seconds,
-    Minutes,
-    Hours,
-    Liters,
+    Seconds = 0,
+    Minutes = 1,
+    Hours = 2,
+    Liters = 3
 }
