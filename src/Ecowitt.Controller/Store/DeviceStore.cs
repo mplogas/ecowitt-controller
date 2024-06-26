@@ -6,6 +6,7 @@ namespace Ecowitt.Controller.Store;
 public interface IDeviceStore
 {
     Gateway? GetGateway(string ipAddress);
+    Gateway? GetGatewayBySubdeviceId(int id);
     bool UpsertGateway(Gateway data);
     void Clear();
     Dictionary<string, string> GetGatewaysShort();
@@ -29,6 +30,11 @@ public class DeviceStore : IDeviceStore
     public Gateway? GetGateway(string ipAddress)
     {
         return _gateways.TryGetValue(ipAddress, out var gateway) ? gateway : null;
+    }
+
+    public Gateway? GetGatewayBySubdeviceId(int id)
+    {
+        return _gateways.Values.FirstOrDefault(gw => gw.Subdevices.Any(sd => sd.Id == id));
     }
     
     public bool UpsertGateway(Gateway data)

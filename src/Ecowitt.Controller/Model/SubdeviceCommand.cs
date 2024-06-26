@@ -2,8 +2,23 @@
 
 public class SubdeviceCommand
 {
-    public string Cmd { get; set; }
+    public Command Cmd { get; set; }
     public int Id { get; set; }
-    public int Model { get; set; }
-    public string Payload { get; set; } //inputobj json
+    public int? Duration { get; set; }
+    public DurationUnit? Unit { get; set; }
+    public bool? AlwaysOn { get; set; }
+}
+
+public enum Command
+{
+    Start,
+    Stop
+}
+
+public enum DurationUnit
+{
+    Seconds,
+    Minutes,
+    Hours,
+    Liters,
 }
