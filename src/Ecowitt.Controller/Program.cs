@@ -11,6 +11,7 @@ using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Serilog;
+using Serilog.Core.Enrichers;
 using Serilog.Events;
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Memory;
@@ -44,17 +45,17 @@ public class Program
         builder.Services.Configure<ControllerOptions>(configuration.GetSection("controller"));
 
         builder.Services.AddHttpClient("ecowitt-client").AddPolicyHandler(GetRetryPolicy(2));
-            
+
         builder.Services.AddSerilog((services, lc) => lc
-                .ReadFrom.Configuration(builder.Configuration)
-                .ReadFrom.Services(services)
-                .Enrich.FromLogContext()
-                //.WriteTo.Console()
-                .WriteTo.Debug()
-                .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
-                .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Debug)
-                .MinimumLevel.Override("Microsoft.AspNetCore.Mvc", LogEventLevel.Warning)
-                .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Debug));
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
+            .MinimumLevel.Information()
+            // .WriteTo.Debug()
+            // .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Information)
+            // .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Information)
+            .ReadFrom.Configuration(builder.Configuration));
 
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
 
