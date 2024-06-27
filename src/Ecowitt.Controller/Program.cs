@@ -50,11 +50,8 @@ public class Program
             .ReadFrom.Services(services)
             .Enrich.FromLogContext()
             .WriteTo.Console()
-            .WriteTo.File("logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day)
-            .MinimumLevel.Information()
-            // .WriteTo.Debug()
-            // .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Information)
-            // .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Information)
+            .WriteTo.File(Path.Exists("/config/logs") ? "/config/logs/ecowitt-controller.log" : "logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+            .MinimumLevel.Warning()
             .ReadFrom.Configuration(builder.Configuration));
 
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
