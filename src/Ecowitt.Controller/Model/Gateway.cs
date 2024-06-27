@@ -2,16 +2,21 @@ namespace Ecowitt.Controller.Model;
 
 public class Gateway
 {
-    public string PASSKEY { get; set; }
-    public string StationType { get; set; }
-    public int Runtime { get; set; }
-    public DateTime DateUtc { get; set; }
-    public string Freq { get; set; }
-    public string Model { get; set; }
+    // important properties
     public string IpAddress { get; set; }
-    public List<Subdevice> Subdevices { get; set; } = new();
+    public string Name { get; set; }
     public DateTime TimestampUtc { get; set; }
+    public List<Subdevice> Subdevices { get; set; } = new();
+    
+    // system properties
+    public string? Model { get; set; } 
+    public string? PASSKEY { get; set; } 
+    public string? StationType { get; set; } 
+    public int? Runtime { get; set; }
+    public DateTime? DateUtc { get; set; }
+    public string? Freq { get; set; }
 
+    // sensors
     public double? TempIndoor { get; set; }
     public int? HumidityIndoor { get; set; }
     public double? BaromRelativeIndoor { get; set; }

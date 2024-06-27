@@ -4,7 +4,7 @@ namespace Ecowitt.Controller.Mapping;
 
 public static class ApiDataExtension
 {
-    public static Gateway Map(this ApiData apiData, bool isMetric = true)
+    public static Gateway Map(this ApiData apiData, string name = "", bool isMetric = true)
     {
         // TODO: check other apidata properties for freedom units
         return new Gateway

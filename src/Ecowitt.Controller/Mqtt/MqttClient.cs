@@ -54,15 +54,18 @@ public class MqttClient : IMqttClient
 
     public async Task Connect()
     {
-        var optionsBuilder = new MqttClientOptionsBuilder()
-            .WithTcpServer(_options.Host, _options.Port)
-            .WithClientId(_options.ClientId)
-            .WithCleanSession();
-        // allowing empty passwords
-        if (!string.IsNullOrWhiteSpace(_options.User)/* && !string.IsNullOrWhiteSpace(_options.Password)*/)
-            optionsBuilder.WithCredentials(_options.User, _options.Password);
+        if (!_client.IsConnected)
+        {
+            var optionsBuilder = new MqttClientOptionsBuilder()
+                .WithTcpServer(_options.Host, _options.Port)
+                .WithClientId(_options.ClientId)
+                .WithCleanSession();
+            // allowing empty passwords
+            if (!string.IsNullOrWhiteSpace(_options.User)/* && !string.IsNullOrWhiteSpace(_options.Password)*/)
+                optionsBuilder.WithCredentials(_options.User, _options.Password);
 
-        if (!_client.IsConnected) await _client.ConnectAsync(optionsBuilder.Build());
+            if (!_client.IsConnected) await _client.ConnectAsync(optionsBuilder.Build());
+        }
         else _logger.LogWarning("Can't connect. Client already connected.");
     }
 

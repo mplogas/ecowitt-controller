@@ -24,6 +24,7 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
     {
         _logger.LogInformation($"Received ApiData: {message.PASSKEY}");
         var gw = message.Map();
+        gw.Name = _options.Gateways.FirstOrDefault(g => g.Ip == gw.IpAddress)?.Name ?? gw.IpAddress.Replace('.','-');
         if(!_deviceStore.UpsertGateway(gw)) _logger.LogWarning($"failed to store {gw.IpAddress} ({gw.Model}) update");
         
         return Task.CompletedTask;
@@ -44,6 +45,7 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
                 }
                 
                 gw = new Gateway {IpAddress = ip};
+                gw.Name = _options.Gateways.FirstOrDefault(g => g.Ip == gw.IpAddress)?.Name ?? gw.IpAddress.Replace('.','-');
             }
 
             var devices = message.Subdevices.Where(sd => sd.GwIp == ip);

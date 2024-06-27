@@ -86,6 +86,7 @@ public class Program
         
         builder.Services.AddHostedService<MqttService>();
         builder.Services.AddHostedService<SubdeviceService>();
+        builder.Services.AddHostedService<DataPublishService>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
