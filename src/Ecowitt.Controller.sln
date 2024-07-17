@@ -11,8 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{B3
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testwiese.homeassistant", "testwiese.homeassistant\testwiese.homeassistant.csproj", "{AB02B0C7-14C2-4A7E-B1DB-E3DC8A4E5FB1}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C746A790-DCB6-46A6-A74E-DF1A4FD6994F}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
@@ -28,10 +26,6 @@ Global
 		{111037E1-D578-489F-8F82-BF41F9F9A70F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{111037E1-D578-489F-8F82-BF41F9F9A70F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{111037E1-D578-489F-8F82-BF41F9F9A70F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AB02B0C7-14C2-4A7E-B1DB-E3DC8A4E5FB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB02B0C7-14C2-4A7E-B1DB-E3DC8A4E5FB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB02B0C7-14C2-4A7E-B1DB-E3DC8A4E5FB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB02B0C7-14C2-4A7E-B1DB-E3DC8A4E5FB1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
