@@ -34,7 +34,7 @@ public class DataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> PostData([FromForm] ApiData data)
+    public async Task<IActionResult> PostData([FromForm] GatewayApiData data)
     {
         var ip = Request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
         if (string.IsNullOrWhiteSpace(ip))

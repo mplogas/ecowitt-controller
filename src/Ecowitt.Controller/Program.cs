@@ -60,18 +60,18 @@ public class Program
         {
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer();
-            smb.Produce<ApiData>(x => x.DefaultTopic("api-data"));
-            smb.Produce<SubdeviceData>(x => x.DefaultTopic("subdevice-data"));
-            smb.Produce<SubdeviceCommand>(x => x.DefaultTopic("subdevice-command"));
-            smb.Consume<ApiData>(x => x
+            smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
+            smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-data"));
+            smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
+            smb.Consume<GatewayApiData>(x => x
                 .Topic("api-data")
                 .WithConsumer<DataConsumer>()
             );
-            smb.Consume<SubdeviceData>(x => x
+            smb.Consume<SubdeviceApiAggregate>(x => x
                 .Topic("subdevice-data")
                 .WithConsumer<DataConsumer>()
             );
-            smb.Consume<SubdeviceCommand>(x => x
+            smb.Consume<SubdeviceApiCommand>(x => x
                 .Topic("subdevice-command")
                 .WithConsumer<CommandConsumer>()
             );

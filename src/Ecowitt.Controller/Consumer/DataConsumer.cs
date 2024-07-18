@@ -7,7 +7,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Consumer;
 
-public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
+public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
 {
     private readonly ILogger<DataConsumer> _logger;
     private readonly IDeviceStore _deviceStore;
@@ -20,7 +20,7 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
         _options = options.Value;
     }
 
-    public Task OnHandle(ApiData message)
+    public Task OnHandle(GatewayApiData message)
     {
         _logger.LogInformation($"Received ApiData: {message.PASSKEY}");
         var gw = message.Map();
@@ -30,7 +30,7 @@ public class DataConsumer : IConsumer<ApiData>, IConsumer<SubdeviceData>
         return Task.CompletedTask;
     }
 
-    public Task OnHandle(SubdeviceData message)
+    public Task OnHandle(SubdeviceApiAggregate message)
     {
         var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
         foreach (var ip in ips)

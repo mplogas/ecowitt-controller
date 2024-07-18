@@ -46,12 +46,13 @@ public class SubdeviceService : BackgroundService
     private async Task SubDevicePolling(CancellationToken cancellationToken, bool autoDiscovery = true)
     {
         _logger.LogInformation("Polling subdevices");
-        var subdevices = new SubdeviceData();
+        var subdevices = new SubdeviceApiAggregate();
 
         if (autoDiscovery)
         {
             // TODO: remove reference to _store and replace it with req/resp through smb
-            foreach (var gwKvp in _store.GetGatewaysShort().Where(kvp => !kvp.Value.StartsWith("GW1000A")))
+            // TODO: GWxx are Ecowitt models, what about Froggit etc?
+            foreach (var gwKvp in _store.GetGatewaysShort().Where(kvp => kvp.Value.StartsWith("GW12") || !kvp.Value.StartsWith("GW20")))
             {
                 subdevices.Subdevices.AddRange(await GetSubdeviceData(gwKvp.Key, cancellationToken));
             }
@@ -67,15 +68,15 @@ public class SubdeviceService : BackgroundService
         await _messageBus.Publish(subdevices, cancellationToken: cancellationToken);
     }
     
-    private async Task<List<Model.Subdevice>> GetSubdeviceData(string ipAddress, CancellationToken cancellationToken)
+    private async Task<List<SubdeviceApiData>> GetSubdeviceData(string ipAddress, CancellationToken cancellationToken)
     {
-        var subdevices = new List<Model.Subdevice>();
+        var subdevices = new List<SubdeviceApiData>();
         try
         {
             subdevices.AddRange(await GetSubdevicesOverview(ipAddress, cancellationToken));
             foreach (var subdevice in subdevices)
             {
-                var payload = await GetSubDevicePayload(ipAddress, subdevice.Id, (int)subdevice.Model, cancellationToken);
+                var payload = await GetSubDeviceApiPayload(ipAddress, subdevice.Id, subdevice.Model, cancellationToken);
                 subdevice.Payload = payload;
             }
         }
@@ -88,9 +89,9 @@ public class SubdeviceService : BackgroundService
         
     }
 
-    private async Task <List<Model.Subdevice>> GetSubdevicesOverview(string ipAddress, CancellationToken cancellationToken)
+    private async Task <List<SubdeviceApiData>> GetSubdevicesOverview(string ipAddress, CancellationToken cancellationToken)
     {
-        var subdevices = new List<Model.Subdevice>();
+        var subdevices = new List<SubdeviceApiData>();
         using var client = CreateHttpClient(ipAddress);
 
         try
@@ -99,16 +100,16 @@ public class SubdeviceService : BackgroundService
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                dynamic data = JsonConvert.DeserializeObject(content);
+                dynamic? data = JsonConvert.DeserializeObject(content);
                 if (data is not null && data.command is not null)
                 {
                     foreach (var device in data.command)
                     {
-                        var subdevice = new Model.Subdevice
+                        var subdevice = new SubdeviceApiData
                         {
                             Id = device.id,
                             Model = device.model,
-                            Ver = device.ver,
+                            Version = device.ver,
                             RfnetState = device.rfnet_state,
                             Battery = device.battery,
                             Signal = device.signal,
@@ -134,12 +135,12 @@ public class SubdeviceService : BackgroundService
         return subdevices;
     }
 
-    private async Task<string> GetSubDevicePayload(string ipAddress, int subdeviceId, int model, CancellationToken cancellationToken)
+    private async Task<string> GetSubDeviceApiPayload(string ipAddress, int subdeviceId, int model, CancellationToken cancellationToken)
     {
         using var client = CreateHttpClient(ipAddress);
         try
         {
-            var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model = model } } };
+            var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model } } };
             var sContent = new StringContent(JsonConvert.SerializeObject(payload));
             var response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
             if (response.IsSuccessStatusCode)

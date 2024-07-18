@@ -7,7 +7,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Consumer;
 
-public class CommandConsumer : IConsumer<SubdeviceCommand>
+public class CommandConsumer : IConsumer<SubdeviceApiCommand>
 {
     private readonly ILogger<CommandConsumer> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -22,7 +22,7 @@ public class CommandConsumer : IConsumer<SubdeviceCommand>
         _options = options.Value;
     }
 
-    public async Task OnHandle(SubdeviceCommand message)
+    public async Task OnHandle(SubdeviceApiCommand message)
     {
         _logger.LogInformation($"Received SubdeviceCommand: {message.Cmd} for device {message.Id}");
         

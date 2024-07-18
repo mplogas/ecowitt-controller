@@ -1,6 +1,6 @@
 ﻿namespace Ecowitt.Controller.Model;
 
-public class ApiData
+public class GatewayApiData
 {
     public string PASSKEY { get; set; }
     public string StationType { get; set; }

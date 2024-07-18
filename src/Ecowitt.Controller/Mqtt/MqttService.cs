@@ -62,7 +62,7 @@ public class MqttService : BackgroundService
     private async void OnMessageReceived(object sender, MqttMessageReceivedEventArgs e)
     {
         _logger.LogInformation("Received message on topic {Topic} with payload {Payload}", e.Topic, e.Payload);
-        var cmd = JsonConvert.DeserializeObject<SubdeviceCommand>(e.Payload);
+        var cmd = JsonConvert.DeserializeObject<SubdeviceApiCommand>(e.Payload);
         await _messageBus.Publish(cmd);
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace Ecowitt.Controller.Model;
 
-public class SubdeviceCommand
+public class SubdeviceApiCommand
 {
     public Command Cmd { get; set; }
     public int Id { get; set; }
