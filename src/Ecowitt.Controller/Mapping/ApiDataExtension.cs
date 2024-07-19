@@ -75,7 +75,6 @@ public static class ApiDataExtension
                             "A", device.ac_current, SensorClass.Sensor));
                         break;
                     case SubdeviceModel.WFC01:
-                        // {"model":1,"id":13398,"nickname":"WFC01-00003456","devicename":"MJULtW6rvT1I8dEKz3o2","version":113,"water_status":0,"warning":0,"always_on":0,"val_type":1,"val":15,"run_time":24,"wfc01batt":5,"rssi":4,"gw_rssi":-52,"timeutc":1721337849,"publish_time":1719251738,"water_action":4,"water_running":0,"plan_status":0,"water_total":"617.557","happen_water":"614.258","flow_velocity":"0.00","water_temp":"18.8"}
                         result.Sensors.Add(new Sensor<bool>("Water Status", SensorType.None, SensorState.Measurement,
                             "", device.water_status == 1, SensorClass.BinarySensor));
                         result.Sensors.Add(new Sensor<bool>("Water running Running", SensorType.None,
