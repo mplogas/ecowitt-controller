@@ -3,8 +3,10 @@ namespace Ecowitt.Controller.Model;
 public interface ISensor
 {
     public string Name { get;  }
-    public DeviceClass DeviceClass { get;  }
-    public StateClass StateClass { get;  }
+    public SensorType SensorType { get;  }
+    public SensorState SensorState { get;  }
+    public SensorClass SensorClass { get; }
+    public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get;  }
     public object Value { get; }
     public Type DataType { get; }
@@ -17,20 +19,22 @@ public interface ISensor<T> : ISensor
 
 public class Sensor<T> : ISensor<T>
 {
-    private readonly T _value;
-
-    public Sensor(string name, DeviceClass deviceClass, StateClass stateClass, string unitOfMeasurement, T value)
+    public Sensor(string name, SensorType sensorType, SensorState sensorState, string unitOfMeasurement, T value, SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
     {
         Name = name;
-        DeviceClass = deviceClass;
-        StateClass = stateClass;
+        SensorType = sensorType;
+        SensorState = sensorState;
+        SensorClass = sensorClass;
+        SensorCategory = sensorCategory;
         UnitOfMeasurement = unitOfMeasurement;
         Value = value;
     }
 
     public string Name { get; }
-    public DeviceClass DeviceClass { get; }
-    public StateClass StateClass { get; }
+    public SensorType SensorType { get; }
+    public SensorState SensorState { get; }
+    public SensorClass SensorClass { get; }
+    public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get; }
     public T Value { get; }
     
@@ -96,7 +100,7 @@ public class Sensor<T> : ISensor<T>
 ///    weight: Generic mass in kg, g, mg, µg, oz, lb, or st
 ///    wind_speed: Wind speed in Beaufort, ft/s, km/h, kn, m/s, or mph
 /// </summary>
-public enum DeviceClass
+public enum SensorType
 {
     None,
     ApparentPower,
@@ -160,9 +164,29 @@ public enum DeviceClass
 /// total: the state represents a total amount that can both increase and decrease, e.g. a net energy meter. When supported, the accumulated growth or decline of the sensor's value since it was first added is updated periodically.
 /// total_increasing: a monotonically increasing total, e.g. an amount of consumed gas, water or energy. When supported, the accumulated growth of the sensor's value since it was first added is updated periodically.
 /// </summary>
-public enum StateClass
+public enum SensorState
 {
     Measurement,
     TotalIncreasing,
     Total
-} 
+}
+
+public enum SensorClass
+{
+    Sensor,
+    BinarySensor
+}
+
+/// <summary>
+/// From: https://developers.home-assistant.io/docs/core/entity/#registry-properties
+/// Classification of a non-primary entity.
+/// Set to EntityCategory.CONFIG for an entity that allows changing the configuration of a device,
+/// for example, a switch entity, making it possible to turn the background illumination of a switch on and off.
+/// Set to EntityCategory.DIAGNOSTIC for an entity exposing some configuration parameter or diagnostics
+/// of a device but does not allow changing it, for example, a sensor showing RSSI or MAC address.
+/// </summary>
+public enum SensorCategory
+{
+    Config,
+    Diagnostic
+}

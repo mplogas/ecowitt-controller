@@ -4,7 +4,7 @@ namespace Ecowitt.Controller.Discovery;
 
 public static class DiscoveryBuilder
 {
-    public static Device BuildDevice(string name, string model, string manufacturer, string hwVersion, string swVersion, string viaDevice = null)
+    public static Device BuildDevice(string name, string model, string manufacturer, string hwVersion, string swVersion, string? viaDevice = null)
     {
         return new Device
         {

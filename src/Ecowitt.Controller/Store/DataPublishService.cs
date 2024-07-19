@@ -35,6 +35,7 @@ public class DataPublishService : BackgroundService
                 foreach (var gwKvp in _store.GetGatewaysShort())
                 {
                     var gw = _store.GetGateway(gwKvp.Key);
+                    if(gw == null) continue;
                     dynamic jsonPayload = new
                     {
                         ip = gw.IpAddress,
@@ -42,12 +43,19 @@ public class DataPublishService : BackgroundService
                         subdevices = gw.Subdevices.Select(sd => new
                         {
                             id = sd.Id,
-                            battery = sd.Battery,
-                            rfnetState = sd.RfnetState,
-                            signal = sd.Signal,
-                            ver = sd.Ver,
+                            model = sd.Model,
+                            devicename = sd.Devicename,
+                            nickname = sd.Nickname,
+                            availability = sd.Availability,
+                            ver = sd.Version,
                             timestampUtc = sd.TimestampUtc,
-                            payload = sd.Payload
+                            payload = sd.Sensors.Select(s => new
+                            {
+                                name = s.Name,
+                                value = s.Value,
+                                unit = s.UnitOfMeasurement,
+                                type = s.SensorType.ToString()
+                                }).ToArray()
                         })
                     };
                     if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{gw.Name}",
@@ -56,7 +64,7 @@ public class DataPublishService : BackgroundService
                         _logger.LogWarning($"Failed to publish {gw.IpAddress}. Is the client connected?");
                 }
 
-                _store.GetGatewaysShort();
+                //_store.GetGatewaysShort();
             }
         }
         catch (OperationCanceledException)

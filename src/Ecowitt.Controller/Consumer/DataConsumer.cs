@@ -51,21 +51,26 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
             var devices = message.Subdevices.Where(sd => sd.GwIp == ip);
             foreach (var device in devices)
             {
+                var subDevice = device.Map();
                 var gwDevice = gw.Subdevices.FirstOrDefault(gwsd => gwsd.Id == device.Id);
                 if (gwDevice != null)
                 {
-                    gwDevice.Battery = device.Battery;
-                    gwDevice.RfnetState = device.RfnetState;
-                    gwDevice.Signal = device.Signal;
-                    gwDevice.Ver = device.Ver;
                     gwDevice.TimestampUtc = device.TimestampUtc;
-                    gwDevice.Payload = device.Payload;
+                    gwDevice.Sensors.Clear();
+                    gwDevice.Sensors.AddRange(subDevice.Sensors);
+                    
+                    if(gwDevice.Availability != subDevice.Availability) gwDevice.Availability = subDevice.Availability;
+                    if(gwDevice.Version != subDevice.Version) gwDevice.Version = subDevice.Version;
+                    if(gwDevice.Devicename != subDevice.Devicename) gwDevice.Devicename = subDevice.Devicename;
+                    if(gwDevice.Nickname != subDevice.Nickname) gwDevice.Nickname = subDevice.Nickname;
+                    // no update of other properties
                 
                     _logger.LogInformation($"subdevice updated: {device.Id} ({device.Model})");
                 }
                 else
                 {
-                    gw.Subdevices.Add(device);
+                    
+                    gw.Subdevices.Add(subDevice);
                     _logger.LogInformation($"subdevice added: {device.Id} ({device.Model})");
                 }
             }
