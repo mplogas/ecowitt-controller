@@ -11,6 +11,7 @@ public class Subdevice
     public int Version { get; set; }
     public DateTime TimestampUtc { get; set; }
     public List<ISensor> Sensors { get; set; } = new List<ISensor>();
+    public bool DiscoveryUpdate { get; set; }
 }
 
 public enum SubdeviceModel

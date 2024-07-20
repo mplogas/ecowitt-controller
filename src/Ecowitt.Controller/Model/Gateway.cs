@@ -7,6 +7,7 @@ public class Gateway
     public string Name { get; set; }
     public DateTime TimestampUtc { get; set; }
     public List<Subdevice> Subdevices { get; set; } = new();
+    public bool DiscoveryUpdate { get; set; }
     
     // system properties
     public string? Model { get; set; } 

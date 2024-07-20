@@ -8,13 +8,14 @@ public interface ISensor
     public SensorClass SensorClass { get; }
     public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get;  }
-    public object Value { get; }
+    public object Value { get; set; }
     public Type DataType { get; }
+    public bool DiscoveryUpdate { get; set; }
 }
 
 public interface ISensor<T> : ISensor
 {
-    new T Value { get; }
+    new T Value { get; set; }
 }
 
 public class Sensor<T> : ISensor<T>
@@ -36,11 +37,16 @@ public class Sensor<T> : ISensor<T>
     public SensorClass SensorClass { get; }
     public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get; }
-    public T Value { get; }
+    public T Value { get; set;  }
     
-    object ISensor.Value => Value;
-    
+    object ISensor.Value
+    {
+        get => Value;
+        set => Value = (T)value;
+    }
+
     public Type DataType => typeof(T);
+    public bool DiscoveryUpdate { get; set; }
 }
 
 /// <summary>
