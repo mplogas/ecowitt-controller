@@ -1,4 +1,5 @@
 using Ecowitt.Controller.Configuration;
+using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -36,40 +37,87 @@ public class DataPublishService : BackgroundService
                 {
                     var gw = _store.GetGateway(gwKvp.Key);
                     if(gw == null) continue;
-                    dynamic jsonPayload = new
-                    {
-                        ip = gw.IpAddress,
-                        name = gw.Name,
-                        subdevices = gw.Subdevices.Select(sd => new
-                        {
-                            id = sd.Id,
-                            model = sd.Model,
-                            devicename = sd.Devicename,
-                            nickname = sd.Nickname,
-                            availability = sd.Availability,
-                            ver = sd.Version,
-                            timestampUtc = sd.TimestampUtc,
-                            payload = sd.Sensors.Select(s => new
-                            {
-                                name = s.Name,
-                                value = s.Value,
-                                unit = s.UnitOfMeasurement,
-                                type = s.SensorType.ToString()
-                                }).ToArray()
-                        })
-                    };
-                    if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{gw.Name}",
-                            JsonConvert.SerializeObject(jsonPayload, Formatting.None,
-                                new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore }))) 
-                        _logger.LogWarning($"Failed to publish {gw.IpAddress}. Is the client connected?");
-                }
+                    
+                    // to sent messages according to ideas outlines in mqtt.md the following approach could work
+                    // 1. send gateway state & hw_info to base/<gateway_id>/ as json payload
+                    // 2. send gateway sensors to base/<gateway_id>/sensors/<sensorid> as json payload
+                    // 3. send subdevice state & hw_info to base/<gateway_id>/<subdevice_id> as json payload
+                    // 4. send subdevice sensors to base/<gateway_id>/<subdevice_id>/sensors/<sensorid> as json payload
 
-                //_store.GetGatewaysShort();
+                    var payload = BuildGatewayPayload(gw);
+                    await PublishMessage(gw.Name, payload);
+
+                    payload = BuildSensorPayloads(gw.Sensors);
+                    foreach (var sensor in payload)
+                    {
+                        await PublishMessage($"{gw.Name}/sensors/{sensor.name}/{sensor.type}", sensor);
+                    }
+
+                    if (gw.Subdevices.Count == 0) continue;
+                    foreach (var subdevice in gw.Subdevices)
+                    {
+                        payload = BuildSubdevicePayload(subdevice);
+                        await PublishMessage($"{gw.Name}/{subdevice.Id}", payload);
+                        var sensorPayload = BuildSensorPayloads(subdevice.Sensors);
+                        foreach (var sensor in sensorPayload)
+                        {
+                            await PublishMessage($"{gw.Name}/{subdevice.Id}/sensors/{sensor.name}/{sensor.type}", sensor);
+                        }
+                    }
+                }
             }
         }
         catch (OperationCanceledException)
         {
             _logger.LogInformation("Stopping MqttService");
         }
+    }
+
+    private dynamic BuildSubdevicePayload(Model.Subdevice subdevice)
+    {
+        return new
+        {
+            id = subdevice.Id,
+            model = subdevice.Model,
+            devicename = subdevice.Devicename,
+            nickname = subdevice.Nickname,
+            state = subdevice.Availability ? "online" : "offline",
+            ver = subdevice.Version
+        };
+    }
+
+    private dynamic BuildSensorPayloads(List<ISensor> sensors)
+    {
+        
+        return sensors.Select(s => new
+        {
+            name = s.Name,
+            value = s.DataType == typeof(double) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+            unit = s.UnitOfMeasurement,
+            type = s.SensorType.ToString()
+        }).ToList();
+    }
+
+    private dynamic BuildGatewayPayload(Gateway gw)
+    {
+        return new
+        {
+            ip = gw.IpAddress,
+            name = gw.Name,
+            model = gw.Model,
+            passkey = gw.PASSKEY,
+            stationType = gw.StationType,
+            runtime = gw.Runtime,
+            state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < 60 ? "online" : "offline",
+            freq = gw.Freq
+        };
+    }
+
+    private async void PublishMessage(string topic, dynamic payload)
+    {
+        if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}",
+                JsonConvert.SerializeObject(payload, Formatting.None,
+                    new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore }))) 
+            _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
     }
 }
