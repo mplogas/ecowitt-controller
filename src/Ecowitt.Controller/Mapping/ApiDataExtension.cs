@@ -74,7 +74,7 @@ public static class ApiDataExtension
                         break;
                     case SubdeviceModel.WFC01:
                         result.Sensors.Add(new Sensor<bool>("Water Status", device.water_status == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Water running Running", device.water_running == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
+                        result.Sensors.Add(new Sensor<bool>("Water Running", device.water_running == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
                         result.Sensors.Add(new Sensor<bool>("Warning",
                             device.warning == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Always On",
