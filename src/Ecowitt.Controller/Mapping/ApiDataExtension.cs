@@ -24,7 +24,7 @@ public static class ApiDataExtension
         };
 
 
-        if (!string.IsNullOrWhiteSpace(subdeviceApiData.Payload))
+        if (!string.IsNullOrWhiteSpace(subdeviceApiData.Payload) && subdeviceApiData.Payload != "200 OK")
         {
             dynamic? json = JsonConvert.DeserializeObject(subdeviceApiData.Payload);
             if (json != null)
@@ -35,108 +35,98 @@ public static class ApiDataExtension
                 switch (result.Model)
                 {
                     case SubdeviceModel.AC1100:
-                        result.Sensors.Add(new Sensor<bool>("AC Status", SensorType.None, SensorState.Measurement, "",
-                            device.ac_status == 1, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("AC Running", SensorType.None, SensorState.Measurement, "",
-                            device.ac_running == 1, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Warning", SensorType.None, SensorState.Measurement, "",
-                            device.warning == 1, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<bool>("Always On", SensorType.None, SensorState.Measurement, "",
-                            device.always_on == 1, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("Val_Type", SensorType.None, SensorState.Measurement, "",
-                            device.val_type, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("Val", SensorType.None, SensorState.Measurement, "",
-                            device.val, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int>("runtime", SensorType.Timestamp, SensorState.Measurement, "",
-                            device.run_time, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int>("rssi", SensorType.SignalStrength, SensorState.Measurement,
-                            "", device.rssi, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("gw_rssi", SensorType.SignalStrength,
-                            SensorState.Measurement, "", device.gw_rssi, SensorClass.Sensor,
-                            SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("timeutc", SensorType.Timestamp, SensorState.Measurement, "",
-                            device.timeutc, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("publish_time", SensorType.Timestamp,
-                            SensorState.Measurement, "", device.publish_time, SensorClass.Sensor,
-                            SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("ac_action", SensorType.Enum, SensorState.Measurement, "",
-                            device.ac_action, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("plan_status", SensorType.None, SensorState.Measurement, "",
-                            device.plan_status, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("Total Consumption", SensorType.Power,
-                            SensorState.TotalIncreasing, "Wh", device.elect_total, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int>("Daily Consumption", SensorType.Power, SensorState.Total,
-                            "Wh", device.happen_elect, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int>("Realtime Consumption", SensorType.Power,
-                            SensorState.Measurement, "W", device.realtime_power, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int>("AC Voltage", SensorType.Voltage, SensorState.Measurement,
-                            "V", device.ac_voltage, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int>("AC Current", SensorType.Current, SensorState.Measurement,
-                            "A", device.ac_current, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<bool>("AC Status",
+                            device.ac_status == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
+                        result.Sensors.Add(new Sensor<bool>("AC Running",
+                            device.ac_running == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
+                        result.Sensors.Add(new Sensor<bool>("Warning",
+                            device.warning == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Always On",
+                            device.always_on == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Val_Type",
+                            (int?)device.val_type, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Val",
+                            (int?)device.val, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<int?>("runtime",
+                            (int?)device.run_time, "", SensorType.Timestamp, SensorState.Measurement, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<int?>("rssi", 
+                            (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("gw_rssi", 
+                            (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("timeutc",
+                            (int?)device.timeutc, "", SensorType.Timestamp, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("publish_time", 
+                            (int?)device.publish_time, "", SensorType.Timestamp, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ac_action",
+                            (int?)device.ac_action, "", SensorType.Enum, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("plan_status",
+                            (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Total Consumption", 
+                            (int?)device.elect_total, "Wh", SensorType.Power, SensorState.TotalIncreasing, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<int?>("Daily Consumption", 
+                            (int?)device.happen_elect, "Wh", SensorType.Power, SensorState.Total, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<int?>("Realtime Consumption", 
+                            (int?)device.realtime_power, "W", SensorType.Power, SensorState.Measurement, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<int?>("AC Voltage", 
+                            (int?)device.ac_voltage, "V", SensorType.Voltage, SensorState.Measurement, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<int?>("AC Current", 
+                            (int?)device.ac_current, "A", SensorType.Current, SensorState.Measurement, SensorClass.Sensor));
                         break;
                     case SubdeviceModel.WFC01:
-                        result.Sensors.Add(new Sensor<bool>("Water Status", SensorType.None, SensorState.Measurement,
-                            "", device.water_status == 1, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Water running Running", SensorType.None,
-                            SensorState.Measurement, "", device.water_running == 1, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Warning", SensorType.None, SensorState.Measurement, "",
-                            device.warning == 1, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<bool>("Always On", SensorType.None, SensorState.Measurement, "",
-                            device.always_on == 1, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("Val_Type", SensorType.None, SensorState.Measurement, "",
-                            device.val_type, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("Val", SensorType.None, SensorState.Measurement, "",
-                            device.val));
-                        result.Sensors.Add(new Sensor<int>("runtime", SensorType.Timestamp, SensorState.Measurement, "",
-                            device.run_time));
-                        result.Sensors.Add(new Sensor<int>("rssi", SensorType.SignalStrength, SensorState.Measurement,
-                            "", device.rssi, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("gw_rssi", SensorType.SignalStrength,
-                            SensorState.Measurement, "", device.gw_rssi, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("timeutc", SensorType.Timestamp, SensorState.Measurement, "",
-                            device.timeutc, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("publish_time", SensorType.Timestamp,
-                            SensorState.Measurement, "", device.publish_time,
-                            sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("water_action", SensorType.Enum, SensorState.Measurement, "",
-                            device.water_action, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("plan_status", SensorType.None, SensorState.Measurement, "",
-                            device.plan_status, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<double>("Total Consumption", SensorType.Volume,
-                            SensorState.TotalIncreasing, isMetric ? "L" : "gal",
-                            isMetric ? device.water_total : L2G(device.water_total)));
-                        result.Sensors.Add(new Sensor<double>("Current Consumption", SensorType.Volume,
-                            SensorState.Measurement, isMetric ? "L" : "gal",
-                            isMetric ? device.happen_water : L2G(device.happen_water)));
-                        result.Sensors.Add(new Sensor<double>("Flow Velocity", SensorType.VolumeFlowRate,
-                            SensorState.Measurement, isMetric ? "L/min" : "gal/min",
-                            isMetric ? device.flow_velocity : L2G(device.flow_velocity)));
-                        result.Sensors.Add(new Sensor<double>("Water Temperature", SensorType.Temperature,
-                            SensorState.Measurement, isMetric ? "°C" : "F",
-                            isMetric ? device.water_temp : C2F(device.water_temp)));
-                        result.Sensors.Add(new Sensor<int>("Battery", SensorType.Battery, SensorState.Measurement, "%",
-                            device.wfc01batt, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Water Status", device.water_status == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
+                        result.Sensors.Add(new Sensor<bool>("Water running Running", device.water_running == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
+                        result.Sensors.Add(new Sensor<bool>("Warning",
+                            device.warning == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Always On",
+                            device.always_on == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Val_Type",
+                            (int?)device.val_type, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Val",
+                            (int?)device.val, "", SensorType.None, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<int?>("runtime",
+                            (int?)device.run_time, "", SensorType.Timestamp, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<int?>("rssi", 
+                            (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("gw_rssi", 
+                            (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("timeutc",
+                            (int?)device.timeutc, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("publish_time", 
+                            (int?)device.publish_time, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("water_action",
+                            (int?)device.water_action, "", SensorType.Enum, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("plan_status",
+                            (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<double?>("Total Consumption",
+                            isMetric ? (double?)device.water_total : L2G(device.water_total), isMetric ? "L" : "gal", SensorType.Volume, SensorState.TotalIncreasing));
+                        result.Sensors.Add(new Sensor<double?>("Current Consumption",
+                            isMetric ? (double?)device.happen_water : L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<double?>("Flow Velocity",
+                            isMetric ? (double?)device.flow_velocity : L2G(device.flow_velocity), isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<double?>("Water Temperature",
+                            isMetric ? (double?)device.water_temp : C2F(device.water_temp), isMetric ? "°C" : "F", SensorType.Temperature, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<int?>("Battery",
+                            (int?)device.wfc01batt, "%", SensorType.Battery, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         break;
                     case SubdeviceModel.Unknown:
                     default:
                         //these things *likely* exists
-                        result.Sensors.Add(new Sensor<int>("Val_Type", SensorType.None, SensorState.Measurement, "",
-                            device.val_type, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("Val", SensorType.None, SensorState.Measurement, "",
-                            device.val));
-                        result.Sensors.Add(new Sensor<int>("runtime", SensorType.Timestamp, SensorState.Measurement, "",
-                            device.run_time));
-                        result.Sensors.Add(new Sensor<int>("rssi", SensorType.SignalStrength, SensorState.Measurement,
-                            "", device.rssi, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("gw_rssi", SensorType.SignalStrength,
-                            SensorState.Measurement, "", device.gw_rssi, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("timeutc", SensorType.Timestamp, SensorState.Measurement, "",
-                            device.timeutc, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("publish_time", SensorType.Timestamp,
-                            SensorState.Measurement, "", device.publish_time,
-                            sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int>("plan_status", SensorType.None, SensorState.Measurement, "",
-                            device.plan_status, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Val_Type",
+                            (int?)device.val_type, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Val",
+                            (int?)device.val, "", SensorType.None, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<int?>("runtime",
+                            (int?)device.run_time, "", SensorType.Timestamp, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<int?>("rssi", 
+                            (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("gw_rssi", 
+                            (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("timeutc",
+                            (int?)device.timeutc, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("publish_time", 
+                            (int?)device.publish_time, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("plan_status",
+                            (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         break;
                 }
             }
@@ -171,47 +161,44 @@ public static class ApiDataExtension
                 property.Name.EndsWith("f", StringComparison.InvariantCultureIgnoreCase))
             {
                 var value = (double?)property.GetValue(gatewayApiData);
-                var sensor = new Sensor<double?>(property.Name, SensorType.Temperature, SensorState.Measurement,
-                    isMetric ? "°C" : "F", isMetric ? F2C(value) : value);
+                var sensor = new Sensor<double?>(property.Name, isMetric ? F2C(value) : value, isMetric ? "°C" : "F", SensorType.Temperature, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Humi"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.Humidity, SensorState.Measurement, "%",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "%", SensorType.Humidity, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Barom"))
             {
                 var value = (double?)property.GetValue(gatewayApiData);
-                var sensor = new Sensor<double?>(property.Name, SensorType.Pressure, SensorState.Measurement,
-                    isMetric ? "hPa" : "inHg", isMetric ? I2M(value) : value);
+                var sensor = new Sensor<double?>(property.Name, isMetric ? I2M(value) : value, isMetric ? "hPa" : "inHg", SensorType.Pressure, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("WindDir"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.None, SensorState.Measurement, "°",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "°", SensorType.None, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if ((property.Name.StartsWith("Wind") && property.Name.EndsWith("Mph")) ||
                      property.Name.StartsWith("MaxDailyGust"))
             {
                 var value = (double?)property.GetValue(gatewayApiData);
-                var sensor = new Sensor<double?>(property.Name, SensorType.WindSpeed, SensorState.Measurement,
-                    isMetric ? "km/h" : "mph", isMetric ? M2K(value) : value);
+                var sensor = new Sensor<double?>(property.Name, isMetric ? M2K(value) : value, isMetric ? "km/h" : "mph", SensorType.WindSpeed, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("SolarRadiation"))
             {
-                var sensor = new Sensor<double?>(property.Name, SensorType.Illuminance, SensorState.Measurement, "W/m²",
-                    (double?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<double?>(property.Name,
+                    (double?)property.GetValue(gatewayApiData), "W/m²", SensorType.Illuminance, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Uv"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.None, SensorState.Measurement, "UV",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "UV", SensorType.None, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("RainRate") || property.Name.StartsWith("EventRain") ||
@@ -228,94 +215,92 @@ public static class ApiDataExtension
                          property.Name.StartsWith("YearlyRain"))
                     stateClass = SensorState.Total;
 
-                var sensor = new Sensor<double?>(property.Name, SensorType.Precipitation, stateClass,
-                    isMetric ? "mm" : "in", isMetric ? I2M(value) : value);
+                var sensor = new Sensor<double?>(property.Name, isMetric ? I2M(value) : value, isMetric ? "mm" : "in", SensorType.Precipitation, stateClass);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("SoilMoisture"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.Moisture, SensorState.Measurement, "%",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "%", SensorType.Moisture, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("SoilAd"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.None, SensorState.Measurement, "",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Pm25"))
             {
                 var stateClass = property.Name.EndsWith("Avg24h") ? SensorState.Total : SensorState.Measurement;
 
-                var sensor = new Sensor<double?>(property.Name, SensorType.Pm25, stateClass, "µg/m³",
-                    (double?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<double?>(property.Name,
+                    (double?)property.GetValue(gatewayApiData), "µg/m³", SensorType.Pm25, stateClass);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Pm10"))
             {
                 var stateClass = property.Name.EndsWith("Avg24h") ? SensorState.Total : SensorState.Measurement;
-                var sensor = new Sensor<double?>(property.Name, SensorType.Pm10, stateClass, "µg/m³",
-                    (double?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<double?>(property.Name,
+                    (double?)property.GetValue(gatewayApiData), "µg/m³", SensorType.Pm10, stateClass);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Pm1"))
             {
                 var stateClass = property.Name.EndsWith("Avg24h") ? SensorState.Total : SensorState.Measurement;
-                var sensor = new Sensor<double?>(property.Name, SensorType.Pm1, stateClass, "µg/m³",
-                    (double?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<double?>(property.Name,
+                    (double?)property.GetValue(gatewayApiData), "µg/m³", SensorType.Pm1, stateClass);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Co2"))
             {
                 var stateClass = property.Name.EndsWith("Avg24h") ? SensorState.Total : SensorState.Measurement;
-                var sensor = new Sensor<int?>(property.Name, SensorType.CarbonDioxide, stateClass, "ppm",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "ppm", SensorType.CarbonDioxide, stateClass);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("LightningNum"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.None, SensorState.Measurement, "",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Lightning"))
             {
-                var sensor = new Sensor<double?>(property.Name, SensorType.Distance, SensorState.Measurement,
-                    isMetric ? "km" : "miles",
+                var sensor = new Sensor<double?>(property.Name,
                     isMetric
                         ? M2K((double?)property.GetValue(gatewayApiData))
-                        : (double?)property.GetValue(gatewayApiData));
+                        : (double?)property.GetValue(gatewayApiData), isMetric ? "km" : "miles", SensorType.Distance, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("LightningTime"))
             {
-                var sensor = new Sensor<string?>(property.Name, SensorType.Timestamp, SensorState.Measurement, "",
-                    (string?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<string?>(property.Name,
+                    (string?)property.GetValue(gatewayApiData), "", SensorType.Timestamp, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Leak"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.None, SensorState.Measurement, "",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("Tf"))
             {
-                var sensor = new Sensor<double?>(property.Name, SensorType.None, SensorState.Measurement, "",
-                    (double?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<double?>(property.Name,
+                    (double?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.StartsWith("LeafWetness"))
             {
-                var sensor = new Sensor<int?>(property.Name, SensorType.Humidity, SensorState.Measurement, "%",
-                    (int?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<int?>(property.Name,
+                    (int?)property.GetValue(gatewayApiData), "%", SensorType.Humidity, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
             else if (property.Name.Contains("Batt", StringComparison.InvariantCultureIgnoreCase))
             {
-                var sensor = new Sensor<double?>(property.Name, SensorType.Battery, SensorState.Measurement, "%",
-                    (double?)property.GetValue(gatewayApiData));
+                var sensor = new Sensor<double?>(property.Name,
+                    (double?)property.GetValue(gatewayApiData), "%", SensorType.Battery, SensorState.Measurement);
                 result.Sensors.Add(sensor);
             }
 

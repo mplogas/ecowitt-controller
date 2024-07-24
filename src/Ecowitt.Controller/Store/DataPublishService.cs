@@ -44,7 +44,9 @@ public class DataPublishService : BackgroundService
                     // 3. send subdevice state & hw_info to base/<gateway_id>/<subdevice_id> as json payload
                     // 4. send subdevice sensors to base/<gateway_id>/<subdevice_id>/sensors/<sensorid> as json payload
 
-                    var payload = BuildGatewayPayload(gw);
+                    dynamic payload = BuildGatewayPayload(gw);
+                    var json = JsonConvert.SerializeObject(payload);
+                    
                     await PublishMessage(gw.Name, payload);
 
                     payload = BuildSensorPayloads(gw.Sensors);
@@ -57,11 +59,11 @@ public class DataPublishService : BackgroundService
                     foreach (var subdevice in gw.Subdevices)
                     {
                         payload = BuildSubdevicePayload(subdevice);
-                        await PublishMessage($"{gw.Name}/{subdevice.Id}", payload);
+                        await PublishMessage($"{gw.Name}/subdevices/{subdevice.Id}", payload);
                         var sensorPayload = BuildSensorPayloads(subdevice.Sensors);
                         foreach (var sensor in sensorPayload)
                         {
-                            await PublishMessage($"{gw.Name}/{subdevice.Id}/sensors/{sensor.name}/{sensor.type}", sensor);
+                            await PublishMessage($"{gw.Name}/subdevices/{subdevice.Id}/sensors/{sensor.name}/{sensor.type}", sensor);
                         }
                     }
                 }
@@ -88,7 +90,6 @@ public class DataPublishService : BackgroundService
 
     private dynamic BuildSensorPayloads(List<ISensor> sensors)
     {
-        
         return sensors.Select(s => new
         {
             name = s.Name,
@@ -100,24 +101,28 @@ public class DataPublishService : BackgroundService
 
     private dynamic BuildGatewayPayload(Gateway gw)
     {
-        return new
+        dynamic result = new
         {
             ip = gw.IpAddress,
-            name = gw.Name,
-            model = gw.Model,
-            passkey = gw.PASSKEY,
-            stationType = gw.StationType,
-            runtime = gw.Runtime,
-            state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < 60 ? "online" : "offline",
-            freq = gw.Freq
+            name = gw.Name
         };
+        
+        if(string.IsNullOrWhiteSpace(gw.Model)) return result;
+        
+        result.model = gw.Model;
+        result.passkey = gw.PASSKEY;
+        result.stationType = gw.StationType;
+        result.runtime = gw.Runtime;
+        result.state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < 60 ? "online" : "offline";
+        result.freq = gw.Freq;
+        
+        return result;
     }
 
-    private async void PublishMessage(string topic, dynamic payload)
+    private async Task PublishMessage(string topic, dynamic payload)
     {
         if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}",
-                JsonConvert.SerializeObject(payload, Formatting.None,
-                    new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore }))) 
+                JsonConvert.SerializeObject(payload))) 
             _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
     }
 }

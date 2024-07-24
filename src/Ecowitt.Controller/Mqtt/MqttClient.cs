@@ -93,7 +93,11 @@ public class MqttClient : IMqttClient
         if (_client.IsConnected)
         {
             var result = await _client.PublishAsync(mqttPayload);
-            if(result.IsSuccess) return true;
+            if (result.IsSuccess)
+            {
+                _logger.LogDebug($"Message {message} published to topic {topic}");
+                return true;
+            }
             else _logger.LogWarning($"Failed to publish message {message} to topic {topic}. Reason: {result.ReasonCode}");
         }
         else _logger.LogWarning($"Can't publish message {message} to topic {topic}. Client not connected.");

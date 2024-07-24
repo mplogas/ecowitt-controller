@@ -20,17 +20,6 @@ public interface ISensor<T> : ISensor
 
 public class Sensor<T> : ISensor<T>
 {
-    public Sensor(string name, SensorType sensorType, SensorState sensorState, string unitOfMeasurement, T value, SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
-    {
-        Name = name;
-        SensorType = sensorType;
-        SensorState = sensorState;
-        SensorClass = sensorClass;
-        SensorCategory = sensorCategory;
-        UnitOfMeasurement = unitOfMeasurement;
-        Value = value;
-    }
-
     public string Name { get; }
     public SensorType SensorType { get; }
     public SensorState SensorState { get; }
@@ -47,6 +36,18 @@ public class Sensor<T> : ISensor<T>
 
     public Type DataType => typeof(T);
     public bool DiscoveryUpdate { get; set; }
+    
+    public Sensor(string name, T value, string unitOfMeasurement, SensorType sensorType, SensorState sensorState,
+        SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
+    {
+        Name = name;
+        SensorType = sensorType;
+        SensorState = sensorState;
+        SensorClass = sensorClass;
+        SensorCategory = sensorCategory;
+        UnitOfMeasurement = unitOfMeasurement;
+        Value = value;
+    }
 }
 
 /// <summary>
