@@ -11,6 +11,16 @@ public class GatewayApiData
     public string? IpAddress { get; set; }
     public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
+    //PASSKEY, stationtype, runtime, dateutc, tempinf, humidityin, baromrelin, baromabsin, tf_co2, humi_co2, pm25_co2, pm25_24h_co2, pm10_co2, pm10_24h_co2, co2, co2_24h, co2_batt, freq, model
+    
+    // Request form keys: PASSKEY, stationtype, runtime, heap, dateutc, tempinf, humidityin, baromrelin, baromabsin, tempf, humidity, winddir, windspeedmph, windgustmph, maxdailygust, solarradiation,
+    // uv, rrain_piezo, erain_piezo, hrain_piezo, drain_piezo, wrain_piezo, mrain_piezo, yrain_piezo, ws90cap_volt, ws90_ver, soilmoisture1, soilad1, soilmoisture2, soilad2, soilmoisture3, soilad3, soilmoisture4,
+    // soilad4, soilmoisture5, soilad5, soilmoisture6, soilad6, soilmoisture7, soilad7, soilmoisture8, soilad8, lightning_num, lightning, lightning_time, soilbatt1, soilbatt2, soilbatt3, soilbatt4, soilbatt5, soilbatt6,
+    // soilbatt7, soilbatt8, wh57batt, wh90batt, freq, model, interval
+
+    public string Payload { get; set; } = string.Empty;
+
+
     public double? TempInf { get; set; }
     public int? HumidityIn { get; set; }
     public double? BaromRelIn { get; set; }
@@ -71,14 +81,14 @@ public class GatewayApiData
     public double? Pm25Avg24hCh3 { get; set; }
     public double? Pm25Ch4 { get; set; }
     public double? Pm25Avg24hCh4 { get; set; }
-    public double? TfCo2 { get; set; }
-    public int? HumiCo2 { get; set; }
-    public double? Pm25Co2 { get; set; }
-    public double? Pm2524hCo2 { get; set; }
-    public double? Pm10Co2 { get; set; }
-    public double? Pm1024hCo2 { get; set; }
+    public double? Tf_Co2 { get; set; }
+    public int? Humi_Co2 { get; set; }
+    public double? Pm25_Co2 { get; set; }
+    public double? Pm25_24h_Co2 { get; set; }
+    public double? Pm10_Co2 { get; set; }
+    public double? Pm10_24h_Co2 { get; set; }
     public int? Co2 { get; set; }
-    public int? Co224h { get; set; }
+    public int? Co2_24h { get; set; }
     public int? LightningNum { get; set; }
     public string? Lightning { get; set; } // Assuming this might be a string representation of lightning data
     public string? LightningTime { get; set; } // Assuming this might be a string representation of time
@@ -114,6 +124,6 @@ public class GatewayApiData
     public int? LeakBatt2 { get; set; }
     public double? TfBatt1 { get; set; }
     public double? TfBatt2 { get; set; }
-    public int? Co2Batt { get; set; }
+    public int? Co2_Batt { get; set; }
     public double? LeafBatt1 { get; set; }
 }

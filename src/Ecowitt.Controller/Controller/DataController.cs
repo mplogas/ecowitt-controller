@@ -1,5 +1,6 @@
 using Ecowitt.Controller.Model;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Controller;
@@ -29,6 +30,13 @@ public class DataController : ControllerBase
     //     return Ok();
     // }
 
+    [HttpGet("/data/report")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult Get()
+    {
+        return new JsonResult(new { status = "ok" });
+    }
+
     [HttpPost("/data/report")]
     [Consumes("application/x-www-form-urlencoded")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -42,11 +50,15 @@ public class DataController : ControllerBase
             _logger.LogWarning("Could not determine IP address of request.");
         }
         else
+
         {
             _logger.LogInformation($"Received data from IP {ip} ({data.StationType}).");
             data.IpAddress = ip;
         }
 
+        //write forms key/values into Payload property as json
+        data.Payload =
+            JsonConvert.SerializeObject(Request.Form.Select(kvp => new { name = kvp.Key, value = kvp.Value.ToString() }));
         _logger.LogDebug($"Request form keys: {string.Join(", ", Request.Form.Keys)}");
 
         await _messageBus.Publish(data);
