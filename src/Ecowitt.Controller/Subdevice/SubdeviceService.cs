@@ -45,14 +45,12 @@ public class SubdeviceService : BackgroundService
 
     private async Task SubDevicePolling(CancellationToken cancellationToken, bool autoDiscovery = true)
     {
-        _logger.LogInformation("Polling subdevices");
         var subdevices = new SubdeviceApiAggregate();
-
         if (autoDiscovery)
         {
             // TODO: remove reference to _store and replace it with req/resp through smb
             // TODO: GWxx are Ecowitt models, what about Froggit etc?
-            foreach (var gwKvp in _store.GetGatewaysShort().Where(kvp => kvp.Value.StartsWith("GW12") || !kvp.Value.StartsWith("GW20")))
+            foreach (var gwKvp in _store.GetGatewaysShort().Where(kvp => kvp.Value.StartsWith("GW12") || kvp.Value.StartsWith("GW20")))
             {
                 subdevices.Subdevices.AddRange(await GetSubdeviceData(gwKvp.Key, cancellationToken));
             }
@@ -65,11 +63,12 @@ public class SubdeviceService : BackgroundService
             }
         }
         
-        await _messageBus.Publish(subdevices, cancellationToken: cancellationToken);
+        if(subdevices.Subdevices.Count > 0) await _messageBus.Publish(subdevices, cancellationToken: cancellationToken);
     }
     
     private async Task<List<SubdeviceApiData>> GetSubdeviceData(string ipAddress, CancellationToken cancellationToken)
     {
+        _logger.LogInformation($"Polling subdevices from {ipAddress}");
         var subdevices = new List<SubdeviceApiData>();
         try
         {
@@ -78,6 +77,7 @@ public class SubdeviceService : BackgroundService
             {
                 var payload = await GetSubDeviceApiPayload(ipAddress, subdevice.Id, subdevice.Model, cancellationToken);
                 subdevice.Payload = payload;
+                await Task.Delay(350, cancellationToken); // delay to not overload the gateway
             }
         }
         catch (Exception e)

@@ -101,22 +101,26 @@ public class DataPublishService : BackgroundService
 
     private dynamic BuildGatewayPayload(Gateway gw)
     {
-        dynamic result = new
+        if (string.IsNullOrWhiteSpace(gw.Model))
+        {
+            return new
+            {
+                ip = gw.IpAddress,
+                name = gw.Name
+            };
+        }
+        
+        return new
         {
             ip = gw.IpAddress,
-            name = gw.Name
+            name = gw.Name,
+            model = gw.Model,
+            passkey = gw.PASSKEY,
+            stationType = gw.StationType,
+            runtime = gw.Runtime,
+            state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < 60 ? "online" : "offline",
+            freq = gw.Freq
         };
-        
-        if(string.IsNullOrWhiteSpace(gw.Model)) return result;
-        
-        result.model = gw.Model;
-        result.passkey = gw.PASSKEY;
-        result.stationType = gw.StationType;
-        result.runtime = gw.Runtime;
-        result.state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < 60 ? "online" : "offline";
-        result.freq = gw.Freq;
-        
-        return result;
     }
 
     private async Task PublishMessage(string topic, dynamic payload)

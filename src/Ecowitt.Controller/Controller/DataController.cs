@@ -47,7 +47,7 @@ public class DataController : ControllerBase
             data.IpAddress = ip;
         }
 
-        Request.Form.Keys.ToList().ForEach(k => _logger.LogDebug($"Form key: {k}"));
+        _logger.LogDebug($"Request form keys: {string.Join(", ", Request.Form.Keys)}");
 
         await _messageBus.Publish(data);
 
