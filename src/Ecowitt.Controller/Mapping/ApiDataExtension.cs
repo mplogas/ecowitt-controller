@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Xml.Linq;
 using Ecowitt.Controller.Model;
 using Newtonsoft.Json;
 using Serilog;
@@ -162,186 +163,226 @@ public static class ApiDataExtension
             dynamic? json = JsonConvert.DeserializeObject(gatewayApiData.Payload);
             if (json != null)
             {
-                Log.Debug($"gateway payload: {json}");
+                foreach (var item in json)
+                {
+                    if (item?.name == null || item?.value == null) continue;
+                    string propertyName = item.name.ToString();
+                    string propertyValue = item.value.ToString(); //this is always a string, thanks ecowitt!
+
+                    //filtering out keys we already set
+                    if (propertyName.Equals("PASSKEY", StringComparison.InvariantCultureIgnoreCase) ||
+                        propertyName.Equals("model", StringComparison.InvariantCultureIgnoreCase)
+                        || propertyName.Equals("stationtype", StringComparison.InvariantCultureIgnoreCase) ||
+                        propertyName.Equals("runtime", StringComparison.InvariantCultureIgnoreCase)
+                        || propertyName.Equals("freq", StringComparison.InvariantCultureIgnoreCase) ||
+                        propertyName.Equals("dateutc", StringComparison.InvariantCultureIgnoreCase)
+                        || propertyName.Equals("model", StringComparison.InvariantCultureIgnoreCase)) continue;
+
+                    if (propertyName.StartsWith("Temp", StringComparison.InvariantCultureIgnoreCase) &&
+                        propertyName.EndsWith("f", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, isMetric ? F2C(value) : value, isMetric ? "°C" : "F",
+                                SensorType.Temperature, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if (propertyName.StartsWith("Humi", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "%", SensorType.Humidity,
+                                SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if (propertyName.StartsWith("Barom", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, isMetric ? I2M(value) : value,
+                                isMetric ? "hPa" : "inHg", SensorType.Pressure, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if (propertyName.StartsWith("WindDir", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "°", SensorType.None, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if ((propertyName.StartsWith("Wind", StringComparison.InvariantCultureIgnoreCase) &&
+                              propertyName.EndsWith("Mph", StringComparison.InvariantCultureIgnoreCase)) ||
+                             propertyName.StartsWith("MaxDailyGust", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, isMetric ? M2K(value) : value,
+                                isMetric ? "km/h" : "mph", SensorType.WindSpeed, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if (propertyName.StartsWith("SolarRadiation", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, value, "W/m²", SensorType.Illuminance,
+                                SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if (propertyName.StartsWith("Uv", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "UV", SensorType.None, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    }
+                    else if (propertyName.Contains("rain", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var stateClass = SensorState.Measurement;
+                            if (propertyName.StartsWith("TotalRain", StringComparison.InvariantCultureIgnoreCase)) stateClass = SensorState.TotalIncreasing;
+                            else if (propertyName.StartsWith("HourlyRain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("DailyRain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("WeeklyRain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("MonthlyRain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("YearlyRain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("hrain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("drain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("wrain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("mrain", StringComparison.InvariantCultureIgnoreCase) ||
+                                     propertyName.StartsWith("yrain", StringComparison.InvariantCultureIgnoreCase))
+                                stateClass = SensorState.Total;
+
+                            var sensor = new Sensor<double?>(propertyName, isMetric ? I2M(value) : value, isMetric ? "mm" : "in", SensorType.Precipitation, stateClass);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("SoilMoisture", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "%", SensorType.Moisture, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("SoilAd", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "", SensorType.None, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Pm25", StringComparison.InvariantCultureIgnoreCase)) {
+                        var stateClass = propertyName.Contains("_24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
+
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, value, "µg/m³", SensorType.Pm25, stateClass);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Pm10", StringComparison.InvariantCultureIgnoreCase)) {
+                        var stateClass = propertyName.Contains("_24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
+
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, value, "µg/m³", SensorType.Pm10, stateClass);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Pm1", StringComparison.InvariantCultureIgnoreCase)) {
+                        var stateClass = propertyName.Contains("_24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
+
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, value, "µg/m³", SensorType.Pm1, stateClass);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Co2", StringComparison.InvariantCultureIgnoreCase)) {
+                        var stateClass = propertyName.Contains("_24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
+
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "ppm", SensorType.CarbonDioxide, stateClass);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Lightning_time", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        var sensor = new Sensor<string?>(propertyName, propertyValue, "", SensorType.Timestamp, SensorState.Measurement);
+                        result.Sensors.Add(sensor);
+                    } else if (propertyName.StartsWith("Lightning_num", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "", SensorType.None, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Lightning", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, isMetric ? M2K(value) : value, isMetric ? "km" : "miles", SensorType.Distance, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        } else {
+                            var sensor = new Sensor<string?>(propertyName, propertyValue, "km", SensorType.Distance, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Leak", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "", SensorType.None, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Tf", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (double.TryParse(propertyValue, out double value))
+                        {
+                            var sensor = new Sensor<double?>(propertyName, value, "", SensorType.None, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.StartsWith("Leaf_Wetness", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "%", SensorType.Humidity, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.Contains("Batt", StringComparison.InvariantCultureIgnoreCase) || propertyName.EndsWith("volt", StringComparison.InvariantCultureIgnoreCase)) {
+                        if (int.TryParse(propertyValue, out int intVal))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, intVal, "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            result.Sensors.Add(sensor);
+                        } else if (double.TryParse(propertyValue, out double doubleVal)) {
+                            var sensor = new Sensor<double?>(propertyName, doubleVal, "V", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            result.Sensors.Add(sensor);
+                        }
+                        else
+                        {
+                            var sensor = new Sensor<string?>(propertyName, propertyValue.ToString(), "", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else if (propertyName.Equals("heap", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            result.Sensors.Add(sensor);
+                        }
+                    }  else if (propertyName.Equals("interval", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (int.TryParse(propertyValue, out int value))
+                        {
+                            var sensor = new Sensor<int?>(propertyName, value, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            result.Sensors.Add(sensor);
+                        }
+                    } else {
+                        Log.Warning($"Unknown property {propertyName} found in GatewayApiData.");
+                    }
+                }
             }
         }
 
-                //var propertyInfo = typeof(GatewayApiData).GetProperties();
-                //foreach (var property in propertyInfo)
-                //{
-                //    var valueCheck = property.GetValue(gatewayApiData);
-                //    if (valueCheck == null) continue;
-
-                //    if (property.Name.StartsWith("Temp", StringComparison.InvariantCultureIgnoreCase) &&
-                //        property.Name.EndsWith("f", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var value = (double?)property.GetValue(gatewayApiData);
-                //        var sensor = new Sensor<double?>(property.Name, isMetric ? F2C(value) : value, isMetric ? "°C" : "F", SensorType.Temperature, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Humi", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "%", SensorType.Humidity, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Barom", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var value = (double?)property.GetValue(gatewayApiData);
-                //        var sensor = new Sensor<double?>(property.Name, isMetric ? I2M(value) : value, isMetric ? "hPa" : "inHg", SensorType.Pressure, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("WindDir", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "°", SensorType.None, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if ((property.Name.StartsWith("Wind", StringComparison.InvariantCultureIgnoreCase) && property.Name.EndsWith("Mph", StringComparison.InvariantCultureIgnoreCase)) ||
-                //             property.Name.StartsWith("MaxDailyGust", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var value = (double?)property.GetValue(gatewayApiData);
-                //        var sensor = new Sensor<double?>(property.Name, isMetric ? M2K(value) : value, isMetric ? "km/h" : "mph", SensorType.WindSpeed, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("SolarRadiation", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<double?>(property.Name,
-                //            (double?)property.GetValue(gatewayApiData), "W/m²", SensorType.Illuminance, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Uv", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "UV", SensorType.None, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.Contains("rain", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var value = (double?)property.GetValue(gatewayApiData);
-                //        var stateClass = SensorState.Measurement;
-                //        if (property.Name.StartsWith("TotalRain", StringComparison.InvariantCultureIgnoreCase))
-                //            stateClass = SensorState.TotalIncreasing;
-                //        else if (property.Name.StartsWith("HourlyRain", StringComparison.InvariantCultureIgnoreCase) || property.Name.StartsWith("DailyRain", StringComparison.InvariantCultureIgnoreCase) ||
-                //                 property.Name.StartsWith("WeeklyRain", StringComparison.InvariantCultureIgnoreCase) || property.Name.StartsWith("MonthlyRain", StringComparison.InvariantCultureIgnoreCase) ||
-                //                 property.Name.StartsWith("YearlyRain", StringComparison.InvariantCultureIgnoreCase))
-                //            stateClass = SensorState.Total;
-
-                //        var sensor = new Sensor<double?>(property.Name, isMetric ? I2M(value) : value, isMetric ? "mm" : "in", SensorType.Precipitation, stateClass);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("SoilMoisture", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "%", SensorType.Moisture, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("SoilAd", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Pm25", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var stateClass = property.Name.EndsWith("Avg24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
-
-                //        var sensor = new Sensor<double?>(property.Name,
-                //            (double?)property.GetValue(gatewayApiData), "µg/m³", SensorType.Pm25, stateClass);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Pm10", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var stateClass = property.Name.EndsWith("Avg24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
-                //        var sensor = new Sensor<double?>(property.Name,
-                //            (double?)property.GetValue(gatewayApiData), "µg/m³", SensorType.Pm10, stateClass);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Pm1"))
-                //    {
-                //        var stateClass = property.Name.EndsWith("Avg24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
-                //        var sensor = new Sensor<double?>(property.Name,
-                //            (double?)property.GetValue(gatewayApiData), "µg/m³", SensorType.Pm1, stateClass);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Co2", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var stateClass = property.Name.EndsWith("Avg24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "ppm", SensorType.CarbonDioxide, stateClass);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("LightningNum", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Lightning", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        if(double.TryParse((string?)property.GetValue(gatewayApiData), out var value))
-                //        {
-                //            var sensor = new Sensor<double?>(property.Name, isMetric ? M2K(value) : value, isMetric ? "km" : "miles", SensorType.Distance, SensorState.Measurement);
-                //            result.Sensors.Add(sensor);
-                //        }
-                //        else
-                //        {
-                //            var sensor = new Sensor<string?>(property.Name, (string?)property.GetValue(gatewayApiData), "km", SensorType.Distance, SensorState.Measurement);
-                //            result.Sensors.Add(sensor);
-                //        }
-
-                //    }
-                //    else if (property.Name.StartsWith("LightningTime", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<string?>(property.Name,
-                //            (string?)property.GetValue(gatewayApiData), "", SensorType.Timestamp, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Leak", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("Tf", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<double?>(property.Name,
-                //            (double?)property.GetValue(gatewayApiData), "", SensorType.None, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.StartsWith("LeafWetness", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        var sensor = new Sensor<int?>(property.Name,
-                //            (int?)property.GetValue(gatewayApiData), "%", SensorType.Humidity, SensorState.Measurement);
-                //        result.Sensors.Add(sensor);
-                //    }
-                //    else if (property.Name.Contains("Batt", StringComparison.InvariantCultureIgnoreCase))
-                //    {
-                //        if(property.PropertyType == typeof(int?))
-                //        {
-                //            var sensor = new Sensor<int?>(property.Name,
-                //                (int?)property.GetValue(gatewayApiData), "%", SensorType.Battery, SensorState.Measurement);
-                //            result.Sensors.Add(sensor);
-                //        } else if (property.PropertyType == typeof(double?))
-                //        {
-                //            var sensor = new Sensor<double?>(property.Name,
-                //                (double?)property.GetValue(gatewayApiData), "V", SensorType.Voltage, SensorState.Measurement);
-                //            result.Sensors.Add(sensor);
-                //        }
-                //        else
-                //        {
-                //            var sensor = new Sensor<string?>(property.Name,
-                //                (string?)property.GetValue(gatewayApiData), "", SensorType.Battery, SensorState.Measurement);
-                //            result.Sensors.Add(sensor);
-                //        }
-                //    }
-                //    else
-                //    {
-                //       Log.Warning($"Unknown property {property.Name} in GatewayApiData.");
-                //    }
-                //}
-
-                return result;
+        return result;
     }
 
     private static double? F2C(double? fahrenheit)
