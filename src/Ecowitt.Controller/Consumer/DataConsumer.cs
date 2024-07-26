@@ -11,20 +11,22 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
 {
     private readonly ILogger<DataConsumer> _logger;
     private readonly IDeviceStore _deviceStore;
-    private readonly EcowittOptions _options;
+    private readonly EcowittOptions _ecowittOptions;
+    private readonly ControllerOptions _controllerOptions;
 
-    public DataConsumer(ILogger<DataConsumer> logger, IDeviceStore deviceStore, IOptions<EcowittOptions> options)
+    public DataConsumer(ILogger<DataConsumer> logger, IDeviceStore deviceStore, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions)
     {
         _logger = logger;
         _deviceStore = deviceStore;
-        _options = options.Value;
+        _ecowittOptions = ecowittOptions.Value;
+        _controllerOptions = controllerOptions.Value;
     }
 
     public Task OnHandle(GatewayApiData message)
     {
         _logger.LogInformation($"Received ApiData: {message.PASSKEY}");
-        var updatedGateway = message.Map();
-        updatedGateway.Name = _options.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.','-');
+        var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric);
+        updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.','-');
 
         var storedGateway = _deviceStore.GetGateway(updatedGateway.IpAddress);
         if(storedGateway == null)
@@ -70,20 +72,20 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
             var gw = _deviceStore.GetGateway(ip);
             if (gw == null)
             {
-                if (_options.AutoDiscovery)
+                if (_ecowittOptions.AutoDiscovery)
                 {
                     _logger.LogWarning($"Gateway {ip} not found while in autodiscovery mode. Not updating subdevices. (Try turning off autodiscovery)");
                     return Task.CompletedTask;
                 }
                 
                 gw = new Gateway {IpAddress = ip};
-                gw.Name = _options.Gateways.FirstOrDefault(g => g.Ip == gw.IpAddress)?.Name ?? gw.IpAddress.Replace('.','-');
+                gw.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == gw.IpAddress)?.Name ?? gw.IpAddress.Replace('.','-');
             }
 
             var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);
             foreach (var data in subdeviceApiData)
             {
-                var updatedSubDevice = data.Map();
+                var updatedSubDevice = data.Map(_controllerOptions.Units == Units.Metric);
                 var storedSubDevice = gw.Subdevices.FirstOrDefault(gwsd => gwsd.Id == updatedSubDevice.Id);
                 if (storedSubDevice != null)
                 {

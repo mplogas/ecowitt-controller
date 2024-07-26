@@ -2,6 +2,7 @@ using System.Net;
 using System.Reflection;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Consumer;
+using Ecowitt.Controller.Discovery;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Store;
@@ -84,6 +85,7 @@ public class Program
         builder.Services.AddHostedService<MqttService>();
         builder.Services.AddHostedService<SubdeviceService>();
         builder.Services.AddHostedService<DataPublishService>();
+        builder.Services.AddHostedService<DiscoveryPublishService>();
 
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();

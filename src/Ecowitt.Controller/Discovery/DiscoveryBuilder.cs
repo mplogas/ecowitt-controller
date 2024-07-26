@@ -8,6 +8,7 @@ public static class DiscoveryBuilder
     {
         return new Device
         {
+            Identifiers = [name],
             Name = name,
             Model = model,
             Manufacturer = manufacturer,
