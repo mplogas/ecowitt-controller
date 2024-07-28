@@ -79,17 +79,18 @@ public class DiscoveryPublishService : BackgroundService
         }
     }
 
-
+    
 
     private async Task PublishGatewayDiscovery(Gateway gw)
     {
-        var device = DiscoveryBuilder.BuildDevice(gw.Name, gw.Model ?? "unknown", "Ecowitt", gw.StationType??"unknown", gw.Runtime.ToString()??"unknown");
-        var availability = DiscoveryBuilder.BuildAvailability($"{_mqttOptions.BaseTopic}/{gw.Name}", "online", "offline", "{{value.state}}");
+        var device = gw.Model == null ? DiscoveryBuilder.BuildDevice(gw.Name) : DiscoveryBuilder.BuildDevice(gw.Name, gw.Model, "Ecowitt", gw.StationType, gw.Runtime.ToString());
+        var origin = DiscoveryBuilder.BuildOrigin();
 
         var id = $"ecowitt-controller_{gw.Name}_availability_state";
-        var topic = $"{_mqttOptions.BaseTopic}/{gw.Name}";
+        var statetopic = $"{_mqttOptions.BaseTopic}/{gw.Name}";
+        var availabilityTopic = $"{_mqttOptions.BaseTopic}/{gw.Name}/availability";
 
-        var config = DiscoveryBuilder.BuildConfig(device, _origin, "Availability", id, id, topic, string.Empty, string.Empty, null, null, null, new List<Availability> { availability });
+        var config = DiscoveryBuilder.BuildConfig(device, _origin, "Availability", id, statetopic, availabilityTopic);
 
         await PublishMessage($"sensor/{gw.Name}", config);
 
@@ -111,8 +112,7 @@ public class DiscoveryPublishService : BackgroundService
 
     private async Task PublishMessage(string topic, Config config)
     {
-        if (!await _mqttClient.Publish($"homeassistant/{topic}/config",
-                JsonConvert.SerializeObject(config)))
+        if (!await _mqttClient.Publish($"homeassistant/{topic}/config", JsonConvert.SerializeObject(config, new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore})))
             _logger.LogWarning($"Failed to publish message to topic homeassistant/{topic}/config. Is the client connected?");
     }
 }

@@ -16,7 +16,7 @@ public static class DiscoveryBuilder
         {
             Identifiers = [name],
             Name = name,
-            Via_Device = viaDevice
+            ViaDevice = viaDevice
         };
     }
 
@@ -38,9 +38,9 @@ public static class DiscoveryBuilder
             Name = name,
             Model = model,
             Manufacturer = manufacturer,
-            Hw_Version = hwVersion,
-            Sw_Version = swVersion,
-            Via_Device = viaDevice
+            HwVersion = hwVersion,
+            SwVersion = swVersion,
+            ViaDevice = viaDevice
         };
     }
 
@@ -88,9 +88,9 @@ public static class DiscoveryBuilder
         return new Availability
         {
             Topic = topic,
-            Payload_Available = payloadAvailable,
-            Payload_Not_Available = payloadNotAvailable,
-            Value_Template = valueTemplate
+            PayloadAvailable = payloadAvailable,
+            PayloadUnavailable = payloadNotAvailable,
+            ValueTemplate = valueTemplate
         };
     }
 
@@ -113,10 +113,10 @@ public static class DiscoveryBuilder
             Device = device,
             Origin = origin,
             Name = name,
-            Unique_Id = uniqueId,
-            Object_Id = uniqueId,
-            State_Topic = stateTopic,
-            Availability_Topic = availabilityTopic,
+            UniqueId = uniqueId,
+            ObjectId = uniqueId,
+            StateTopic = stateTopic,
+            AvailabilityTopic = availabilityTopic,
             Retain = retain,
             Qos = qos
         };
@@ -142,11 +142,11 @@ public static class DiscoveryBuilder
             Device = device,
             Origin = origin,
             Name = name,
-            Unique_Id = uniqueId,
-            Object_Id = uniqueId,
-            State_Topic = stateTopic,
+            UniqueId = uniqueId,
+            ObjectId = uniqueId,
+            StateTopic = stateTopic,
             Availability = availability,
-            Availability_Mode = availabilityMode,  
+            AvailabilityMode = availabilityMode,  
             Retain = retain,
             Qos = qos
         };
@@ -174,12 +174,12 @@ public static class DiscoveryBuilder
             Device = device,
             Origin = origin,
             Name = name,
-            Unique_Id = uniqueId,
-            Object_Id = uniqueId,
-            State_Topic = stateTopic,
-            Availability_Topic = availabilityTopic,
-            Value_Template = valueTemplate,
-            Unit_Of_Measurement = unitOfMeasurement,
+            UniqueId = uniqueId,
+            ObjectId = uniqueId,
+            StateTopic = stateTopic,
+            AvailabilityTopic = availabilityTopic,
+            ValueTemplate = valueTemplate,
+            UnitOfMeasurement = unitOfMeasurement,
             Icon = icon,
             Retain = retain,
             Qos = qos
@@ -207,11 +207,11 @@ public static class DiscoveryBuilder
             Device = device,
             Origin = origin,
             Name = name,
-            Unique_Id = uniqueId,
-            Object_Id = uniqueId,
-            State_Topic = stateTopic,
-            Availability_Topic = availabilityTopic,
-            Command_Topic = commandTopic,
+            UniqueId = uniqueId,
+            ObjectId = uniqueId,
+            StateTopic = stateTopic,
+            AvailabilityTopic = availabilityTopic,
+            CommandTopic = commandTopic,
             Icon = icon,
             Retain = retain,
             Qos = qos
