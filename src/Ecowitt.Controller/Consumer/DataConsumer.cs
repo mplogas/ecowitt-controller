@@ -69,8 +69,8 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
         var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
         foreach (var ip in ips)
         {
-            var gw = _deviceStore.GetGateway(ip);
-            if (gw == null)
+            var storedGateway = _deviceStore.GetGateway(ip);
+            if (storedGateway == null)
             {
                 if (_ecowittOptions.AutoDiscovery)
                 {
@@ -78,17 +78,22 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
                     return Task.CompletedTask;
                 }
                 
-                gw = new Gateway {IpAddress = ip};
-                gw.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == gw.IpAddress)?.Name ?? gw.IpAddress.Replace('.','-');
+                storedGateway = new Gateway {IpAddress = ip};
+                storedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == storedGateway.IpAddress)?.Name ?? storedGateway.IpAddress.Replace('.','-');
+                storedGateway.DiscoveryUpdate = true;
             }
 
             var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);
             foreach (var data in subdeviceApiData)
             {
                 var updatedSubDevice = data.Map(_controllerOptions.Units == Units.Metric);
-                var storedSubDevice = gw.Subdevices.FirstOrDefault(gwsd => gwsd.Id == updatedSubDevice.Id);
-                if (storedSubDevice != null)
+                var storedSubDevice = storedGateway.Subdevices.FirstOrDefault(gwsd => gwsd.Id == updatedSubDevice.Id);
+                if (storedSubDevice == null)
                 {
+                    updatedSubDevice.DiscoveryUpdate = true;
+                    storedGateway.Subdevices.Add(updatedSubDevice);
+                    _logger.LogInformation($"subdevice added: {data.Id} ({data.Model})");
+                } else {
                     storedSubDevice.TimestampUtc = updatedSubDevice.TimestampUtc;
                     storedSubDevice.Availability = updatedSubDevice.Availability;
 
@@ -126,14 +131,9 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
                 
                     _logger.LogInformation($"subdevice updated: {data.Id} ({data.Model})");
                 }
-                else
-                {
-                    gw.Subdevices.Add(updatedSubDevice);
-                    _logger.LogInformation($"subdevice added: {data.Id} ({data.Model})");
-                }
             }
             
-            _deviceStore.UpsertGateway(gw);
+            _deviceStore.UpsertGateway(storedGateway);
         }
         
         return Task.CompletedTask;

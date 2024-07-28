@@ -48,26 +48,26 @@ public class DataPublishService : BackgroundService
                     dynamic payload = BuildGatewayPayload(gw);
                     var json = JsonConvert.SerializeObject(payload);
                     
-                    await PublishMessage(gw.Name, payload);
-                    await PublishAvailabilityMessage($"{gw.Name}", gw.TimestampUtc);
+                    await PublishMessage(Helper.BuildMqttGatewayTopic(gw.Name), payload);
+                    await PublishAvailabilityMessage(Helper.BuildMqttGatewayTopic(gw.Name), gw.TimestampUtc);
 
                     payload = BuildSensorPayloads(gw.Sensors);
                     foreach (var sensor in payload)
                     {
-                        await PublishMessage($"{gw.Name}/sensors/{sensor.name}/{sensor.type}", sensor);
+                        await PublishMessage(Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.name, sensor.type), sensor);
                     }
 
                     if (gw.Subdevices.Count == 0) continue;
                     foreach (var subdevice in gw.Subdevices)
                     {
                         payload = BuildSubdevicePayload(subdevice);
-                        await PublishMessage($"{gw.Name}/subdevices/{subdevice.Id}", payload);
-                        await PublishAvailabilityMessage($"{gw.Name}/subdevices/{subdevice.Id}", subdevice.TimestampUtc);
+                        await PublishMessage(Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString()), payload);
+                        await PublishAvailabilityMessage(Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString()), subdevice.TimestampUtc);
 
                         var sensorPayload = BuildSensorPayloads(subdevice.Sensors);
                         foreach (var sensor in sensorPayload)
                         {
-                            await PublishMessage($"{gw.Name}/subdevices/{subdevice.Id}/sensors/{sensor.name}/{sensor.type}", sensor);
+                            await PublishMessage(Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.name, sensor.type), sensor);
                         }
                     }
                 }
@@ -136,7 +136,7 @@ public class DataPublishService : BackgroundService
 
     private async Task PublishAvailabilityMessage(string topic, DateTime timestamp)
     {
-        var available = DateTime.UtcNow.Subtract(new TimeSpan(0,2,0)) < timestamp ? "offline" : "online";
+        var available = DateTime.UtcNow.Subtract(timestamp) < TimeSpan.FromSeconds(300) ? "online" : "offline";
 
         if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}/availability", available))
             _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");

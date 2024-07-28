@@ -27,8 +27,7 @@ public class DiscoveryPublishService : BackgroundService
         _controllerOptions = controllerOption.Value;
         _store = deviceStore;
         _mqttClient = mqttClient;
-        _origin = new Origin()
-            { Name = "Ecowitt Controller", Sw = "0.1", Url = @"https://github.com/mplogas/ecowitt-controller" };
+        _origin = DiscoveryBuilder.BuildOrigin();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -79,16 +78,14 @@ public class DiscoveryPublishService : BackgroundService
         }
     }
 
-    
+
 
     private async Task PublishGatewayDiscovery(Gateway gw)
     {
-        var device = gw.Model == null ? DiscoveryBuilder.BuildDevice(gw.Name) : DiscoveryBuilder.BuildDevice(gw.Name, gw.Model, "Ecowitt", gw.StationType, gw.Runtime.ToString());
-        var origin = DiscoveryBuilder.BuildOrigin();
-
-        var id = $"ecowitt-controller_{gw.Name}_availability_state";
-        var statetopic = $"{_mqttOptions.BaseTopic}/{gw.Name}";
-        var availabilityTopic = $"{_mqttOptions.BaseTopic}/{gw.Name}/availability";
+        var device = gw.Model == null ? DiscoveryBuilder.BuildDevice(gw.Name) : DiscoveryBuilder.BuildDevice(gw.Name, gw.Model, "Ecowitt", gw.Model, gw.StationType??"unknown");
+        var id = DiscoveryBuilder.BuildIdentifier(gw.Name, "availability");
+        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}";
+        var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}/availability";
 
         var config = DiscoveryBuilder.BuildConfig(device, _origin, "Availability", id, statetopic, availabilityTopic);
 
@@ -97,17 +94,25 @@ public class DiscoveryPublishService : BackgroundService
     }
     private async Task PublishSubdeviceDiscovery(Gateway gw, Ecowitt.Controller.Model.Subdevice subdevice)
     {
-        throw new NotImplementedException();
+        var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt", subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
+        var id = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, "availability");
+        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}";
+        var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}/availability";
+
+        var config = DiscoveryBuilder.BuildConfig(device, _origin, "Availability", id, statetopic, availabilityTopic);
+
+        await PublishMessage($"sensor/{subdevice.Id}", config);
     }
 
-    private async Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
+    private Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
-    private async Task PublishSensorDiscovery(Ecowitt.Controller.Model.Subdevice subdevice, ISensor sensor)
+    private Task PublishSensorDiscovery(Ecowitt.Controller.Model.Subdevice subdevice, ISensor sensor)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
+
     }
 
     private async Task PublishMessage(string topic, Config config)

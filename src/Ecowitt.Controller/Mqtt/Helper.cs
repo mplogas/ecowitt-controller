@@ -4,27 +4,23 @@ namespace Ecowitt.Controller.Mqtt;
 
 public static class Helper
 {
-    public static string BuildMqttTopic(string baseTopic, string action, string clientId)
+    public static string BuildMqttGatewayTopic(string gwName)
     {
-        var sb = new StringBuilder();
-        if (!string.IsNullOrWhiteSpace(baseTopic))
-        {
-            sb.Append(baseTopic);
-            if (!baseTopic.EndsWith('/')) sb.Append('/');
-        }
+        return gwName;
+    }
 
-        if (!string.IsNullOrWhiteSpace(action))
-        {
-            sb.Append(action);
-            if (!action.EndsWith('/')) sb.Append('/');
+    public static string BuildMqttGatewaySensorTopic(string gwName, string sensorName, string sensorType)
+    {
+        return $"{gwName}/sensors/{sensorName}/{sensorType}";
+    }
 
-            if (!string.IsNullOrWhiteSpace(clientId))
-                sb.Append(clientId);
-            //TODO: remove before prod :D
-            else
-                sb.Append("scale-01");
-        }
+    public static string BuildMqttSubdeviceTopic(string gwName, string subdeviceName)
+    {
+        return $"{gwName}/subdevices/{subdeviceName}";
+    }
 
-        return sb.ToString();
+    public static string BuildMqttSubdeviceSensorTopic(string gwName, string subdeviceName, string sensorName, string sensorType)
+    {
+        return $"{gwName}/subdevices/{subdeviceName}/sensors/{sensorName}/{sensorType}";
     }
 }

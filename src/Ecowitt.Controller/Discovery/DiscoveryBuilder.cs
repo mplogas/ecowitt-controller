@@ -14,7 +14,7 @@ public static class DiscoveryBuilder
     {
         return new Device
         {
-            Identifiers = [name],
+            Identifiers = [BuildIdentifier(name)],
             Name = name,
             ViaDevice = viaDevice
         };
@@ -34,7 +34,7 @@ public static class DiscoveryBuilder
     {
         return new Device
         {
-            Identifiers = [ $"ec_{model}_{name}"],
+            Identifiers = [ BuildIdentifier(name)],
             Name = name,
             Model = model,
             Manufacturer = manufacturer,
@@ -216,5 +216,10 @@ public static class DiscoveryBuilder
             Retain = retain,
             Qos = qos
         };
+    }
+
+    public static string BuildIdentifier(string name, string type = "config")
+    {
+        return $"ec_{name}_{type}";
     }
 }
