@@ -2,6 +2,7 @@ using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 
 namespace Ecowitt.Controller.Store;
@@ -48,6 +49,7 @@ public class DataPublishService : BackgroundService
                     var json = JsonConvert.SerializeObject(payload);
                     
                     await PublishMessage(gw.Name, payload);
+                    await PublishAvailabilityMessage($"{gw.Name}", gw.TimestampUtc);
 
                     payload = BuildSensorPayloads(gw.Sensors);
                     foreach (var sensor in payload)
@@ -60,6 +62,8 @@ public class DataPublishService : BackgroundService
                     {
                         payload = BuildSubdevicePayload(subdevice);
                         await PublishMessage($"{gw.Name}/subdevices/{subdevice.Id}", payload);
+                        await PublishAvailabilityMessage($"{gw.Name}/subdevices/{subdevice.Id}", subdevice.TimestampUtc);
+
                         var sensorPayload = BuildSensorPayloads(subdevice.Sensors);
                         foreach (var sensor in sensorPayload)
                         {
@@ -127,6 +131,14 @@ public class DataPublishService : BackgroundService
     {
         if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}",
                 JsonConvert.SerializeObject(payload))) 
+            _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
+    }
+
+    private async Task PublishAvailabilityMessage(string topic, DateTime timestamp)
+    {
+        var available = DateTime.UtcNow.Subtract(new TimeSpan(0,2,0)) < timestamp ? "offline" : "online";
+
+        if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}/availability", available))
             _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
     }
 }
