@@ -108,8 +108,8 @@ This project is developed using C# and .NET 8, utilizing ASP.NET Core Web API to
 - **Polling Background Service**: Periodically retrieves updates from subdevices.   
 - **[SlimMessageBus](https://github.com/zarusz/SlimMessageBus)**: An in-memory message bus that integrates all components for efficient communication.`
 ## Contributing
-We welcome contributions from the community! Please read our [CONTRIBUTING.md](https://oai.azure.com/portal/4b29ef036c1d4f3cbcb407bd0e6fe5a2/CONTRIBUTING.md) file for guidelines on how to get involved.
+We welcome contributions from the community! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to get involved.
 ## License
-This project is licensed under the MIT License. See the [LICENSE](https://oai.azure.com/portal/4b29ef036c1d4f3cbcb407bd0e6fe5a2/LICENSE) file for more details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 ## Contact
 For any questions or feedback, please open an issue on GitHub.  
