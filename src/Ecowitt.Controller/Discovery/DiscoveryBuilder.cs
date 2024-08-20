@@ -1,4 +1,5 @@
 using Ecowitt.Controller.Discovery.Model;
+using Ecowitt.Controller.Model;
 
 namespace Ecowitt.Controller.Discovery;
 
@@ -106,7 +107,7 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string availabilityTopic, bool? retain = false, int? qos = 1)
+    public static Config BuildGatewayConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string availabilityTopic, bool? retain = false, int? qos = 1)
     {
         return new Config
         {
@@ -135,7 +136,7 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, List<Availability> availability, AvailabilityMode availabilityMode = AvailabilityMode.All, bool? retain = false, int? qos = 1)
+    public static Config BuildSubdeviceConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, List<Availability> availability, AvailabilityMode availabilityMode = AvailabilityMode.All, bool? retain = false, int? qos = 1)
     {
         return new Config
         {
@@ -167,9 +168,9 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string availabilityTopic, string valueTemplate, string? unitOfMeasurement, string? icon, bool? retain = false, int? qos = 1)
+    public static Config BuildSensorConfig(Device device, Origin origin, string name, string uniqueId, string sensor_category,string stateTopic, string valueTemplate, string? unitOfMeasurement = "", string? icon = "", bool? retain = false, int? qos = 1)
     {
-        return new Config
+        var result = new Config
         {
             Device = device,
             Origin = origin,
@@ -177,17 +178,20 @@ public static class DiscoveryBuilder
             UniqueId = uniqueId,
             ObjectId = uniqueId,
             StateTopic = stateTopic,
-            AvailabilityTopic = availabilityTopic,
+            DeviceClass = sensor_category,
             ValueTemplate = valueTemplate,
-            UnitOfMeasurement = unitOfMeasurement,
-            Icon = icon,
             Retain = retain,
             Qos = qos
         };
+
+        if (!string.IsNullOrWhiteSpace(unitOfMeasurement)) result.UnitOfMeasurement = unitOfMeasurement;
+        if (!string.IsNullOrWhiteSpace(icon)) result.Icon = icon;
+
+        return result;
     }
 
     /// <summary>
-    /// Build config discovery object for a switch/toggle
+    /// Build config discovery object for a switch/toggle (actor)
     /// </summary>
     /// <param name="device"></param>
     /// <param name="origin"></param>
@@ -200,9 +204,9 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string availabilityTopic, string commandTopic, string? icon, bool? retain = false, int? qos = 1)
+    public static Config BuildActorConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string availabilityTopic, string commandTopic, string? icon = "", bool? retain = false, int? qos = 1)
     {
-        return new Config
+        var result = new Config
         {
             Device = device,
             Origin = origin,
@@ -212,14 +216,78 @@ public static class DiscoveryBuilder
             StateTopic = stateTopic,
             AvailabilityTopic = availabilityTopic,
             CommandTopic = commandTopic,
-            Icon = icon,
             Retain = retain,
             Qos = qos
         };
+
+        if (!string.IsNullOrWhiteSpace(icon))
+        {
+            result.Icon = icon;
+        }
+        return result;
     }
 
     public static string BuildIdentifier(string name, string type = "config")
     {
         return $"ec_{name}_{type}";
+    }
+
+    public static string BuildDeviceCategory(SensorType sensorType)
+    {
+        return sensorType switch
+        {
+            SensorType.ApparentPower => "apparent_power",
+            SensorType.Battery => "battery",
+            SensorType.Aqi => "aqi",
+            SensorType.AtmosphericPressure => "atmospheric_pressure",
+            SensorType.CarbonDioxide => "carbon_dioxide",
+            SensorType.CarbonMonoxide => "carbon_monoxide",
+            SensorType.Current => "current",
+            SensorType.DataRate => "data_rate",
+            SensorType.DataSize => "data_size",
+            SensorType.Date => "date",
+            SensorType.Distance => "distance",
+            SensorType.Duration => "duration",
+            SensorType.Energy => "energy",
+            SensorType.EnergyStorage => "energy_storage",
+            SensorType.Enum => "enum",
+            SensorType.Frequency => "frequency",
+            SensorType.Gas => "gas",
+            SensorType.Humidity => "humidity",
+            SensorType.Illuminance => "illuminance",
+            SensorType.Irradiance => "irradiance",
+            SensorType.Moisture => "moisture",
+            SensorType.Monetary => "monetary",
+            SensorType.NitrogenDioxide => "nitrogen_dioxide",
+            SensorType.NitrogenMonoxide => "nitrogen_monoxide",
+            SensorType.NitrousOxide => "nitrous_oxide",
+            SensorType.Ozone => "ozone",
+            SensorType.Ph => "ph",
+            SensorType.Pm1 => "pm1",
+            SensorType.Pm25 => "pm25",
+            SensorType.Pm10 => "pm10",
+            SensorType.PowerFactor => "power_factor",
+            SensorType.Power => "power",
+            SensorType.Precipitation => "precipitation",
+            SensorType.PrecipitationIntensity => "precipitation_intensity",
+            SensorType.Pressure => "pressure",
+            SensorType.ReactivePower => "reactive_power",
+            SensorType.SignalStrength => "signal_strength",
+            SensorType.SoundPressure => "sound_pressure",
+            SensorType.Speed => "speed",
+            SensorType.SulphurDioxide => "sulphur_dioxide",
+            SensorType.Temperature => "temperature",
+            SensorType.Timestamp => "timestamp",
+            SensorType.VolatileOrganicCompounds => "volatile_organic_compounds",
+            SensorType.VolatileOrganicCompoundsParts => "volatile_organic_compounds_parts",
+            SensorType.Voltage => "voltage",
+            SensorType.Volume => "volume",
+            SensorType.VolumeFlowRate => "volume_flow_rate",
+            SensorType.VolumeStorage => "volume_storage",
+            SensorType.Water => "water",
+            SensorType.Weight => "weight",
+            SensorType.WindSpeed => "wind_speed",
+            _ => "none"
+        };  
     }
 }

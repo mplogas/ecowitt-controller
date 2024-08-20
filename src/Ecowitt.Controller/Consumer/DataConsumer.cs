@@ -28,10 +28,16 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
         var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric);
         updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.','-');
 
+        // TODO: der erste storedgateway check schreibt schon sensoren, so dass das discoveryupdate flag nie auf true gesetzt wird
+
         var storedGateway = _deviceStore.GetGateway(updatedGateway.IpAddress);
         if(storedGateway == null)
         {
             updatedGateway.DiscoveryUpdate = true;
+            foreach (var sensor in updatedGateway.Sensors)
+            {
+                sensor.DiscoveryUpdate = true;
+            }
             if(!_deviceStore.UpsertGateway(updatedGateway)) _logger.LogWarning($"failed to add gateway {updatedGateway.IpAddress} ({updatedGateway.Model}) to the store");
         }
         else

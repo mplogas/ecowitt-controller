@@ -49,11 +49,13 @@ public class DiscoveryPublishService : BackgroundService
                 {
                     if (gw.DiscoveryUpdate)
                     {
+                        gw.DiscoveryUpdate = false;
                         await PublishGatewayDiscovery(gw);
                     }
 
                     foreach (var sensor in gw.Sensors.Where(sensor => sensor.DiscoveryUpdate))
                     {
+                        sensor.DiscoveryUpdate = false;
                         await PublishSensorDiscovery(gw, sensor);
                     }
 
@@ -61,12 +63,14 @@ public class DiscoveryPublishService : BackgroundService
                     {
                         if (subdevice.DiscoveryUpdate)
                         {
+                            subdevice.DiscoveryUpdate = false;
                             await PublishSubdeviceDiscovery(gw, subdevice);
                         }
 
                         foreach (var sensor in subdevice.Sensors.Where(sensor => sensor.DiscoveryUpdate))
                         {
-                            await PublishSensorDiscovery(subdevice, sensor);
+                            sensor.DiscoveryUpdate = false;
+                            await PublishSensorDiscovery(gw, subdevice, sensor);
                         }
                     }
                 }
@@ -84,10 +88,10 @@ public class DiscoveryPublishService : BackgroundService
     {
         var device = gw.Model == null ? DiscoveryBuilder.BuildDevice(gw.Name) : DiscoveryBuilder.BuildDevice(gw.Name, gw.Model, "Ecowitt", gw.Model, gw.StationType??"unknown");
         var id = DiscoveryBuilder.BuildIdentifier(gw.Name, "availability");
-        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}";
+        //var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}";
         var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}/availability";
 
-        var config = DiscoveryBuilder.BuildConfig(device, _origin, "Availability", id, statetopic, availabilityTopic);
+        var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
         await PublishMessage($"sensor/{gw.Name}", config);
 
@@ -96,28 +100,51 @@ public class DiscoveryPublishService : BackgroundService
     {
         var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt", subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
         var id = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, "availability");
-        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}";
+        //var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}";
         var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}/availability";
 
-        var config = DiscoveryBuilder.BuildConfig(device, _origin, "Availability", id, statetopic, availabilityTopic);
+        var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
         await PublishMessage($"sensor/{subdevice.Id}", config);
     }
 
-    private Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
+    private async Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
     {
-        return Task.CompletedTask;
+        var device = gw.Model == null ? DiscoveryBuilder.BuildDevice(gw.Name) : DiscoveryBuilder.BuildDevice(gw.Name, gw.Model, "Ecowitt", gw.Model, gw.StationType ?? "unknown");
+        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.Name, sensor.SensorType.ToString())}";
+        var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}/availability";
+        await PublishSensorDiscovery(device, sensor, statetopic, availabilityTopic);
     }
 
-    private Task PublishSensorDiscovery(Ecowitt.Controller.Model.Subdevice subdevice, ISensor sensor)
+    private async Task PublishSensorDiscovery(Gateway gw, Ecowitt.Controller.Model.Subdevice subdevice, ISensor sensor)
     {
-        return Task.CompletedTask;
-
+        var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt", subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
+        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.Name, sensor.SensorType.ToString())}";
+        var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}/availability";
+        await PublishSensorDiscovery(device, sensor, statetopic, availabilityTopic);
     }
 
+    private async Task PublishSensorDiscovery(Device device, ISensor sensor, string statetopic, string availabilityTopic)
+    {
+        var id = DiscoveryBuilder.BuildIdentifier($"{device.Name}_{sensor.Name}", sensor.SensorType.ToString());
+
+        var category = DiscoveryBuilder.BuildDeviceCategory(sensor.SensorType);
+
+        var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Name, id, category, statetopic, "{{value_json.value}}", sensor.UnitOfMeasurement, string.Empty);
+
+        await PublishMessage($"{sensor.SensorClass.ToString().ToLower()}/{sensor.Name}", config);
+    }
+    
     private async Task PublishMessage(string topic, Config config)
     {
-        if (!await _mqttClient.Publish($"homeassistant/{topic}/config", JsonConvert.SerializeObject(config, new JsonSerializerSettings {NullValueHandling = NullValueHandling.Ignore})))
-            _logger.LogWarning($"Failed to publish message to topic homeassistant/{topic}/config. Is the client connected?");
+        topic = $"homeassistant/{topic}/config";
+        var payload = JsonConvert.SerializeObject(config,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+        _logger.LogDebug($"Topic: {topic}");
+        _logger.LogDebug($"Payload: {payload}");
+
+        if (!await _mqttClient.Publish(topic, payload))
+            _logger.LogWarning($"Failed to publish message to topic {topic}. Is the client connected?");
     }
 }

@@ -6,6 +6,8 @@ public class Config
 {
     [JsonProperty("device")]
     public Device Device { get; set; }
+    [JsonProperty("device_class")]
+    public string? DeviceClass { get; set; }
     [JsonProperty("origin")]
     public Origin Origin { get; set; }  
     [JsonProperty("name")]
