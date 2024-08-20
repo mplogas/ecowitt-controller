@@ -44,6 +44,7 @@ public class DataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> PostData([FromForm] GatewayApiData data)
     {
+        data.TimestampUtc = DateTime.UtcNow;
         var ip = Request.HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString();
         if (string.IsNullOrWhiteSpace(ip))
         {
@@ -55,6 +56,7 @@ public class DataController : ControllerBase
             _logger.LogInformation($"Received data from IP {ip} ({data.StationType}).");
             data.IpAddress = ip;
         }
+
 
         //write forms key/values into Payload property as json
         data.Payload =
