@@ -61,7 +61,19 @@ For a more detailed configuration, including MQTT credentials and polling interv
   "ecowitt": {
     "pollingInterval": 30, //seconds
     "autodiscovery": true,
-    "retries": 2
+    "retries": 2,
+    "gateways": [
+      {
+        "name": "weatherstation_01",
+        "ip": "192.168.1.101"
+      },
+      {
+        "name": "weatherstation_02",
+        "ip": "192.168.1.102",
+        "username": "",
+        "password": ""
+      }
+    ]
   },
   "controller": {
     "precision": 2, //math.round to x digits
