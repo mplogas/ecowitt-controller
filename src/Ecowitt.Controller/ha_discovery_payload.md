@@ -27,6 +27,34 @@ payload:
 }
 ```
 
+``` json
+{
+  "Device": {
+    "Identifiers": [
+      "ec_GW2000A_192-168-103-162"
+    ],
+    "Manufacturer": "Ecowitt",
+    "Model": "GW2000A",
+    "Name": "192-168-103-162",
+    "Hw_Version": "GW2000A_V3.1.3",
+    "Sw_Version": "5844040"
+  },
+  "Origin": {
+    "Name": "Ecowitt Controller",
+    "Sw": "0.1",
+    "Url": "https://github.com/mplogas/ecowitt-controller"
+  },
+  "Name": "Availability",
+  "Retain": false,
+  "Qos": 1,
+  "Availability_Topic": "ecowitt-dev/192-168-103-162/availability",
+  "State_Topic": "ecowitt-dev/192-168-103-162",
+  "Unique_Id": "ecowitt-controller_192-168-103-162_availability_state",
+  "Object_Id": "ecowitt-controller_192-168-103-162_availability_state"
+}
+```
+
+
 ### setting up a sensor for the gateway
 topic `homeassistant/sensor/gw2000/uv/config`
 

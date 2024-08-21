@@ -1,0 +1,234 @@
+[
+  {
+    "name": "PASSKEY",
+    "value": [ "FD80AD4AFE5555333E729C1BDD35AA05" ]
+  },
+  {
+    "name": "stationtype",
+    "value": [ "GW2000A_V3.1.3" ]
+  },
+  {
+    "name": "runtime",
+    "value": [ "5614702" ]
+  },
+  {
+    "name": "heap",
+    "value": [ "100496" ]
+  },
+  {
+    "name": "dateutc",
+    "value": [ "2024-07-25 21:31:54" ]
+  },
+  {
+    "name": "tempinf",
+    "value": [ "69.44" ]
+  },
+  {
+    "name": "humidityin",
+    "value": [ "65" ]
+  },
+  {
+    "name": "baromrelin",
+    "value": [ "29.781" ]
+  },
+  {
+    "name": "baromabsin",
+    "value": [ "29.781" ]
+  },
+  {
+    "name": "tempf",
+    "value": [ "56.66" ]
+  },
+  {
+    "name": "humidity",
+    "value": [ "83" ]
+  },
+  {
+    "name": "winddir",
+    "value": [ "89" ]
+  },
+  {
+    "name": "windspeedmph",
+    "value": [ "0.00" ]
+  },
+  {
+    "name": "windgustmph",
+    "value": [ "1.34" ]
+  },
+  {
+    "name": "maxdailygust",
+    "value": [ "9.62" ]
+  },
+  {
+    "name": "solarradiation",
+    "value": [ "0.00" ]
+  },
+  {
+    "name": "uv",
+    "value": [ "0" ]
+  },
+  {
+    "name": "rrain_piezo",
+    "value": [ "0.000" ]
+  },
+  {
+    "name": "erain_piezo",
+    "value": [ "0.000" ]
+  },
+  {
+    "name": "hrain_piezo",
+    "value": [ "0.000" ]
+  },
+  {
+    "name": "drain_piezo",
+    "value": [ "0.000" ]
+  },
+  {
+    "name": "wrain_piezo",
+    "value": [ "0.508" ]
+  },
+  {
+    "name": "mrain_piezo",
+    "value": [ "2.768" ]
+  },
+  {
+    "name": "yrain_piezo",
+    "value": [ "8.953" ]
+  },
+  {
+    "name": "ws90cap_volt",
+    "value": [ "5.0" ]
+  },
+  {
+    "name": "ws90_ver",
+    "value": [ "138" ]
+  },
+  {
+    "name": "soilmoisture1",
+    "value": [ "32" ]
+  },
+  {
+    "name": "soilad1",
+    "value": [ "195" ]
+  },
+  {
+    "name": "soilmoisture2",
+    "value": [ "36" ]
+  },
+  {
+    "name": "soilad2",
+    "value": [ "207" ]
+  },
+  {
+    "name": "soilmoisture3",
+    "value": [ "53" ]
+  },
+  {
+    "name": "soilad3",
+    "value": [ "273" ]
+  },
+  {
+    "name": "soilmoisture4",
+    "value": [ "23" ]
+  },
+  {
+    "name": "soilad4",
+    "value": [ "158" ]
+  },
+  {
+    "name": "soilmoisture5",
+    "value": [ "38" ]
+  },
+  {
+    "name": "soilad5",
+    "value": [ "214" ]
+  },
+  {
+    "name": "soilmoisture6",
+    "value": [ "23" ]
+  },
+  {
+    "name": "soilad6",
+    "value": [ "156" ]
+  },
+  {
+    "name": "soilmoisture7",
+    "value": [ "55" ]
+  },
+  {
+    "name": "soilad7",
+    "value": [ "275" ]
+  },
+  {
+    "name": "soilmoisture8",
+    "value": [ "8" ]
+  },
+  {
+    "name": "soilad8",
+    "value": [ "100" ]
+  },
+  {
+    "name": "lightning_num",
+    "value": [ "0" ]
+  },
+  {
+    "name": "lightning",
+    "value": [ "20" ]
+  },
+  {
+    "name": "lightning_time",
+    "value": [ "1721784084" ]
+  },
+  {
+    "name": "soilbatt1",
+    "value": [ "1.4" ]
+  },
+  {
+    "name": "soilbatt2",
+    "value": [ "1.5" ]
+  },
+  {
+    "name": "soilbatt3",
+    "value": [ "1.5" ]
+  },
+  {
+    "name": "soilbatt4",
+    "value": [ "1.5" ]
+  },
+  {
+    "name": "soilbatt5",
+    "value": [ "1.4" ]
+  },
+  {
+    "name": "soilbatt6",
+    "value": [ "1.4" ]
+  },
+  {
+    "name": "soilbatt7",
+    "value": [ "1.5" ]
+  },
+  {
+    "name": "soilbatt8",
+    "value": [ "1.5" ]
+  },
+  {
+    "name": "wh57batt",
+    "value": [ "3" ]
+  },
+  {
+    "name": "wh90batt",
+    "value": [ "3.00" ]
+  },
+  {
+    "name": "freq",
+    "value": [ "868M" ]
+  },
+  {
+    "name": "model",
+    "value": [ "GW2000A" ]
+  },
+  {
+    "name": "interval",
+    "value": [ "30" ]
+  }
+]

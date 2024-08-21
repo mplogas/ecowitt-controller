@@ -9,7 +9,7 @@ services:
       - 8883:8883
     volumes:
       - type: bind
-        source: /home/marc/Testwiese/container-mounts/mosquitto
+        source: H:\docker\mosquitto
         target: /mosquitto/
   homeassistant-dev:
     container_name: homeassistant-dev
@@ -21,7 +21,7 @@ services:
       - 8123:8123
     volumes:
       - type: bind
-        source: /home/marc/Testwiese/container-mounts/homeassistant
+        source: H:\docker\homeassistant
         target: /config
       - type: bind
         source: /etc/localtime

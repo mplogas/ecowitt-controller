@@ -105,7 +105,7 @@ public class DiscoveryPublishService : BackgroundService
 
         var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-        await PublishMessage($"sensor/{subdevice.Id}", config);
+        await PublishMessage($"sensor/{subdevice.Nickname}", config);
     }
 
     private async Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
@@ -132,7 +132,7 @@ public class DiscoveryPublishService : BackgroundService
 
         var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Name, id, category, statetopic, "{{value_json.value}}", sensor.UnitOfMeasurement, string.Empty);
 
-        await PublishMessage($"{sensor.SensorClass.ToString().ToLower()}/{sensor.Name}", config);
+        await PublishMessage($"{sensor.SensorClass.ToString().ToLower()}/{device.Name}_{sensor.Name}", config);
     }
     
     private async Task PublishMessage(string topic, Config config)
