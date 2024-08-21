@@ -38,12 +38,14 @@ public class DataPublishService : BackgroundService
                 {
                     var gw = _store.GetGateway(gwKvp.Key);
                     if(gw == null) continue;
-                    
+
                     // to sent messages according to ideas outlines in mqtt.md the following approach could work
                     // 1. send gateway state & hw_info to base/<gateway_id>/ as json payload
                     // 2. send gateway sensors to base/<gateway_id>/sensors/<sensorid> as json payload
                     // 3. send subdevice state & hw_info to base/<gateway_id>/<subdevice_id> as json payload
                     // 4. send subdevice sensors to base/<gateway_id>/<subdevice_id>/sensors/<sensorid> as json payload
+
+                    // note: HA Discovery seems to break for mqtt topics with spaces in them
 
                     dynamic payload = BuildGatewayPayload(gw);
                     var json = JsonConvert.SerializeObject(payload);

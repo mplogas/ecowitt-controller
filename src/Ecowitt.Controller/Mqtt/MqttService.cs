@@ -53,13 +53,15 @@ public class MqttService : BackgroundService
         _mqttClient.Dispose();
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await _mqttClient.Disconnect();
-        _logger.LogInformation("Disconnected");
-    }
+    //public async Task StopAsync(CancellationToken cancellationToken)
+    //{
+    //    await _mqttClient.Disconnect();
+    //    _logger.LogInformation("Disconnected");
 
-    private async void OnMessageReceived(object sender, MqttMessageReceivedEventArgs e)
+    //    await base.StopAsync(cancellationToken);
+    //}
+
+    private async void OnMessageReceived(object? sender, MqttMessageReceivedEventArgs e)
     {
         _logger.LogInformation("Received message on topic {Topic} with payload {Payload}", e.Topic, e.Payload);
         var cmd = JsonConvert.DeserializeObject<SubdeviceApiCommand>(e.Payload);

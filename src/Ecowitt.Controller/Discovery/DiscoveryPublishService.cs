@@ -67,7 +67,7 @@ public class DiscoveryPublishService : BackgroundService
                             await PublishSubdeviceDiscovery(gw, subdevice);
                         }
 
-                        foreach (var sensor in subdevice.Sensors.Where(sensor => sensor.DiscoveryUpdate))
+                        foreach (var sensor in subdevice.Sensors.Where(s => s.DiscoveryUpdate))
                         {
                             sensor.DiscoveryUpdate = false;
                             await PublishSensorDiscovery(gw, subdevice, sensor);
@@ -93,7 +93,7 @@ public class DiscoveryPublishService : BackgroundService
 
         var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-        await PublishMessage($"sensor/{gw.Name}", config);
+        await PublishMessage(Helper.Sanitize($"sensor/{gw.Name}"), config);
 
     }
     private async Task PublishSubdeviceDiscovery(Gateway gw, Ecowitt.Controller.Model.Subdevice subdevice)
@@ -105,7 +105,7 @@ public class DiscoveryPublishService : BackgroundService
 
         var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-        await PublishMessage($"sensor/{subdevice.Nickname}", config);
+        await PublishMessage(Helper.Sanitize($"sensor/{subdevice.Nickname}"), config);
     }
 
     private async Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
@@ -130,9 +130,9 @@ public class DiscoveryPublishService : BackgroundService
 
         var category = DiscoveryBuilder.BuildDeviceCategory(sensor.SensorType);
 
-        var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Name, id, category, statetopic, "{{value_json.value}}", sensor.UnitOfMeasurement, string.Empty);
+        var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Name, id, category, statetopic, "{{ value_json.value }}", sensor.UnitOfMeasurement, string.Empty);
 
-        await PublishMessage($"{sensor.SensorClass.ToString().ToLower()}/{device.Name}_{sensor.Name}", config);
+        await PublishMessage(Helper.Sanitize($"{sensor.SensorClass.ToString()}/{device.Name}_{sensor.Name}"), config);
     }
     
     private async Task PublishMessage(string topic, Config config)
