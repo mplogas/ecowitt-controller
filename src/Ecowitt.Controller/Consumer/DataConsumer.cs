@@ -97,8 +97,14 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
                 if (storedSubDevice == null)
                 {
                     updatedSubDevice.DiscoveryUpdate = true;
+                    foreach (var sensor in updatedSubDevice.Sensors)
+                    {
+                        sensor.DiscoveryUpdate = true;
+                    }
                     storedGateway.Subdevices.Add(updatedSubDevice);
                     _logger.LogInformation($"subdevice added: {data.Id} ({data.Model})");
+
+
                 } else {
                     storedSubDevice.TimestampUtc = updatedSubDevice.TimestampUtc;
                     storedSubDevice.Availability = updatedSubDevice.Availability;
