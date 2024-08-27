@@ -189,7 +189,7 @@ public static class ApiDataExtension
                     {
                         if (double.TryParse(propertyValue, out double value))
                         {
-                            var sensor = new Sensor<double?>(propertyName, isMetric ? I2M(value) : value,
+                            var sensor = new Sensor<double?>(propertyName, isMetric ? IM2HP(value) : value,
                                 isMetric ? "hPa" : "inHg", SensorType.Pressure, SensorState.Measurement);
                             result.Sensors.Add(sensor);
                         }
@@ -371,6 +371,11 @@ public static class ApiDataExtension
         }
 
         return result;
+    }
+
+    private static double? IM2HP(double im)
+    {
+        return im * 33.8639;
     }
 
     private static double? F2C(double? fahrenheit)
