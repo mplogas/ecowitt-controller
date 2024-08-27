@@ -132,9 +132,11 @@ public class DiscoveryPublishService : BackgroundService
 
         var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Name, id, category, statetopic, "{{ value_json.value }}", sensor.UnitOfMeasurement, string.Empty);
 
-        await PublishMessage(Helper.Sanitize($"{sensor.SensorClass.ToString()}/{device.Name}_{sensor.Name}"), config);
+        var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass); 
+
+        await PublishMessage(Helper.Sanitize($"{sensorClassTopic}/{device.Name}_{sensor.Name}"), config);
     }
-    
+
     private async Task PublishMessage(string topic, Config config)
     {
         topic = $"homeassistant/{topic}/config";
@@ -148,5 +150,14 @@ public class DiscoveryPublishService : BackgroundService
 
         if (!await _mqttClient.Publish(topic, payload))
             _logger.LogWarning($"Failed to publish message to topic {topic}. Is the client connected?");
+    }
+
+    private string BuildSensorClassTopic(SensorClass sc)
+    {
+        return sc switch
+        {
+            SensorClass.BinarySensor => "binary_sensor",
+            _ => "sensor"
+        };
     }
 }
