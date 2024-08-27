@@ -96,15 +96,26 @@ public class DataPublishService : BackgroundService
 
     private dynamic BuildSensorPayloads(List<ISensor> sensors)
     {
-        return sensors.Select(s => new
+        //return sensors.Select(s => new
+        //{
+        //    name = s.Name,
+        //    value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+        //    unit = s.UnitOfMeasurement,
+        //    type = s.SensorType.ToString()
+
+        //}).ToList();
+
+        return sensors.Select((s) =>
         {
-            name = s.Name,
-            value = s.DataType == typeof(double) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-            unit = s.UnitOfMeasurement,
-            type = s.SensorType.ToString()
-
+            _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
+            return new
+            {
+                name = s.Name,
+                value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+                unit = s.UnitOfMeasurement,
+                type = s.SensorType.ToString()
+            };
         }).ToList();
-
     }
 
     private dynamic BuildGatewayPayload(Gateway gw)
@@ -126,7 +137,7 @@ public class DataPublishService : BackgroundService
             passkey = gw.PASSKEY,
             stationType = gw.StationType,
             runtime = gw.Runtime,
-            state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < 60 ? "online" : "offline",
+            state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < _controllerOptions.PublishingInterval * 3 ? "online" : "offline",
             freq = gw.Freq
         };
     }

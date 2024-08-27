@@ -51,17 +51,13 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("Val",
                             (int?)device.val, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor));
                         result.Sensors.Add(new Sensor<int?>("runtime",
-                            (int?)device.run_time, "", SensorType.Timestamp, SensorState.Measurement, SensorClass.Sensor));
+                            (int?)device.run_time, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("rssi", 
                             (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
                             (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("timeutc",
-                            (int?)device.timeutc, "", SensorType.Timestamp, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("publish_time", 
-                            (int?)device.publish_time, "", SensorType.Timestamp, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("ac_action",
-                            (int?)device.ac_action, "", SensorType.Enum, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                            (int?)device.ac_action, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
                             (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("Total Consumption", 
@@ -87,17 +83,13 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("Val",
                             (int?)device.val, "", SensorType.None, SensorState.Measurement));
                         result.Sensors.Add(new Sensor<int?>("runtime",
-                            (int?)device.run_time, "", SensorType.Timestamp, SensorState.Measurement));
+                            (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("rssi", 
                             (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
                             (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("timeutc",
-                            (int?)device.timeutc, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("publish_time", 
-                            (int?)device.publish_time, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("water_action",
-                            (int?)device.water_action, "", SensorType.Enum, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                            (int?)device.water_action, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
                             (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<double?>("Total Consumption",
@@ -119,15 +111,11 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("Val",
                             (int?)device.val, "", SensorType.None, SensorState.Measurement));
                         result.Sensors.Add(new Sensor<int?>("runtime",
-                            (int?)device.run_time, "", SensorType.Timestamp, SensorState.Measurement));
+                            (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("rssi", 
                             (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
                             (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("timeutc",
-                            (int?)device.timeutc, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("publish_time", 
-                            (int?)device.publish_time, "", SensorType.Timestamp, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
                             (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         break;
@@ -300,7 +288,7 @@ public static class ApiDataExtension
                             var sensor = new Sensor<double?>(propertyName, value, "µg/m³", SensorType.Pm1, stateClass);
                             result.Sensors.Add(sensor);
                         }
-                    } else if (propertyName.StartsWith("Co2", StringComparison.InvariantCultureIgnoreCase)) {
+                    } else if (propertyName.StartsWith("Co2", StringComparison.InvariantCultureIgnoreCase) && !propertyName.Equals("co2_batt", StringComparison.InvariantCultureIgnoreCase)) {
                         var stateClass = propertyName.Contains("_24h", StringComparison.InvariantCultureIgnoreCase) ? SensorState.Total : SensorState.Measurement;
 
                         if (int.TryParse(propertyValue, out int value))
