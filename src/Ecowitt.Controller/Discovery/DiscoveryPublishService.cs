@@ -138,6 +138,8 @@ public class DiscoveryPublishService : BackgroundService
     private async Task PublishMessage(string topic, Config config)
     {
         topic = $"homeassistant/{topic}/config";
+
+        if(config.DeviceClass != null && config.DeviceClass.Equals("none", StringComparison.InvariantCultureIgnoreCase)) config.DeviceClass = null;
         var payload = JsonConvert.SerializeObject(config,
             new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
 

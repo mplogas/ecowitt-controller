@@ -102,7 +102,9 @@ public class DataPublishService : BackgroundService
             value = s.DataType == typeof(double) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
             unit = s.UnitOfMeasurement,
             type = s.SensorType.ToString()
+
         }).ToList();
+
     }
 
     private dynamic BuildGatewayPayload(Gateway gw)
