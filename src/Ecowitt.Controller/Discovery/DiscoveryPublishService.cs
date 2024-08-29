@@ -130,7 +130,7 @@ public class DiscoveryPublishService : BackgroundService
 
         var category = DiscoveryBuilder.BuildDeviceCategory(sensor.SensorType);
 
-        var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Name, id, category, statetopic, "{{ value_json.value }}", sensor.UnitOfMeasurement, string.Empty);
+        var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, "{{ value_json.value }}", sensor.UnitOfMeasurement, string.Empty);
 
         var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass); 
 
