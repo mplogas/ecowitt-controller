@@ -2,7 +2,9 @@ namespace Ecowitt.Controller.Model;
 
 public interface ISensor
 {
-    public string Name { get;  }
+    public string Name { get; }
+    public string Alias { get; }
+    public DateTime TimestampUtc { get; set; }
     public SensorType SensorType { get;  }
     public SensorState SensorState { get;  }
     public SensorClass SensorClass { get; }
@@ -21,6 +23,8 @@ public interface ISensor<T> : ISensor
 public class Sensor<T> : ISensor<T>
 {
     public string Name { get; }
+    public string Alias { get; }
+    public DateTime TimestampUtc { get; set; }
     public SensorType SensorType { get; }
     public SensorState SensorState { get; }
     public SensorClass SensorClass { get; }
@@ -41,12 +45,28 @@ public class Sensor<T> : ISensor<T>
         SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
     {
         Name = name;
+        Alias = name;
         SensorType = sensorType;
         SensorState = sensorState;
         SensorClass = sensorClass;
         SensorCategory = sensorCategory;
         UnitOfMeasurement = unitOfMeasurement;
         Value = value;
+        TimestampUtc = DateTime.UtcNow;
+    }
+
+    public Sensor(string name, string alias, T value, string unitOfMeasurement, SensorType sensorType, SensorState sensorState,
+        SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
+    {
+        Name = name;
+        Alias = alias;
+        SensorType = sensorType;
+        SensorState = sensorState;
+        SensorClass = sensorClass;
+        SensorCategory = sensorCategory;
+        UnitOfMeasurement = unitOfMeasurement;
+        Value = value;
+        TimestampUtc = DateTime.UtcNow;
     }
 }
 

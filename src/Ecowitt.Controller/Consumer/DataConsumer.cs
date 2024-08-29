@@ -24,7 +24,7 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
 
     public Task OnHandle(GatewayApiData message)
     {
-        _logger.LogInformation($"Received ApiData: {message.PASSKEY}");
+        _logger.LogDebug($"Received ApiData: {message.Model} ({message.PASSKEY}) \n {message.Payload}");
         var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric);
         updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.','-');
 

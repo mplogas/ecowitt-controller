@@ -14,7 +14,9 @@ public class Gateway
     public string? PASSKEY { get; set; } 
     public string? StationType { get; set; } 
     public int? Runtime { get; set; }
-    public DateTime? DateUtc { get; set; }
+
+    // i don't think we need the time of the GW for anything
+    // public DateTime? DateUtc { get; set; }
     public string? Freq { get; set; }
 
     // sensors

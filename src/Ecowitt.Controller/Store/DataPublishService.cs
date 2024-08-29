@@ -96,26 +96,27 @@ public class DataPublishService : BackgroundService
 
     private dynamic BuildSensorPayloads(List<ISensor> sensors)
     {
-        //return sensors.Select(s => new
-        //{
-        //    name = s.Name,
-        //    value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-        //    unit = s.UnitOfMeasurement,
-        //    type = s.SensorType.ToString()
-
-        //}).ToList();
-
-        return sensors.Select((s) =>
+        return sensors.Select(s => new
         {
-            _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
-            return new
-            {
-                name = s.Name,
-                value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-                unit = s.UnitOfMeasurement,
-                type = s.SensorType.ToString()
-            };
+            name = s.Name,
+            value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+            unit = s.UnitOfMeasurement,
+            type = s.SensorType.ToString()
+
         }).ToList();
+
+        // this is pretty neat if you want to log the payload creation details. only use in debug mode, obviously :)
+        //return sensors.Select((s) =>
+        //{
+        //    _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
+        //    return new
+        //    {
+        //        name = s.Name,
+        //        value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+        //        unit = s.UnitOfMeasurement,
+        //        type = s.SensorType.ToString()
+        //    };
+        //}).ToList();
     }
 
     private dynamic BuildGatewayPayload(Gateway gw)
