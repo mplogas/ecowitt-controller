@@ -53,17 +53,17 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("runtime",
                             (int?)device.run_time, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("rssi", 
-                            (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                            (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
-                            (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                            (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("ac_action",
                             (int?)device.ac_action, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
                             (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("Total Consumption", 
-                            (int?)device.elect_total, "Wh", SensorType.Power, SensorState.TotalIncreasing, SensorClass.Sensor));
+                            (int?)device.elect_total, "Wh", SensorType.Energy, SensorState.TotalIncreasing, SensorClass.Sensor));
                         result.Sensors.Add(new Sensor<int?>("Daily Consumption", 
-                            (int?)device.happen_elect, "Wh", SensorType.Power, SensorState.Total, SensorClass.Sensor));
+                            (int?)device.happen_elect, "Wh", SensorType.Energy, SensorState.Total, SensorClass.Sensor));
                         result.Sensors.Add(new Sensor<int?>("Realtime Consumption", 
                             (int?)device.realtime_power, "W", SensorType.Power, SensorState.Measurement, SensorClass.Sensor));
                         result.Sensors.Add(new Sensor<int?>("AC Voltage", 
@@ -85,9 +85,9 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("runtime",
                             (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("rssi", 
-                            (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                            (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
-                            (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                            (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("water_action",
                             (int?)device.water_action, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
@@ -113,9 +113,9 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("runtime",
                             (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("rssi", 
-                            (int?)device.rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                            (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
-                            (int?)device.gw_rssi, "", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                            (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
                             (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         break;
@@ -229,7 +229,7 @@ public static class ApiDataExtension
                     {
                         if (double.TryParse(propertyValue, out double value))
                         {
-                            sensor = new Sensor<double?>(propertyName, value/100, "W/m²", SensorType.Illuminance,
+                            sensor = new Sensor<double?>(propertyName, value/100, "W/m²", SensorType.Irradiance,
                                 SensorState.Measurement);
                         }
                     }
@@ -340,7 +340,7 @@ public static class ApiDataExtension
                         {
                             sensor = new Sensor<int?>(propertyName, value, "%", SensorType.Humidity, SensorState.Measurement);
                         }
-                    } else if (propertyName.Contains("Batt", StringComparison.InvariantCultureIgnoreCase) || propertyName.EndsWith("volt", StringComparison.InvariantCultureIgnoreCase)) {
+                    } else if (propertyName.Contains("Batt", StringComparison.InvariantCultureIgnoreCase) /*|| propertyName.EndsWith("volt", StringComparison.InvariantCultureIgnoreCase)*/) {
                         if (int.TryParse(propertyValue, out int intVal))
                         {
                             if (propertyName.Equals("co2_batt", StringComparison.InvariantCultureIgnoreCase))
@@ -356,16 +356,23 @@ public static class ApiDataExtension
                             }
                         } else if (double.TryParse(propertyValue, out double doubleVal))
                         {
-                            double? value;
+                            double value;
+                            double maxVoltage;
+                            double minVoltage;
                             if (propertyName.Equals("wh90batt", StringComparison.InvariantCultureIgnoreCase))
                             {
+                                maxVoltage = 5.3;
+                                minVoltage = 2.0;
                                 value = doubleVal / 100;
                             }
                             else
                             {
+                                minVoltage = 1.2;
+                                maxVoltage = 1.5;
                                 value = doubleVal / 10;
                             }
-                            sensor = new Sensor<double?>(propertyName, value, "V", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            // Percentage of Charge (%) = [(Current Battery Voltage - Min Voltage) / (Max Voltage - Min Voltage)] * 100
+                            sensor = new Sensor<int?>(propertyName, (int)((value - minVoltage) / (maxVoltage - minVoltage) * 100), "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
                         }
                         else
                         {
