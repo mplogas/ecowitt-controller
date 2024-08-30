@@ -168,7 +168,7 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildSensorConfig(Device device, Origin origin, string name, string uniqueId, string sensor_category,string stateTopic, string valueTemplate, string? unitOfMeasurement = "", string? icon = "", bool? retain = false, int? qos = 1)
+    public static Config BuildSensorConfig(Device device, Origin origin, string name, string uniqueId, string sensor_category, string stateTopic, string valueTemplate = "{{ value_json.value }}", string? unitOfMeasurement = "", string? icon = "", string? sensorCategory = "", bool isBinarySensor = false, bool? retain = false, int? qos = 1)
     {
         var result = new Config
         {
@@ -186,7 +186,8 @@ public static class DiscoveryBuilder
 
         if (!string.IsNullOrWhiteSpace(unitOfMeasurement)) result.UnitOfMeasurement = unitOfMeasurement;
         if (!string.IsNullOrWhiteSpace(icon)) result.Icon = icon;
-
+        if (!string.IsNullOrWhiteSpace(sensorCategory)) result.SensorCategory = sensorCategory;
+        
         return result;
     }
 
@@ -229,7 +230,7 @@ public static class DiscoveryBuilder
 
     public static string BuildIdentifier(string name, string type = "config")
     {
-        return $"ec_{name}_{type}";
+        return $"ec_{name.Replace(' ', '-').ToLowerInvariant()}_{type.Replace(' ', '-').ToLowerInvariant()}";
     }
 
     public static string BuildDeviceCategory(SensorType sensorType)

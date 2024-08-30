@@ -127,10 +127,16 @@ public class DiscoveryPublishService : BackgroundService
     private async Task PublishSensorDiscovery(Device device, ISensor sensor, string statetopic, string availabilityTopic)
     {
         var id = DiscoveryBuilder.BuildIdentifier($"{device.Name}_{sensor.Name}", sensor.SensorType.ToString());
-
         var category = DiscoveryBuilder.BuildDeviceCategory(sensor.SensorType);
 
-        var config = DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, "{{ value_json.value }}", sensor.UnitOfMeasurement, string.Empty);
+        var valueTemplate = sensor.SensorClass == SensorClass.BinarySensor
+            ? "{% if (value_json.value == true) -%} ON {%- else -%} OFF {%- endif %}"
+            : "{{ value_json.value }}";
+        //var valueTemplate = "{{ value_json.value }}";
+
+        var config = sensor.SensorCategory == SensorCategory.Diagnostic 
+            ? DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, valueTemplate: valueTemplate, unitOfMeasurement: sensor.UnitOfMeasurement, sensorCategory: sensor.SensorCategory.ToString().ToLower(), isBinarySensor: sensor.SensorClass == SensorClass.BinarySensor) 
+            : DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, valueTemplate: valueTemplate, unitOfMeasurement: sensor.UnitOfMeasurement, isBinarySensor: sensor.SensorClass == SensorClass.BinarySensor);
 
         var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass); 
 

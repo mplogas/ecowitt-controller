@@ -35,5 +35,16 @@ public class Config
     [JsonProperty("availability_mode")]
     public AvailabilityMode? AvailabilityMode { get; set; }
     [JsonProperty("value_template")]
-    public string ValueTemplate { get; set; }
+    public string? ValueTemplate { get; set; }
+    [JsonProperty("entity_category")] 
+    public string? SensorCategory { get; set; }
+
+    [JsonProperty("payload_on")]
+    public string? PayloadOn { get; set; }
+    [JsonProperty("payload_off")]
+    public string? PayloadOff { get; set; }
+    [JsonProperty("state_on")]
+    public string? StateOn { get; set; }
+    [JsonProperty("state_off")]
+    public string? StateOff { get; set; }
 }   
