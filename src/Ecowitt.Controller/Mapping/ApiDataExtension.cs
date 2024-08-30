@@ -167,7 +167,7 @@ public static class ApiDataExtension
                         || propertyName.Equals("model", StringComparison.InvariantCultureIgnoreCase)) continue;
 
                     if (propertyName.StartsWith("Temp", StringComparison.InvariantCultureIgnoreCase) &&
-                        propertyName.EndsWith("f", StringComparison.InvariantCultureIgnoreCase) || propertyName.Equals("tf_co2", StringComparison.InvariantCultureIgnoreCase))
+                        propertyName.EndsWith("f", StringComparison.InvariantCultureIgnoreCase))
                     {
                         if (double.TryParse(propertyValue, out double value))
                         {
@@ -234,7 +234,7 @@ public static class ApiDataExtension
                     {
                         if (double.TryParse(propertyValue, out double value))
                         {
-                            var sensor = new Sensor<double?>(propertyName, value, "W/m²", SensorType.Illuminance,
+                            var sensor = new Sensor<double?>(propertyName, value/100, "W/m²", SensorType.Illuminance,
                                 SensorState.Measurement);
                             result.Sensors.Add(sensor);
                         }
@@ -315,8 +315,17 @@ public static class ApiDataExtension
                         }
                     } else if (propertyName.StartsWith("Lightning_time", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        var sensor = new Sensor<string?>(propertyName, propertyValue, "", SensorType.Timestamp, SensorState.Measurement);
-                        result.Sensors.Add(sensor);
+                        var value = T2TS(propertyValue);
+                        if (value != null)
+                        {
+                            var sensor = new Sensor<DateTime?>(propertyName, value, "", SensorType.Timestamp, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
+                        else
+                        {
+                            var sensor = new Sensor<string?>(propertyName, propertyValue, "", SensorType.Timestamp, SensorState.Measurement);
+                            result.Sensors.Add(sensor);
+                        }
                     } else if (propertyName.StartsWith("Lightning_num", StringComparison.InvariantCultureIgnoreCase))
                     {
                         if (int.TryParse(propertyValue, out int value))
@@ -355,7 +364,20 @@ public static class ApiDataExtension
                     } else if (propertyName.Contains("Batt", StringComparison.InvariantCultureIgnoreCase) || propertyName.EndsWith("volt", StringComparison.InvariantCultureIgnoreCase)) {
                         if (int.TryParse(propertyValue, out int intVal))
                         {
-                            var sensor = new Sensor<int?>(propertyName, intVal, "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            var alias = propertyName;
+                            ISensor sensor;
+                            if (propertyName.Equals("co2_batt", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                sensor = intVal == 6 ? new Sensor<int?>(propertyName, 100, "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic) : new Sensor<int?>(propertyName, intVal * 20, "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            } else if (propertyName.Equals("wh57batt", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                sensor = new Sensor<int?>(propertyName, "lightning_batt", intVal * 20, "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            }
+                            else
+                            {
+                                sensor = new Sensor<int?>(propertyName, intVal, "%", SensorType.Battery, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic);
+                            }
+
                             result.Sensors.Add(sensor);
                         } else if (double.TryParse(propertyValue, out double doubleVal))
                         {
@@ -397,6 +419,16 @@ public static class ApiDataExtension
             }
         }
         return result;
+    }
+
+    private static DateTime? T2TS(string value)
+    {
+        if(long.TryParse(value, out var ts))
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime;
+        }
+
+        return null;
     }
 
     private static double? K2M(double result)
