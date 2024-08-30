@@ -52,8 +52,8 @@ public static class ApiDataExtension
                             (int?)device.val, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor));
                         result.Sensors.Add(new Sensor<int?>("runtime",
                             (int?)device.run_time, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("rssi", 
-                            (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
+                        //result.Sensors.Add(new Sensor<int?>("rssi", 
+                        //    (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
                             (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("ac_action",
@@ -84,8 +84,8 @@ public static class ApiDataExtension
                             (int?)device.val, "", SensorType.None, SensorState.Measurement));
                         result.Sensors.Add(new Sensor<int?>("runtime",
                             (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("rssi", 
-                            (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        //result.Sensors.Add(new Sensor<int?>("rssi", 
+                        //    (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
                             (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("water_action",
@@ -101,7 +101,7 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<double?>("Water Temperature",
                             isMetric ? (double?)device.water_temp : C2F(device.water_temp), isMetric ? "°C" : "F", SensorType.Temperature, SensorState.Measurement));
                         result.Sensors.Add(new Sensor<int?>("Battery",
-                            (int?)device.wfc01batt, "%", SensorType.Battery, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                            (int?)device.wfc01batt*20, "%", SensorType.Battery, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         break;
                     case SubdeviceModel.Unknown:
                     default:
@@ -112,8 +112,8 @@ public static class ApiDataExtension
                             (int?)device.val, "", SensorType.None, SensorState.Measurement));
                         result.Sensors.Add(new Sensor<int?>("runtime",
                             (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("rssi", 
-                            (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        //result.Sensors.Add(new Sensor<int?>("rssi", 
+                        //    (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("gw_rssi", 
                             (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("plan_status",
