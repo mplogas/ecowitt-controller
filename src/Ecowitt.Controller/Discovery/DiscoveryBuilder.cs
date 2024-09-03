@@ -205,7 +205,7 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildActorConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string availabilityTopic, string commandTopic, string? icon = "", bool? retain = false, int? qos = 1)
+    public static Config BuildSwitchConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string commandTopic, string? icon = "", bool? retain = false, int? qos = 1)
     {
         var result = new Config
         {
@@ -215,12 +215,11 @@ public static class DiscoveryBuilder
             UniqueId = uniqueId,
             ObjectId = uniqueId,
             StateTopic = stateTopic,
-            AvailabilityTopic = availabilityTopic,
             CommandTopic = commandTopic,
             Retain = retain,
             Qos = qos
         };
-
+        
         if (!string.IsNullOrWhiteSpace(icon))
         {
             result.Icon = icon;

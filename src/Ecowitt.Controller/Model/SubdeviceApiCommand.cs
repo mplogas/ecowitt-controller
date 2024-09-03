@@ -9,6 +9,7 @@ public class SubdeviceApiCommand
     public bool? AlwaysOn { get; set; }
 }
 
+
 public enum Command
 {
     Start = 0,

@@ -65,6 +65,7 @@ public class DiscoveryPublishService : BackgroundService
                         {
                             subdevice.DiscoveryUpdate = false;
                             await PublishSubdeviceDiscovery(gw, subdevice);
+                            await PublishSubdeviceSwitchDiscovery(gw, subdevice);
                         }
 
                         foreach (var sensor in subdevice.Sensors.Where(s => s.DiscoveryUpdate))
@@ -81,6 +82,7 @@ public class DiscoveryPublishService : BackgroundService
             _logger.LogInformation("Stopping MqttService");
         }
     }
+
 
 
 
@@ -106,6 +108,19 @@ public class DiscoveryPublishService : BackgroundService
         var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
         await PublishMessage(Helper.Sanitize($"sensor/{subdevice.Nickname}"), config);
+    }
+
+    private async Task PublishSubdeviceSwitchDiscovery(Gateway gw, Ecowitt.Controller.Model.Subdevice subdevice)
+    {
+        var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt", subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
+        var id = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, "switch");
+        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}";
+        var cmdTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceHACommandTopic(gw.Name, subdevice.Id.ToString())}";
+
+        var config =
+            DiscoveryBuilder.BuildSwitchConfig(device, _origin, "switch", id, statetopic, cmdTopic);
+
+        await PublishMessage(Helper.Sanitize($"switch/{subdevice.Nickname}"), config);
     }
 
     private async Task PublishSensorDiscovery(Gateway gw, ISensor sensor)

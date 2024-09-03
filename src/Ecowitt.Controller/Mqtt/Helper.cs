@@ -21,7 +21,27 @@ public static class Helper
 
     public static string BuildMqttSubdeviceSensorTopic(string gwName, string subdeviceName, string sensorName, string sensorType)
     {
-        return Sanitize($"{gwName}/subdevices/{subdeviceName}/sensors/{sensorName}/{sensorType}");
+        return Sanitize($"{gwName}/subdevices/{subdeviceName}/sensors/{sensorName}");
+    }
+
+    public static string BuildMqttSubdeviceCommandTopic(string gwName, string subdeviceName)
+    {
+        return Sanitize($"{gwName}/subdevices/{subdeviceName}/cmd");
+    }
+
+    public static string BuildMqttSubdeviceCommandTopic()
+    {
+        return Sanitize($"+/subdevices/+/cmd");
+    }
+
+    public static string BuildMqttSubdeviceHACommandTopic(string gwName, string subdeviceName)
+    {
+        return Sanitize($"{gwName}/subdevices/{subdeviceName}/cmd/homeassistant");
+    }
+
+    public static string BuildMqttSubdeviceHACommandTopic()
+    {
+        return Sanitize($"+/subdevices/+/cmd/homeassistant");
     }
 
     public static string Sanitize(string input)
