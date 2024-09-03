@@ -158,12 +158,12 @@ public static class ApiDataExtension
                     string propertyValue = item.value.ToString(); //this is always a string, thanks ecowitt!
 
                     //filtering out keys we already set
-                    if (propertyName.Equals("PASSKEY", StringComparison.InvariantCultureIgnoreCase) ||
-                        propertyName.Equals("model", StringComparison.InvariantCultureIgnoreCase)
-                        || propertyName.Equals("stationtype", StringComparison.InvariantCultureIgnoreCase) ||
-                        propertyName.Equals("runtime", StringComparison.InvariantCultureIgnoreCase)
-                        || propertyName.Equals("freq", StringComparison.InvariantCultureIgnoreCase) ||
-                        propertyName.Equals("dateutc", StringComparison.InvariantCultureIgnoreCase)
+                    if (propertyName.Equals("PASSKEY", StringComparison.InvariantCultureIgnoreCase) 
+                        || propertyName.Equals("model", StringComparison.InvariantCultureIgnoreCase)
+                        || propertyName.Equals("stationtype", StringComparison.InvariantCultureIgnoreCase) 
+                        || propertyName.Equals("runtime", StringComparison.InvariantCultureIgnoreCase)
+                        || propertyName.Equals("freq", StringComparison.InvariantCultureIgnoreCase) 
+                        || propertyName.Equals("dateutc", StringComparison.InvariantCultureIgnoreCase)
                         || propertyName.Equals("model", StringComparison.InvariantCultureIgnoreCase)) continue;
 
                     ISensor sensor = null;
