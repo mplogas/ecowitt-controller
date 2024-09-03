@@ -42,7 +42,9 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
         }
         else
         {
-            // no other property should update besides sensors
+            // no other property should update besides sensors 
+            // and i'm stupid, because TS is required for availability :(
+            storedGateway.TimestampUtc = updatedGateway.TimestampUtc;
             
             foreach (var sensor in updatedGateway.Sensors)
             {
