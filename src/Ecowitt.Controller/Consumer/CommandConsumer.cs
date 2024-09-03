@@ -37,8 +37,8 @@ public class CommandConsumer : IConsumer<SubdeviceApiCommand>
 
         if (message.Cmd == Command.Start)
         {
-            var val = message.Duration ?? 0;
-            var valType = message.Unit ?? 0;
+            var val = message.Duration ?? 20;
+            var valType = message.Unit ?? DurationUnit.Minutes;
             // the magic "maganiFator" :D
             if(valType == DurationUnit.Liters) val *= 10; 
             var alwaysOn = message.AlwaysOn.HasValue ? 1 : 0;
@@ -55,7 +55,6 @@ public class CommandConsumer : IConsumer<SubdeviceApiCommand>
         }
     }
 
-    
     private async Task<bool> SendCommand(string ipAddress, string cmd, int id, int model, int val = 0, int valType = 0, int onType = 0, int offType = 0, int alwaysOn = 0, int onTime = 0, int offTime = 0)
     {
         var client = _httpClientFactory.CreateClient("ecowitt-client");
