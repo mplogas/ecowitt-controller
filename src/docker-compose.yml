@@ -7,6 +7,7 @@ services:
     ports:
       - 1883:1883
       - 8883:8883
+      - 9001:9001  
     volumes:
       - type: bind
         source: H:\docker\mosquitto
