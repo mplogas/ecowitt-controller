@@ -11,7 +11,7 @@ public static class Helper
 
     public static string BuildMqttGatewaySensorTopic(string gwName, string sensorName, string sensorType)
     {
-        return Sanitize($"{gwName}/sensors/{sensorName}/{sensorType}");
+        return Sanitize($"{gwName}/sensors/{sensorName}");
     }
 
     public static string BuildMqttSubdeviceTopic(string gwName, string subdeviceName)
