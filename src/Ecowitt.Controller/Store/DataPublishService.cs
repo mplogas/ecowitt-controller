@@ -96,27 +96,27 @@ public class DataPublishService : BackgroundService
 
     private dynamic BuildSensorPayloads(List<ISensor> sensors)
     {
-        return sensors.Select(s => new
-        {
-            name = s.Name,
-            value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-            unit = s.UnitOfMeasurement,
-            type = s.SensorType.ToString()
-
-        }).ToList();
-
-        // this is pretty neat if you want to log the payload creation details. only use in debug mode, obviously :)
-        //return sensors.Select((s) =>
+        //return sensors.Select(s => new
         //{
-        //    _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
-        //    return new
-        //    {
-        //        name = s.Name,
-        //        value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-        //        unit = s.UnitOfMeasurement,
-        //        type = s.SensorType.ToString()
-        //    };
+        //    name = s.Name,
+        //    value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+        //    unit = s.UnitOfMeasurement,
+        //    type = s.SensorType.ToString()
+
         //}).ToList();
+
+        //this is pretty neat if you want to log the payload creation details.only use in debug mode, obviously :)
+        return sensors.Select((s) =>
+        {
+            _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
+            return new
+            {
+                name = s.Name,
+                value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+                unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null,
+                type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
+            };
+        }).ToList();
     }
 
     private dynamic BuildGatewayPayload(Gateway gw)
@@ -146,7 +146,8 @@ public class DataPublishService : BackgroundService
     private async Task PublishMessage(string topic, dynamic payload)
     {
         if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}",
-                JsonConvert.SerializeObject(payload))) 
+                JsonConvert.SerializeObject(payload,
+                    new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }))) 
             _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
     }
 
