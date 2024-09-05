@@ -37,13 +37,16 @@ public class CommandConsumer : IConsumer<SubdeviceApiCommand>
 
         if (message.Cmd == Command.Start)
         {
-            var val = message.Duration ?? 20;
-            var valType = message.Unit ?? DurationUnit.Minutes;
-            // the magic "maganiFator" :D
-            if(valType == DurationUnit.Liters) val *= 10; 
-            var alwaysOn = message.AlwaysOn.HasValue ? 1 : 0;
+            //var val = message.Duration ?? 20;
+            //var valType = message.Unit ?? DurationUnit.Minutes;
+            // // the magic "maganiFator" :D
+            //if(valType == DurationUnit.Liters) val *= 10;
+            //var alwaysOn = message.AlwaysOn.HasValue ? 1 : 0;
+            //await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model, val: val, valType: (int)valType, alwaysOn: alwaysOn);
             
-            await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model, val: val, valType: (int)valType, alwaysOn: alwaysOn);
+            //default always-on message for now
+            await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model);
+
         } else if (message.Cmd == Command.Stop)
         {
             await SendCommand(gw.IpAddress, "quick_stop", message.Id, (int)subdevice!.Model);
@@ -55,7 +58,7 @@ public class CommandConsumer : IConsumer<SubdeviceApiCommand>
         }
     }
 
-    private async Task<bool> SendCommand(string ipAddress, string cmd, int id, int model, int val = 0, int valType = 0, int onType = 0, int offType = 0, int alwaysOn = 0, int onTime = 0, int offTime = 0)
+    private async Task<bool> SendCommand(string ipAddress, string cmd, int id, int model, int val = 0, int valType = 0, int onType = 0, int offType = 0, int alwaysOn = 1, int onTime = 0, int offTime = 0)
     {
         var client = _httpClientFactory.CreateClient("ecowitt-client");
         client.BaseAddress = new Uri($"http://{ipAddress}");
@@ -68,7 +71,7 @@ public class CommandConsumer : IConsumer<SubdeviceApiCommand>
             //client.DefaultRequestHeaders.Add();
         }
         
-        // [{"on_type":0,"off_type":0,"always_on":0,"on_time":0,"off_time":0,"val_type":1,"val":20,"cmd":"quick_run","id":13441,"model":1}]}    
+        // [{"on_type":0,"off_type":0,"always_on":0,"on_time":0,"off_time":0,"val_type":1,"val":20,"cmd":"quick_run","id":12345,"model":1}]}    
         dynamic payload;
         switch (cmd)
         {
