@@ -9,9 +9,14 @@ public static class Helper
         return Sanitize(gwName);
     }
 
-    public static string BuildMqttGatewaySensorTopic(string gwName, string sensorName, string sensorType)
+    public static string BuildMqttGatewaySensorTopic(string gwName, string sensorName)
     {
         return Sanitize($"{gwName}/sensors/{sensorName}");
+    }
+
+    public static string BuildMqttGatewayDiagnosticTopic(string gwName, string sensorName)
+    {
+        return Sanitize($"{gwName}/diag/{sensorName}");
     }
 
     public static string BuildMqttSubdeviceTopic(string gwName, string subdeviceName)
@@ -19,9 +24,15 @@ public static class Helper
         return Sanitize($"{gwName}/subdevices/{subdeviceName}");
     }
 
-    public static string BuildMqttSubdeviceSensorTopic(string gwName, string subdeviceName, string sensorName, string sensorType)
+    public static string BuildMqttSubdeviceSensorTopic(string gwName, string subdeviceName, string sensorName)
     {
         return Sanitize($"{gwName}/subdevices/{subdeviceName}/sensors/{sensorName}");
+    }
+
+
+    public static string BuildMqttSubdeviceDiagnosticTopic(string gwName, string subdeviceName, string sensorName)
+    {
+        return Sanitize($"{gwName}/subdevices/{subdeviceName}/diag/{sensorName}");
     }
 
     public static string BuildMqttSubdeviceCommandTopic(string gwName, string subdeviceName)

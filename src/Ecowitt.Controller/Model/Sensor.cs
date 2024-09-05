@@ -41,7 +41,7 @@ public class Sensor<T> : ISensor<T>
     public Type DataType => typeof(T);
     public bool DiscoveryUpdate { get; set; }
     
-    public Sensor(string name, T value, string unitOfMeasurement, SensorType sensorType, SensorState sensorState,
+    public Sensor(string name, T value, string unitOfMeasurement = "", SensorType sensorType = SensorType.None, SensorState sensorState = SensorState.Measurement,
         SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
     {
         Name = name;
@@ -55,7 +55,7 @@ public class Sensor<T> : ISensor<T>
         TimestampUtc = DateTime.UtcNow;
     }
 
-    public Sensor(string name, string alias, T value, string unitOfMeasurement, SensorType sensorType, SensorState sensorState,
+    public Sensor(string name, string alias, T value, string unitOfMeasurement, SensorType sensorType = SensorType.None, SensorState sensorState = SensorState.Measurement,
         SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
     {
         Name = name;

@@ -47,16 +47,17 @@ public class DataPublishService : BackgroundService
 
                     // note: HA Discovery seems to break for mqtt topics with spaces in them
 
-                    dynamic payload = BuildGatewayPayload(gw);
-                    var json = JsonConvert.SerializeObject(payload);
+                    var payload = BuildGatewayPayload(gw);
                     
                     await PublishMessage(Helper.BuildMqttGatewayTopic(gw.Name), payload);
                     await PublishAvailabilityMessage(Helper.BuildMqttGatewayTopic(gw.Name), gw.TimestampUtc);
 
-                    payload = BuildSensorPayloads(gw.Sensors);
-                    foreach (var sensor in payload)
+                    foreach (var sensor in gw.Sensors)
                     {
-                        await PublishMessage(Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.name, sensor.type), sensor);
+                        payload = BuildSensorPayload(sensor);
+                        var topic = sensor.SensorCategory == SensorCategory.Diagnostic ? Helper.BuildMqttGatewayDiagnosticTopic(gw.Name, sensor.Name) : Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.Name);
+                        await PublishMessage(topic, payload);
+
                     }
 
                     if (gw.Subdevices.Count == 0) continue;
@@ -66,10 +67,11 @@ public class DataPublishService : BackgroundService
                         await PublishMessage(Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString()), payload);
                         await PublishAvailabilityMessage(Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString()), subdevice.TimestampUtc);
 
-                        var sensorPayload = BuildSensorPayloads(subdevice.Sensors);
-                        foreach (var sensor in sensorPayload)
+                        foreach (var sensor in subdevice.Sensors)
                         {
-                            await PublishMessage(Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.name, sensor.type), sensor);
+                            payload = BuildSensorPayload(sensor);
+                            var topic = sensor.SensorCategory == SensorCategory.Diagnostic ? Helper.BuildMqttSubdeviceDiagnosticTopic(gw.Name, subdevice.Id.ToString(), sensor.Name) : Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.Name);
+                            await PublishMessage(topic, payload);
                         }
                     }
                 }
@@ -94,30 +96,17 @@ public class DataPublishService : BackgroundService
         };
     }
 
-    private dynamic BuildSensorPayloads(List<ISensor> sensors)
+    private dynamic BuildSensorPayload(ISensor s)
     {
-        //return sensors.Select(s => new
-        //{
-        //    name = s.Name,
-        //    value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-        //    unit = s.UnitOfMeasurement,
-        //    type = s.SensorType.ToString()
-
-        //}).ToList();
-
-        //this is pretty neat if you want to log the payload creation details.only use in debug mode, obviously :)
-        return sensors.Select((s) =>
+        _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
+        return new
         {
-            _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}");
-            return new
-            {
-                name = s.Name,
-                value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-                unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null,
-                type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
-            };
-        }).ToList();
-    }
+            name = s.Name,
+            value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+            unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null,
+            type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
+        };
+    }                        
 
     private dynamic BuildGatewayPayload(Gateway gw)
     {

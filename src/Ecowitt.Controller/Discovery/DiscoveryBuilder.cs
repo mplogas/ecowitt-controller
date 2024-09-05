@@ -199,13 +199,13 @@ public static class DiscoveryBuilder
     /// <param name="name"></param>
     /// <param name="uniqueId"></param>
     /// <param name="stateTopic"></param>
-    /// <param name="availabilityTopic"></param>
     /// <param name="commandTopic"></param>
     /// <param name="icon"></param>
+    /// <param name="valueTemplate"></param>
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildSwitchConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string commandTopic, string? icon = "", bool? retain = false, int? qos = 1)
+    public static Config BuildSwitchConfig(Device device, Origin origin, string name, string uniqueId, string stateTopic, string commandTopic, string? icon = "", string? valueTemplate = "{{ value_json.value }}", bool? retain = false, int? qos = 1)
     {
         var result = new Config
         {
@@ -217,9 +217,10 @@ public static class DiscoveryBuilder
             StateTopic = stateTopic,
             CommandTopic = commandTopic,
             Retain = retain,
-            Qos = qos
+            Qos = qos,
+            ValueTemplate = valueTemplate
         };
-        
+
         if (!string.IsNullOrWhiteSpace(icon))
         {
             result.Icon = icon;

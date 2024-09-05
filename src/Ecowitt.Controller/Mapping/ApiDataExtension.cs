@@ -38,86 +38,46 @@ public static class ApiDataExtension
                 switch (result.Model)
                 {
                     case SubdeviceModel.AC1100:
-                        result.Sensors.Add(new Sensor<bool>("AC Status",
-                            device.ac_status == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("AC Running",
-                            device.ac_running == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Warning",
-                            device.warning == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<bool>("Always On",
-                            device.always_on == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("Val_Type",
-                            (int?)device.val_type, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("Val",
-                            (int?)device.val, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int?>("runtime",
-                            (int?)device.run_time, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        //result.Sensors.Add(new Sensor<int?>("rssi", 
-                        //    (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("gw_rssi", 
-                            (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("ac_action",
-                            (int?)device.ac_action, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("plan_status",
-                            (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("Total Consumption", 
-                            (int?)device.elect_total, "Wh", SensorType.Energy, SensorState.TotalIncreasing, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int?>("Daily Consumption", 
-                            (int?)device.happen_elect, "Wh", SensorType.Energy, SensorState.Total, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int?>("Realtime Consumption", 
-                            (int?)device.realtime_power, "W", SensorType.Power, SensorState.Measurement, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int?>("AC Voltage", 
-                            (int?)device.ac_voltage, "V", SensorType.Voltage, SensorState.Measurement, SensorClass.Sensor));
-                        result.Sensors.Add(new Sensor<int?>("AC Current", 
-                            (int?)device.ac_current, "A", SensorType.Current, SensorState.Measurement, SensorClass.Sensor));
+                        result.Sensors.Add(new Sensor<bool>("AC Status", device.ac_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory:SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("AC Running", device.ac_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Warning", device.warning == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Always On", device.always_on == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ConfigValue Type", (int?)device.val_type, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ConfigValue", (int?)device.val, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Runtime", (int?)device.run_time, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("RSSI", (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Current Action", (int?)device.ac_action, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Plan Status", (int?)device.plan_status, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Total Consumption", (int?)device.elect_total, "Wh", SensorType.Energy, SensorState.TotalIncreasing));
+                        result.Sensors.Add(new Sensor<int?>("Daily Consumption", (int?)device.happen_elect, "Wh", SensorType.Energy, SensorState.Total));
+                        result.Sensors.Add(new Sensor<int?>("Realtime Power", (int?)device.realtime_power, "W", SensorType.Power));
+                        result.Sensors.Add(new Sensor<int?>("AC Voltage", (int?)device.ac_voltage, "V", SensorType.Voltage));
+                        result.Sensors.Add(new Sensor<int?>("AC Current", (int?)device.ac_current, "A", SensorType.Current));
                         break;
                     case SubdeviceModel.WFC01:
-                        result.Sensors.Add(new Sensor<bool>("Water Status", device.water_status == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Water Running", device.water_running == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor));
-                        result.Sensors.Add(new Sensor<bool>("Warning",
-                            device.warning == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<bool>("Always On",
-                            device.always_on == 1, "", SensorType.None, SensorState.Measurement, SensorClass.BinarySensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("Val_Type",
-                            (int?)device.val_type, "", SensorType.None, SensorState.Measurement, SensorClass.Sensor, SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("Val",
-                            (int?)device.val, "", SensorType.None, SensorState.Measurement));
-                        result.Sensors.Add(new Sensor<int?>("runtime",
-                            (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        //result.Sensors.Add(new Sensor<int?>("rssi", 
-                        //    (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("gw_rssi", 
-                            (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("water_action",
-                            (int?)device.water_action, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("plan_status",
-                            (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<double?>("Total Consumption",
-                            isMetric ? (double?)device.water_total : L2G(device.water_total), isMetric ? "L" : "gal", SensorType.Volume, SensorState.TotalIncreasing));
-                        result.Sensors.Add(new Sensor<double?>("Current Consumption",
-                            isMetric ? (double?)device.happen_water : L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
-                        result.Sensors.Add(new Sensor<double?>("Flow Velocity",
-                            isMetric ? (double?)device.flow_velocity : L2G(device.flow_velocity), isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate, SensorState.Measurement));
-                        result.Sensors.Add(new Sensor<double?>("Water Temperature",
-                            isMetric ? (double?)device.water_temp : C2F(device.water_temp), isMetric ? "°C" : "F", SensorType.Temperature, SensorState.Measurement));
-                        result.Sensors.Add(new Sensor<int?>("Battery",
-                            (int?)device.wfc01batt*20, "%", SensorType.Battery, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Water Status", device.water_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Water Running", device.water_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Warning", device.warning == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Always On", device.always_on == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ConfigValue Type", (int?)device.val_type, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ConfigValue", (int?)device.val, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Runtime", (int?)device.run_time, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("RSSI", (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Current Action", (int?)device.water_action, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Plan Status", (int?)device.plan_status, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<double?>("Total Consumption", isMetric ? (double?)device.water_total : L2G(device.water_total), isMetric ? "L" : "gal", SensorType.Volume, SensorState.TotalIncreasing));
+                        result.Sensors.Add(new Sensor<double?>("Daily Consumption", isMetric ? (double?)device.water_total - (double?)device.happen_water : L2G(device.water_total) - L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
+                        result.Sensors.Add(new Sensor<double?>("Flow Velocity", isMetric ? (double?)device.flow_velocity : L2G(device.flow_velocity), isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate));
+                        result.Sensors.Add(new Sensor<double?>("Water Temperature", isMetric ? (double?)device.water_temp : C2F(device.water_temp), isMetric ? "°C" : "F", SensorType.Temperature));
+                        result.Sensors.Add(new Sensor<int?>("Battery", (int?)device.wfc01batt*20, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic));
                         break;
                     case SubdeviceModel.Unknown:
                     default:
                         //these things *likely* exists
-                        result.Sensors.Add(new Sensor<int?>("Val_Type",
-                            (int?)device.val_type, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("Val",
-                            (int?)device.val, "", SensorType.None, SensorState.Measurement));
-                        result.Sensors.Add(new Sensor<int?>("runtime",
-                            (int?)device.run_time, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        //result.Sensors.Add(new Sensor<int?>("rssi", 
-                        //    (int?)device.rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("gw_rssi", 
-                            (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<int?>("plan_status",
-                            (int?)device.plan_status, "", SensorType.None, SensorState.Measurement, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ConfigValue Type", (int?)device.val_type, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("ConfigValue", (int?)device.val, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Runtime", (int?)device.run_time, "", sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("RSSI", (int?)device.gw_rssi, "dBm", SensorType.SignalStrength, sensorCategory: SensorCategory.Diagnostic));
                         break;
                 }
             }
