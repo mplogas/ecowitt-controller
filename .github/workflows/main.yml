@@ -26,9 +26,10 @@ jobs:
         images: |
           ${{ vars.DOCKERHUB_USERNAME }}/ecowitt-controller
         # Docker tags to generate
-        # tags: |
-        #   type=raw,value=latest
-        #   type=sha      
+        tags: |
+            type=schedule,enable=true,pattern={{date 'YYYYMMDD-hhmmss' tz='Europe/Berlin'}}
+            type=raw,enable={{is_default_branch}},value=latest
+            type=sha,enable=true,format=short      
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
