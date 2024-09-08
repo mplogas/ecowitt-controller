@@ -51,7 +51,7 @@ public class Program
             .ReadFrom.Services(services)
             .Enrich.FromLogContext()
             .WriteTo.Console()
-            .WriteTo.File(Path.Exists("/config/logs") ? "/config/logs/ecowitt-controller.log" : "logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+            .WriteTo.File(Path.Exists("/config/logs") ? "/config/logs/ecowitt-controller.log" : "logs/ecowitt-controller.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 5)
             .MinimumLevel.Warning()
             .ReadFrom.Configuration(builder.Configuration));
 
