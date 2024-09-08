@@ -5,15 +5,12 @@ WORKDIR /app
 EXPOSE 8080  
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
-ENV ASPNETCORE_URLS=http://+:8080
-
 ADD Ecowitt.Controller/ /src/Ecowitt.Controller
 WORKDIR "/src/Ecowitt.Controller"
 RUN dotnet restore "./Ecowitt.Controller.csproj"
-# RUN dotnet build "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
+ENV ASPNETCORE_URLS=http://+:8080
 ARG BUILD_CONFIGURATION=Release
 WORKDIR "/src/Ecowitt.Controller"
 RUN dotnet publish "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
