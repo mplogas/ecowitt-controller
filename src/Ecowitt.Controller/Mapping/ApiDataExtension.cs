@@ -319,15 +319,22 @@ public static class ApiDataExtension
                             double value;
                             double maxVoltage;
                             double minVoltage;
+
+                            /*
+                             *
+                               wh90batt - voltage of the AA batteries
+                               ws90cap_volt - voltage of the capacitor battery (solar charged)
+
+                             */
                             if (propertyName.Equals("wh90batt", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                maxVoltage = 5.3;
-                                minVoltage = 2.0;
+                                maxVoltage = 3.0;
+                                minVoltage = 2.2;
                                 value = doubleVal / 100;
                             }
                             else
                             {
-                                minVoltage = 1.2;
+                                minVoltage = 1.1;
                                 maxVoltage = 1.5;
                                 value = doubleVal / 10;
                             }
