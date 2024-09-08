@@ -10,12 +10,12 @@ WORKDIR "/src/Ecowitt.Controller"
 RUN dotnet restore "./Ecowitt.Controller.csproj"
 
 FROM build AS publish
-ENV ASPNETCORE_URLS=http://+:8080
 ARG BUILD_CONFIGURATION=Release
 WORKDIR "/src/Ecowitt.Controller"
 RUN dotnet publish "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Ecowitt.Controller.dll"]
