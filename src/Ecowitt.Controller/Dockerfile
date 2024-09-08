@@ -2,23 +2,20 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 80   
-EXPOSE 443
+EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["Ecowitt.Controller/Ecowitt.Controller.csproj", "Ecowitt.Controller/"]
-RUN dotnet restore "./Ecowitt.Controller/Ecowitt.Controller.csproj"
-COPY . .
+ADD ./ /src/Ecowitt.Controller
 WORKDIR "/src/Ecowitt.Controller"
-RUN dotnet build "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet restore "./Ecowitt.Controller.csproj"
 
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
+ARG BUILD_CONFIGURATION=Debug
+WORKDIR "/src/Ecowitt.Controller"
 RUN dotnet publish "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "Ecowitt.Controller.dll"]
