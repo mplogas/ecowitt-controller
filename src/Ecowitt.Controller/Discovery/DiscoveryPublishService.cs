@@ -114,11 +114,12 @@ public class DiscoveryPublishService : BackgroundService
     {
         var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt", subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
         var id = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, "switch");
-        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}";
+        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}/diag/status";
+        var valueTemplate = "{% if (value_json.value == true) -%} ON {%- else -%} OFF {%- endif %}";
         var cmdTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceHACommandTopic(gw.Name, subdevice.Id.ToString())}";
 
         var config =
-            DiscoveryBuilder.BuildSwitchConfig(device, _origin, "switch", id, statetopic, cmdTopic);
+            DiscoveryBuilder.BuildSwitchConfig(device, _origin, "switch", id, statetopic, cmdTopic, valueTemplate: valueTemplate);
 
         await PublishMessage(Helper.Sanitize($"switch/{subdevice.Nickname}"), config);
     }
@@ -126,7 +127,8 @@ public class DiscoveryPublishService : BackgroundService
     private async Task PublishSensorDiscovery(Gateway gw, ISensor sensor)
     {
         var device = gw.Model == null ? DiscoveryBuilder.BuildDevice(gw.Name) : DiscoveryBuilder.BuildDevice(gw.Name, gw.Model, "Ecowitt", gw.Model, gw.StationType ?? "unknown");
-        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.Name)}";
+        
+        var statetopic = sensor.SensorCategory == SensorCategory.Diagnostic ? $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayDiagnosticTopic(gw.Name, sensor.Name)}" : $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.Name)}";
         var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttGatewayTopic(gw.Name)}/availability";
         await PublishSensorDiscovery(device, sensor, statetopic, availabilityTopic);
     }
@@ -134,7 +136,7 @@ public class DiscoveryPublishService : BackgroundService
     private async Task PublishSensorDiscovery(Gateway gw, Ecowitt.Controller.Model.Subdevice subdevice, ISensor sensor)
     {
         var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt", subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
-        var statetopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.Name)}";
+        var statetopic = sensor.SensorCategory == SensorCategory.Diagnostic ? $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceDiagnosticTopic(gw.Name, subdevice.Id.ToString(), sensor.Name)}" : $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.Name)}";
         var availabilityTopic = $"{_mqttOptions.BaseTopic}/{Helper.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}/availability";
         await PublishSensorDiscovery(device, sensor, statetopic, availabilityTopic);
     }

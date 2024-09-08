@@ -221,6 +221,9 @@ public static class DiscoveryBuilder
             ValueTemplate = valueTemplate
         };
 
+        //result.StateOn = "true";
+        //result.StateOff = "false";
+
         if (!string.IsNullOrWhiteSpace(icon))
         {
             result.Icon = icon;
