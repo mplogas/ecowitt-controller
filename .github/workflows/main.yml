@@ -32,7 +32,7 @@ jobs:
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
-        context: "{{defaultContext}}:src:Ecowitt.Controller"
+        context: "{{defaultContext}}/src/Ecowitt.Controller"
         #dockerfile: ./Dockerfile
         push: true
         labels: ${{ steps.meta.outputs.labels }}
