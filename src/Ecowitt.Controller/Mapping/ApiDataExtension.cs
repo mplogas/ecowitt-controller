@@ -38,8 +38,8 @@ public static class ApiDataExtension
                 switch (result.Model)
                 {
                     case SubdeviceModel.AC1100:
-                        result.Sensors.Add(new Sensor<bool>("AC Status", device.ac_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory:SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<bool>("AC Running", device.ac_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Status", device.ac_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory:SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Running", device.ac_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Warning", device.warning == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Always On", device.always_on == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("ConfigValue Type", (int?)device.val_type, sensorCategory: SensorCategory.Diagnostic));
@@ -55,8 +55,8 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<int?>("AC Current", (int?)device.ac_current, "A", SensorType.Current));
                         break;
                     case SubdeviceModel.WFC01:
-                        result.Sensors.Add(new Sensor<bool>("Water Status", device.water_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
-                        result.Sensors.Add(new Sensor<bool>("Water Running", device.water_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Status", device.water_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Running", device.water_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Warning", device.warning == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Always On", device.always_on == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<int?>("ConfigValue Type", (int?)device.val_type, sensorCategory: SensorCategory.Diagnostic));
