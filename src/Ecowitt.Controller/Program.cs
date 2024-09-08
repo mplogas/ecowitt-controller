@@ -88,8 +88,8 @@ public class Program
         builder.Services.AddHostedService<DiscoveryPublishService>();
 
         builder.Services.AddControllers();
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        //builder.Services.AddEndpointsApiExplorer();
+        //builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
         app.UseSerilogRequestLogging(options =>
@@ -108,11 +108,11 @@ public class Program
             };
         });
         
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
+        //if (app.Environment.IsDevelopment())
+        //{
+        //    app.UseSwagger();
+        //    app.UseSwaggerUI();
+        //}
         
         app.MapControllers();
         
