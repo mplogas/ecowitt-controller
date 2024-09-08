@@ -3,17 +3,18 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80   
-EXPOSE 443
+#EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
-ENV ASPNETCORE_HTTPS_PORTS=443
-ENV ASPNETCORE_HTTP_PORTS=80
+ENV ASPNETCORE_URLS=http://+:80
+#ENV ASPNETCORE_HTTPS_PORTS=443
+#ENV ASPNETCORE_HTTP_PORTS=80
 
 ADD Ecowitt.Controller/ /src/Ecowitt.Controller
 WORKDIR "/src/Ecowitt.Controller"
 RUN dotnet restore "./Ecowitt.Controller.csproj"
-RUN dotnet build "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/build
+# RUN dotnet build "./Ecowitt.Controller.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
