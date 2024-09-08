@@ -24,8 +24,9 @@
 **/values.dev.yaml
 **/appsettings.json
 **/appsettings.*.json
+*.json
+*.md
 LICENSE
-README.md
 !**/.gitignore
 !.git/HEAD
 !.git/config
