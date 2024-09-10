@@ -3,6 +3,7 @@ using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Consumer;
@@ -27,9 +28,7 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
         _logger.LogDebug($"Received ApiData: {message.Model} ({message.PASSKEY}) \n {message.Payload}");
         var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric);
         updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.','-');
-
-        // TODO: der erste storedgateway check schreibt schon sensoren, so dass das discoveryupdate flag nie auf true gesetzt wird
-
+        
         var storedGateway = _deviceStore.GetGateway(updatedGateway.IpAddress);
         if(storedGateway == null)
         {
@@ -39,6 +38,7 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
                 sensor.DiscoveryUpdate = true;
             }
             if(!_deviceStore.UpsertGateway(updatedGateway)) _logger.LogWarning($"failed to add gateway {updatedGateway.IpAddress} ({updatedGateway.Model}) to the store");
+            else { _logger.LogDebug($"gateway updated: {JsonConvert.SerializeObject(storedGateway)})"); }
         }
         else
         {
@@ -66,7 +66,8 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
                 storedGateway.Sensors.Remove(sensor);
             }
             
-            if(!_deviceStore.UpsertGateway(storedGateway)) _logger.LogWarning($"failed to update {storedGateway.IpAddress} ({storedGateway.Model}) in the store");
+            if(!_deviceStore.UpsertGateway(storedGateway)) {_logger.LogWarning($"failed to update {storedGateway.IpAddress} ({storedGateway.Model}) in the store");}
+            else { _logger.LogDebug($"gateway updated: {JsonConvert.SerializeObject(storedGateway)})"); }
         }
         
         return Task.CompletedTask;
