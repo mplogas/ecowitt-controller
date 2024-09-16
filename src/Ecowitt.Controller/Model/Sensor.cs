@@ -55,7 +55,7 @@ public class Sensor<T> : ISensor<T>
         TimestampUtc = DateTime.UtcNow;
     }
 
-    public Sensor(string name, string alias, T value, string unitOfMeasurement, SensorType sensorType = SensorType.None, SensorState sensorState = SensorState.Measurement,
+    public Sensor(string name, string alias, T value, string unitOfMeasurement = "", SensorType sensorType = SensorType.None, SensorState sensorState = SensorState.Measurement,
         SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
     {
         Name = name;
