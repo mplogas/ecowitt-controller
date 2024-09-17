@@ -155,7 +155,7 @@ namespace Ecowitt.Controller.Mapping
         // so we're doing it old school
         private static int GetNumber(string propertyName)
         {
-            const string pattern = @"(\D*)(\d+)";
+            const string pattern = @"^[a-zA-Z_0-9]*(\d+)$";
             var m = Regex.Match(propertyName, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
             return m.Success ? int.Parse(m.Groups[1].Value) : -1;
         }
