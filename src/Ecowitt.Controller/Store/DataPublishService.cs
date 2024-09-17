@@ -55,7 +55,7 @@ public class DataPublishService : BackgroundService
                     foreach (var sensor in gw.Sensors)
                     {
                         payload = BuildSensorPayload(sensor);
-                        var topic = sensor.SensorCategory == SensorCategory.Diagnostic ? Helper.BuildMqttGatewayDiagnosticTopic(gw.Name, sensor.Name) : Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.Name);
+                        var topic = sensor.SensorCategory == SensorCategory.Diagnostic ? Helper.BuildMqttGatewayDiagnosticTopic(gw.Name, sensor.Alias) : Helper.BuildMqttGatewaySensorTopic(gw.Name, sensor.Alias);
                         await PublishMessage(topic, payload);
 
                     }
@@ -70,7 +70,7 @@ public class DataPublishService : BackgroundService
                         foreach (var sensor in subdevice.Sensors)
                         {
                             payload = BuildSensorPayload(sensor);
-                            var topic = sensor.SensorCategory == SensorCategory.Diagnostic ? Helper.BuildMqttSubdeviceDiagnosticTopic(gw.Name, subdevice.Id.ToString(), sensor.Name) : Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.Name);
+                            var topic = sensor.SensorCategory == SensorCategory.Diagnostic ? Helper.BuildMqttSubdeviceDiagnosticTopic(gw.Name, subdevice.Id.ToString(), sensor.Alias) : Helper.BuildMqttSubdeviceSensorTopic(gw.Name, subdevice.Id.ToString(), sensor.Alias);
                             await PublishMessage(topic, payload);
                         }
                     }
@@ -102,7 +102,8 @@ public class DataPublishService : BackgroundService
         return new
         {
             name = s.Name,
-            value = s.DataType == typeof(double?) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
+            alias = s.Alias,
+            value = s.DataType == typeof(double) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
             unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null,
             type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
         };

@@ -134,6 +134,7 @@ namespace Ecowitt.Controller.Mapping
                     return BuildWindSpeedSensor(propertyName, "Wind Speed", propertyValue, isMetric);
                 case "windgustmph":
                     return BuildWindSpeedSensor(propertyName, "Wind Gust", propertyValue, isMetric);
+                    //return BuildDoubleSensor(propertyName, "Wind Gust", propertyValue, "km/h", SensorType.WindSpeed);
                 case "maxdailygust":
                     return BuildWindSpeedSensor(propertyName, "Max Daily Gust", propertyValue, isMetric);
                 case "winddir":
@@ -143,6 +144,7 @@ namespace Ecowitt.Controller.Mapping
                 case "uv":
                     return BuildIntSensor(propertyName, "UV Index", propertyValue);
                 case "rainratein":
+                case "rrain_piezo":
                     return BuildRainRateSensor(propertyName, "Rain Rate", propertyValue, isMetric);
                 case "eventrainin":
                 case "erain_piezo":
@@ -395,6 +397,8 @@ namespace Ecowitt.Controller.Mapping
                     return BuildTemperatureSensor(propertyName, "Water Temperature", propertyValue, isMetric);
                 case "wfc01batt":
                     return BuildBatterySensor(propertyName, "WFC01 Battery", propertyValue);
+                case "heap":
+                    return BuildIntSensor(propertyName, "Gateway Heap", propertyValue, "byte", SensorType.None);
                 case "PASSKEY":
                 case "stationtype":
                 case "runtime":

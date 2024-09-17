@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Xml.Linq;
 using Ecowitt.Controller.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
 
 namespace Ecowitt.Controller.Mapping;
@@ -29,6 +30,9 @@ public static class ApiDataExtension
 
         if (!string.IsNullOrWhiteSpace(subdeviceApiData.Payload) && subdeviceApiData.Payload != "200 OK")
         {
+            //var jObject = JObject.Parse(subdeviceApiData.Payload);
+            //var command = jObject["command"];
+
             dynamic? json = JsonConvert.DeserializeObject(subdeviceApiData.Payload);
             if (json != null)
             {
@@ -38,7 +42,7 @@ public static class ApiDataExtension
                 switch (result.Model)
                 {
                     case SubdeviceModel.AC1100:
-                        result.Sensors.Add(new Sensor<bool>("Status", device.ac_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory:SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<bool>("Status", device.ac_status == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Running", device.ac_running == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Warning", device.warning == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
                         result.Sensors.Add(new Sensor<bool>("Always On", device.always_on == 1, sensorClass: SensorClass.BinarySensor, sensorCategory: SensorCategory.Diagnostic));
@@ -69,7 +73,7 @@ public static class ApiDataExtension
                         result.Sensors.Add(new Sensor<double?>("Daily Consumption", isMetric ? (double?)device.water_total - (double?)device.happen_water : L2G(device.water_total) - L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
                         result.Sensors.Add(new Sensor<double?>("Flow Velocity", isMetric ? (double?)device.flow_velocity : L2G(device.flow_velocity), isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate));
                         result.Sensors.Add(new Sensor<double?>("Water Temperature", isMetric ? (double?)device.water_temp : C2F(device.water_temp), isMetric ? "°C" : "F", SensorType.Temperature));
-                        result.Sensors.Add(new Sensor<int?>("Battery", (int?)device.wfc01batt*20, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic));
+                        result.Sensors.Add(new Sensor<int?>("Battery", (int?)device.wfc01batt * 20, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic));
                         break;
                     case SubdeviceModel.Unknown:
                     default:
