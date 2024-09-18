@@ -1,115 +1,112 @@
 ﻿using Ecowitt.Controller.Model;
 using Serilog;
 
+/* all currently available sensors. their naming scheme is not consistent, so we have to map them manually
+PASSKEY
+stationtype
+runtime
+dateutc
+tempinf
+humidityin 
+baromrelin 
+baromabsin 
+tempf  
+humidity   
+winddir
+windspeedmph
+windgustmph
+maxdailygust
+solarradiation
+uv     
+rainratein 
+eventrainin
+hourlyrainin
+dailyrainin
+weeklyrainin
+monthlyrainin 
+yearlyrainin
+totalrainin
+rrain_piezo
+erain_piezo
+hrain_piezo
+drain_piezo
+wrain_piezo
+mrain_piezo
+yrain_piezo
+ws90cap_volt
+ws90_ver   
+tempf1,….,,tempf8             
+humidity1,….,humidity8        
+soilmoisture1,….., soilmoisture8  
+soilad1,…., soilad8           
+pm25_ch1, …., pm25_ch4        
+pm25_avg_24h_ch1,…..,pm25_avg_24h_ch4
+tf_co2                        
+humi_co2                      
+pm1_co2                       
+pm1_24h_co2                   
+pm25_co2                      
+pm25_24h_co2                  
+pm4_co2                       
+pm4_24h_co2                   
+pm10_co2                      
+pm10_24h_co2                  
+co2                           
+co2_24h                       
+lightning_num                 
+lightning                     
+lightning_time                
+leak_ch1 …., leak_ch4         
+tf_ch1, …., tf_ch8            
+leafwetness_ch1,…, leafwetness_ch8
+console_batt                  
+wh65batt                      
+wh80batt                      
+wh26batt                      
+batt1,….,batt8                
+soilbatt1,…,soilbatt8         
+pm25batt1, …, pm25batt4       
+wh57batt                      
+leakbatt1, …,leakbatt4        
+tf_batt1, …, tf_batt8 
+co2_batt          
+leaf_batt1, …, leaf_batt8
+wh90batt          
+freq              
+model             
+interval          
+ac_status         
+warning           
+always_on         
+val_type          
+val               
+run_time          
+rssi              
+gw_rssi           
+timeutc           
+publish_time      
+ac_action         
+ac_running        
+plan_status       
+elect_total       
+happen_elect      
+realtime_power    
+ac_voltage        
+ac_current        
+water_status      
+water_action      
+water_running     
+water_total       
+happen_water      
+flow_velocity     
+water_temp        
+wfc01batt         
+*/
+
 namespace Ecowitt.Controller.Mapping
 {
     public partial class SensorBuilder
     {
-        /* all currently available sensors. their naming scheme is not consistent, so we have to map them manually
-            | sensor name    |
-            | -------------- |
-            | PASSKEY        |
-            | stationtype    |
-            | runtime        |
-            | dateutc        |
-            | tempinf        |
-            | humidityin     |
-            | baromrelin     |
-            | baromabsin     |
-            | tempf          |
-            | humidity       |
-            | winddir        |
-            | windspeedmph   |
-            | windgustmph    |
-            | maxdailygust   |
-            | solarradiation |
-            | uv             |
-            | rainratein     |
-            | eventrainin    |
-            | hourlyrainin   |
-            | dailyrainin    |
-            | weeklyrainin   |
-            | monthlyrainin  |
-            | yearlyrainin   |
-            | totalrainin    |
-            | rrain_piezo    |
-            | erain_piezo    |
-            | hrain_piezo    |
-            | drain_piezo    |
-            | wrain_piezo    |
-            | mrain_piezo    |
-            | yrain_piezo    |
-            | ws90cap_volt   |
-            | ws90_ver       |
-            | tempf1,….,,tempf8                     |
-            | humidity1,….,humidity8                |
-            | soilmoisture1,….., soilmoisture8      |
-            | soilad1,…., soilad8                   |
-            | pm25_ch1, …., pm25_ch4                |
-            | pm25_avg_24h_ch1,…..,pm25_avg_24h_ch4 |
-            | tf_co2                                |
-            | humi_co2                              |
-            | pm1_co2                               |
-            | pm1_24h_co2                           |
-            | pm25_co2                              |
-            | pm25_24h_co2                          |
-            | pm4_co2                               |
-            | pm4_24h_co2                           |
-            | pm10_co2                              |
-            | pm10_24h_co2                          |
-            | co2                                   |
-            | co2_24h                               |
-            | lightning_num                         |
-            | lightning                             |
-            | lightning_time                        |
-            | leak_ch1 …., leak_ch4                 |
-            | tf_ch1, …., tf_ch8                    |
-            | leafwetness_ch1,…, leafwetness_ch8    |
-            | console_batt                          |
-            | wh65batt                              |
-            | wh80batt                              |
-            | wh26batt                              |
-            | batt1,….,batt8                        |
-            | soilbatt1,…,soilbatt8                 |
-            | pm25batt1, …, pm25batt4               |
-            | wh57batt                              |
-            | leakbatt1, …,leakbatt4                |
-            | tf_batt1, …, tf_batt8     |
-            | co2_batt                  |
-            | leaf_batt1, …, leaf_batt8 |
-            | wh90batt                  |
-            | freq                      |
-            | model                     |
-            | interval                  |
-            | ac_status                 |
-            | warning                   |
-            | always_on                 |
-            | val_type                  |
-            | val                       |
-            | run_time                  |
-            | rssi                      |
-            | gw_rssi                   |
-            | timeutc                   |
-            | publish_time              |
-            | ac_action                 |
-            | ac_running                |
-            | plan_status               |
-            | elect_total               |
-            | happen_elect              |
-            | realtime_power            |
-            | ac_voltage                |
-            | ac_current                |
-            | water_status              |
-            | water_action              |
-            | water_running             |
-            | water_total               |
-            | happen_water              |
-            | flow_velocity             |
-            | water_temp                |
-            | wfc01batt                 |
-            | ------------------------- |
-             */
-
         public static ISensor? BuildSensor(string propertyName, string propertyValue, bool isMetric = true)
         {
             switch (propertyName)
@@ -275,12 +272,16 @@ namespace Ecowitt.Controller.Mapping
                     number = GetNumber(propertyName);
                     return BuildIntSensor(propertyName, $"Leaf Wetness {number}", propertyValue, "%");
                 case "console_batt":
+                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "Console Battery", propertyValue);
                 case "wh65batt":
+                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH65 Battery", propertyValue);
                 case "wh80batt":
+                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH80 Battery", propertyValue);
                 case "wh26batt":
+                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH26 Battery", propertyValue);
                 case "batt1":
                 case "batt2":
@@ -290,10 +291,10 @@ namespace Ecowitt.Controller.Mapping
                 case "batt6":
                 case "batt7":
                 case "batt8":
+                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Battery {number}", propertyValue);
-                // maybe it's voltage, I don't have this sensor
-                //return BuildVoltageSensor(propertyName, $"Battery {number}", propertyValue, isDiag: true);
+                    //return BuildVoltageSensor(propertyName, $"Battery {number}", propertyValue, isDiag: true);
                 case "soilbatt1":
                 case "soilbatt2":
                 case "soilbatt3":
@@ -308,18 +309,18 @@ namespace Ecowitt.Controller.Mapping
                 case "pm25batt2":
                 case "pm25batt3":
                 case "pm25batt4":
+                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"PM2.5 Battery {number}", propertyValue);
-                // maybe it's voltage, I don't have this sensor
                 case "wh57batt":
-                    return BuildBatterySensor(propertyName, "WH57 Battery", propertyValue);
+                    return BuildBatterySensor(propertyName, "WH57 Battery", propertyValue, true);
                 case "leakbatt1":
                 case "leakbatt2":
                 case "leakbatt3":
                 case "leakbatt4":
+                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Leak Battery {number}", propertyValue);
-                // maybe it's voltage, I don't have this sensor
                 case "tf_batt1":
                 case "tf_batt2":
                 case "tf_batt3":
@@ -328,11 +329,11 @@ namespace Ecowitt.Controller.Mapping
                 case "tf_batt6":
                 case "tf_batt7":
                 case "tf_batt8":
+                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Temperature Battery {number}", propertyValue);
-                // maybe it's voltage, I don't have this sensor
                 case "co2_batt":
-                    return BuildBatterySensor(propertyName, "CO2 Battery", propertyValue);
+                    return BuildBatterySensor(propertyName, "CO2 Battery", propertyValue, true);
                 case "leaf_batt1":
                 case "leaf_batt2":
                 case "leaf_batt3":
@@ -341,15 +342,15 @@ namespace Ecowitt.Controller.Mapping
                 case "leaf_batt6":
                 case "leaf_batt7":
                 case "leaf_batt8":
+                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Leaf Battery {number}", propertyValue);
-                // maybe it's voltage, I don't have this sensor
                 case "wh90batt":
-                    return BuildBatterySensor(propertyName, "WH90 Battery", propertyValue);
+                    return BuildVoltageSensor(propertyName, "WH90 Battery", propertyValue, true);
                 case "ac_status":
                     return BuildBinarySensor(propertyName, "AC Status", propertyValue);
                 case "ac_running":
-                    return BuildBinarySensor(propertyName, "AC Running", propertyValue);
+                    return BuildBinarySensor(propertyName, "Running", propertyValue);
                 case "warning":
                     return BuildBinarySensor(propertyName, "Warning", propertyValue);
                 case "always_on":
@@ -381,7 +382,7 @@ namespace Ecowitt.Controller.Mapping
                 case "water_action":
                     return BuildIntSensor(propertyName, "Water Action", propertyValue, isDiag: true);
                 case "water_running":
-                    return BuildBinarySensor(propertyName, "Water Running", propertyValue);
+                    return BuildBinarySensor(propertyName, "Running", propertyValue);
                 case "water_total":
                     return BuildWaterConsumptionSensor(propertyName, "Total Water", propertyValue, isMetric, true);
                 case "happen_water":
@@ -390,9 +391,9 @@ namespace Ecowitt.Controller.Mapping
                 case "flow_velocity":
                     return BuildWaterFlowSensor(propertyName, "Flow Velocity", propertyValue, isMetric);
                 case "water_temp":
-                    return BuildTemperatureSensor(propertyName, "Water Temperature", propertyValue, isMetric);
+                    return BuildTemperatureSensor(propertyName, "Water Temperature", propertyValue, isMetric, true);
                 case "wfc01batt":
-                    return BuildBatterySensor(propertyName, "WFC01 Battery", propertyValue);
+                    return BuildBatterySensor(propertyName, "WFC01 Battery", propertyValue, true);
                 case "heap":
                     return BuildIntSensor(propertyName, "Gateway Heap", propertyValue, "byte", SensorType.None);
                 case "PASSKEY":

@@ -52,15 +52,28 @@ namespace Ecowitt.Controller.Mapping
 
         private static Sensor<bool>? BuildBinarySensor(string propertyName, string alias, string propertyValue, bool isDiag = true)
         {
-            return bool.TryParse(propertyValue, out var value)
-                ? new Sensor<bool>(propertyName, alias, value, sensorClass: SensorClass.BinarySensor, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
-                : null;
+            bool value;
+            switch (propertyValue)
+            {
+                case "0":
+                case "false":
+                    value = false;
+                    break;
+                case "1":
+                case "true":
+                    value = true;
+                    break;
+                default:
+                    return null;
+            }
+
+            return new Sensor<bool>(propertyName, alias, value, sensorClass: SensorClass.BinarySensor, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
         }
 
-        private static Sensor<int>? BuildBatterySensor(string propertyName, string alias, string propertyValue)
+        private static Sensor<int>? BuildBatterySensor(string propertyName, string alias, string propertyValue, bool withMultiplier = false )
         {
             return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic)
+                ? new Sensor<int>(propertyName, alias, withMultiplier ? value * 20 : value, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic)
                 : null;
         }
 
@@ -120,12 +133,20 @@ namespace Ecowitt.Controller.Mapping
                 : null;
         }
 
-        private static Sensor<double>? BuildTemperatureSensor(string propertyName, string alias, string propertyValue,
-            bool isMetric)
+        private static Sensor<double>? BuildTemperatureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
         {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? F2C(value) : value, isMetric ? "°C" : "F", SensorType.Temperature)
-                : null;
+            if (double.TryParse(propertyValue, out var value))
+            {
+                var unit = isMetric ? "°C" : "F";
+                if (startMetric != isMetric)
+                {
+                    value = startMetric ? C2F(value) : F2C(value);
+                }
+
+                return new Sensor<double>(propertyName, alias, value, unit, SensorType.Temperature);
+            }
+
+            return null;
         }
 
         private static Sensor<double>? BuildDoubleSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
