@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
@@ -104,8 +105,8 @@ public class DataPublishService : BackgroundService
             name = s.Name,
             alias = s.Alias,
             value = s.DataType == typeof(double) ? Math.Round(Convert.ToDouble(s.Value), _controllerOptions.Precision) : s.Value,
-            unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null,
-            type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
+            unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null
+            //type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
         };
     }                        
 
@@ -136,7 +137,7 @@ public class DataPublishService : BackgroundService
     private async Task PublishMessage(string topic, dynamic payload)
     {
         if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}",
-                JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }))) 
+                JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping}))) 
             _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
     }
 

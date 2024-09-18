@@ -1,4 +1,5 @@
-﻿using Ecowitt.Controller.Configuration;
+﻿using System.Text.Encodings.Web;
+using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Discovery.Model;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
@@ -167,7 +168,7 @@ public class DiscoveryPublishService : BackgroundService
 
         if(config.DeviceClass != null && config.DeviceClass.Equals("none", StringComparison.InvariantCultureIgnoreCase)) config.DeviceClass = null;
 
-        var payload = JsonSerializer.Serialize(config, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
+        var payload = JsonSerializer.Serialize(config, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping});
 
         _logger.LogDebug($"Topic: {topic}");
         _logger.LogDebug($"Payload: {payload}");
