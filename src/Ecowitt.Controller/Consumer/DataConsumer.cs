@@ -3,8 +3,8 @@ using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using SlimMessageBus;
+using System.Text.Json;
 
 namespace Ecowitt.Controller.Consumer;
 
@@ -38,7 +38,7 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
                 sensor.DiscoveryUpdate = true;
             }
             if(!_deviceStore.UpsertGateway(updatedGateway)) _logger.LogWarning($"failed to add gateway {updatedGateway.IpAddress} ({updatedGateway.Model}) to the store");
-            else { _logger.LogDebug($"gateway updated: {JsonConvert.SerializeObject(storedGateway)})"); }
+            else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
         }
         else
         {
@@ -67,7 +67,7 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
             }
             
             if(!_deviceStore.UpsertGateway(storedGateway)) {_logger.LogWarning($"failed to update {storedGateway.IpAddress} ({storedGateway.Model}) in the store");}
-            else { _logger.LogDebug($"gateway updated: {JsonConvert.SerializeObject(storedGateway)})"); }
+            else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
         }
         
         return Task.CompletedTask;

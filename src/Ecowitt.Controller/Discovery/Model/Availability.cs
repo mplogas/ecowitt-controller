@@ -1,15 +1,15 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Ecowitt.Controller.Discovery.Model;
 
 public class Availability
 {
-    [JsonProperty("topic")]
+    [JsonPropertyName("topic")]
     public string Topic { get; set; }
-    [JsonProperty("payload_available")]
+    [JsonPropertyName("payload_available")]
     public string PayloadAvailable { get; set; }
-    [JsonProperty("payload_not_available")]
+    [JsonPropertyName("payload_not_available")]
     public string PayloadUnavailable { get; set; }
-    [JsonProperty("value_template")]
+    [JsonPropertyName("value_template")]
     public string ValueTemplate { get; set; }
 }

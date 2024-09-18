@@ -2,8 +2,8 @@ using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Microsoft.Extensions.Options;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Ecowitt.Controller.Store;
 
@@ -136,8 +136,7 @@ public class DataPublishService : BackgroundService
     private async Task PublishMessage(string topic, dynamic payload)
     {
         if (!await _mqttClient.Publish($"{_mqttOptions.BaseTopic}/{topic}",
-                JsonConvert.SerializeObject(payload,
-                    new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }))) 
+                JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }))) 
             _logger.LogWarning($"Failed to publish message to topic {_mqttOptions.BaseTopic}/{topic}. Is the client connected?");
     }
 

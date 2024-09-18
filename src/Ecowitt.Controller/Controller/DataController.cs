@@ -1,6 +1,6 @@
+using System.Text.Json;
 using Ecowitt.Controller.Model;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Controller;
@@ -60,7 +60,7 @@ public class DataController : ControllerBase
 
         //write forms key/values into Payload property as json
         data.Payload =
-            JsonConvert.SerializeObject(Request.Form.Select(kvp => new { name = kvp.Key, value = kvp.Value[0] }));
+            JsonSerializer.Serialize(Request.Form.Select(kvp => new { name = kvp.Key, value = kvp.Value[0] }));
         _logger.LogDebug($"Request form keys: {string.Join(", ", Request.Form.Keys)}");
 
         await _messageBus.Publish(data);

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Ecowitt.Controller.Model;
 
 public interface ISensor
@@ -11,6 +13,7 @@ public interface ISensor
     public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get;  }
     public object Value { get; set; }
+    [JsonIgnore]
     public Type DataType { get; }
     public bool DiscoveryUpdate { get; set; }
 }

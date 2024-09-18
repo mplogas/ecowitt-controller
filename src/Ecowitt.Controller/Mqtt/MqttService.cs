@@ -1,8 +1,8 @@
 ﻿using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using SlimMessageBus;
+using System.Text.Json;
 
 namespace Ecowitt.Controller.Mqtt;
 
@@ -40,7 +40,7 @@ public class MqttService : BackgroundService
             while(await timer.WaitForNextTickAsync(stoppingToken))
             {
                 // because i can't figure out how to escape the special chars for the heartbeat payload :(
-                await _mqttClient.Publish($"{_mqttConfig.BaseTopic}/{HeartbeatTopic}", JsonConvert.SerializeObject(new { service = DateTime.UtcNow }));
+                await _mqttClient.Publish($"{_mqttConfig.BaseTopic}/{HeartbeatTopic}", JsonSerializer.Serialize(new { service = DateTime.UtcNow }));
                 _logger.LogInformation("Sent heartbeat");
             }
         }
@@ -80,7 +80,7 @@ public class MqttService : BackgroundService
         }
         else
         {
-            var cmd = JsonConvert.DeserializeObject<SubdeviceApiCommand>(e.Payload);
+            var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(e.Payload);
             await _messageBus.Publish(cmd);
         }
 

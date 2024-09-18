@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Subdevice;
@@ -100,25 +100,24 @@ public class SubdeviceService : BackgroundService
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                dynamic? data = JsonConvert.DeserializeObject(content);
-                if (data is not null && data.command is not null)
+                var jsonDocument = JsonDocument.Parse(content);
+                var elements = jsonDocument.RootElement.GetProperty("command");
+                foreach (var element in elements.EnumerateArray())
                 {
-                    foreach (var device in data.command)
+                    
+                    var subdevice = new SubdeviceApiData
                     {
-                        var subdevice = new SubdeviceApiData
-                        {
-                            Id = device.id,
-                            Model = device.model,
-                            Version = device.ver,
-                            RfnetState = device.rfnet_state,
-                            Battery = device.battery,
-                            Signal = device.signal,
-                            GwIp = ipAddress,
-                            TimestampUtc = DateTime.UtcNow
-                        };
-                        _logger.LogInformation($"Subdevice: {subdevice.Id} ({subdevice.Model})");
-                        subdevices.Add(subdevice);
-                    }
+                        Id = element.GetProperty("id").GetInt32(),
+                        Model = element.GetProperty("model").GetInt32(),
+                        Version = element.GetProperty("ver").GetInt32(),
+                        RfnetState = element.GetProperty("rfnet_state").GetInt32(),
+                        Battery = element.GetProperty("battery").GetInt32(),
+                        Signal = element.GetProperty("signal").GetInt32(),
+                        GwIp = ipAddress,
+                        TimestampUtc = DateTime.UtcNow
+                    };
+                    _logger.LogInformation($"Subdevice: {subdevice.Id} ({subdevice.Model})");
+                    subdevices.Add(subdevice);
                 }
             }
             else
@@ -141,7 +140,7 @@ public class SubdeviceService : BackgroundService
         try
         {
             var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model } } };
-            var sContent = new StringContent(JsonConvert.SerializeObject(payload));
+            var sContent = new StringContent(JsonSerializer.Serialize(payload));
             var response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
             if (response.IsSuccessStatusCode)
             {

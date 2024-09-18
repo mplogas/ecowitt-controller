@@ -1,11 +1,5 @@
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text.Json;
-using System.Xml.Linq;
 using Ecowitt.Controller.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Serilog;
+using System.Text.Json;
 
 namespace Ecowitt.Controller.Mapping;
 
@@ -90,20 +84,18 @@ public static class ApiDataExtension
 
         if (!string.IsNullOrWhiteSpace(gatewayApiData.Payload) && gatewayApiData.Payload != "200 OK")
         {
-            dynamic? json = JsonConvert.DeserializeObject(gatewayApiData.Payload);
-            if (json != null)
+            using var jsonDocument = JsonDocument.Parse(gatewayApiData.Payload);
+            foreach (var element in jsonDocument.RootElement.EnumerateArray())
             {
-                foreach (var item in json)
-                {
-                    if (item?.name == null || item?.value == null) continue;
-                    string propertyName = item.name.ToString();
-                    string propertyValue = item.value.ToString(); //this is always a string, thanks ecowitt!
+                var propertyName = element.GetProperty("name").GetString();
+                var propertyValue = element.GetProperty("value").GetString();
 
-                    var sensor = SensorBuilder.BuildSensor(propertyName, propertyValue, isMetric);
-                    if(sensor != null)
-                    {
-                        result.Sensors.Add(sensor);
-                    }
+                if(string.IsNullOrWhiteSpace(propertyName) || string.IsNullOrWhiteSpace(propertyValue)) continue;
+
+                var sensor = SensorBuilder.BuildSensor(propertyName, propertyValue, isMetric);
+                if (sensor != null)
+                {
+                    result.Sensors.Add(sensor);
                 }
             }
         }

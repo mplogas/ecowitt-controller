@@ -1,8 +1,4 @@
-﻿using System.Globalization;
-using System.Text.RegularExpressions;
-using Ecowitt.Controller.Configuration;
-using Ecowitt.Controller.Model;
-using Newtonsoft.Json.Linq;
+﻿using Ecowitt.Controller.Model;
 using Serilog;
 
 namespace Ecowitt.Controller.Mapping

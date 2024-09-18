@@ -1,21 +1,21 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Ecowitt.Controller.Discovery.Model;
 
 public class Device
 {
-    [JsonProperty("identifiers")]
+    [JsonPropertyName("identifiers")]
     public List<string> Identifiers { get; set; } = new List<string>();
-    [JsonProperty("manufacturer")]
+    [JsonPropertyName("manufacturer")]
     public string Manufacturer { get; set; }
-    [JsonProperty("model")]
+    [JsonPropertyName("model")]
     public string Model { get; set; }
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
-    [JsonProperty("hw_version")]
+    [JsonPropertyName("hw_version")]
     public string HwVersion { get; set; }
-    [JsonProperty("sw_version")]
+    [JsonPropertyName("sw_version")]
     public string SwVersion { get; set; }
-    [JsonProperty("via_device")]
+    [JsonPropertyName("via_device")]
     public string? ViaDevice { get; set; }
 }

@@ -2,7 +2,7 @@ using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
+using System.Text.Json;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Consumer;
@@ -86,7 +86,7 @@ public class CommandConsumer : IConsumer<SubdeviceApiCommand>
                 return false;
         }
         
-        var sContent = new StringContent(JsonConvert.SerializeObject(payload));
+        var sContent = new StringContent(JsonSerializer.Serialize(payload));
         var response = await client.PostAsync("parse_quick_cmd_iot", sContent);
 
         if (response.IsSuccessStatusCode) return true;

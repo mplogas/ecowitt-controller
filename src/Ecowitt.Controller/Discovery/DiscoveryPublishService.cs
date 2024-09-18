@@ -4,7 +4,8 @@ using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Ecowitt.Controller.Discovery;
 
@@ -165,8 +166,8 @@ public class DiscoveryPublishService : BackgroundService
         topic = $"homeassistant/{topic}/config";
 
         if(config.DeviceClass != null && config.DeviceClass.Equals("none", StringComparison.InvariantCultureIgnoreCase)) config.DeviceClass = null;
-        var payload = JsonConvert.SerializeObject(config,
-            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
+        var payload = JsonSerializer.Serialize(config, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 
         _logger.LogDebug($"Topic: {topic}");
         _logger.LogDebug($"Payload: {payload}");

@@ -1,50 +1,50 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Ecowitt.Controller.Discovery.Model;
 
 public class Config
 {
-    [JsonProperty("device")]
+    [JsonPropertyName("device")]
     public Device Device { get; set; }
-    [JsonProperty("device_class")]
+    [JsonPropertyName("device_class")]
     public string? DeviceClass { get; set; }
-    [JsonProperty("origin")]
+    [JsonPropertyName("origin")]
     public Origin Origin { get; set; }  
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
-    [JsonProperty("retain")]
+    [JsonPropertyName("retain")]
     public bool? Retain { get; set; }
-    [JsonProperty("qos")]
+    [JsonPropertyName("qos")]
     public int? Qos { get; set; }
-    [JsonProperty("availability_topic")]
+    [JsonPropertyName("availability_topic")]
     public string AvailabilityTopic { get; set; }
-    [JsonProperty("state_topic")]
+    [JsonPropertyName("state_topic")]
     public string StateTopic { get; set; }
-    [JsonProperty("command_topic")]
+    [JsonPropertyName("command_topic")]
     public string? CommandTopic { get; set; }
-    [JsonProperty("unique_id")]
+    [JsonPropertyName("unique_id")]
     public string UniqueId { get; set; }
-    [JsonProperty("object_id")]
+    [JsonPropertyName("object_id")]
     public string ObjectId { get; set; }
-    [JsonProperty("unit_of_measurement")]
+    [JsonPropertyName("unit_of_measurement")]
     public string? UnitOfMeasurement { get; set; }
-    [JsonProperty("icon")]
+    [JsonPropertyName("icon")]
     public string? Icon { get; set; }
-    [JsonProperty("availability")]
+    [JsonPropertyName("availability")]
     public List<Availability>? Availability { get; set; }
-    [JsonProperty("availability_mode")]
+    [JsonPropertyName("availability_mode")]
     public AvailabilityMode? AvailabilityMode { get; set; }
-    [JsonProperty("value_template")]
+    [JsonPropertyName("value_template")]
     public string? ValueTemplate { get; set; }
-    [JsonProperty("entity_category")] 
+    [JsonPropertyName("entity_category")] 
     public string? SensorCategory { get; set; }
 
-    [JsonProperty("payload_on")]
+    [JsonPropertyName("payload_on")]
     public string? PayloadOn { get; set; }
-    [JsonProperty("payload_off")]
+    [JsonPropertyName("payload_off")]
     public string? PayloadOff { get; set; }
-    [JsonProperty("state_on")]
+    [JsonPropertyName("state_on")]
     public string? StateOn { get; set; }
-    [JsonProperty("state_off")]
+    [JsonPropertyName("state_off")]
     public string? StateOff { get; set; }
 }   
