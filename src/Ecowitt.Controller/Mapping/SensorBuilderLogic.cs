@@ -188,7 +188,7 @@ namespace Ecowitt.Controller.Mapping
 
         private static double IM2HP(double im)
         {
-            return im * 0.0338639;
+            return im * 33.86388;
         }
 
         private static double F2C(double fahrenheit)
