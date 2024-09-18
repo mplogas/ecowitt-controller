@@ -398,7 +398,7 @@ namespace Ecowitt.Controller.Mapping
                 case "wfc01batt":
                     return BuildBatterySensor(propertyName, "WFC01 Battery", propertyValue, true);
                 case "heap":
-                    return BuildIntSensor(propertyName, "Gateway Heap", propertyValue, "byte", SensorType.None);
+                    return BuildIntSensor(propertyName, "Gateway Heap", propertyValue, "byte", isDiag: true);
                 case "PASSKEY":
                 case "stationtype":
                 case "runtime":
