@@ -136,6 +136,9 @@ namespace Ecowitt.Controller.Mapping
                     return BuildIntSensor(propertyName, "Solar Radiation", propertyValue, "W/m²", SensorType.Irradiance);
                 case "uv":
                     return BuildIntSensor(propertyName, "UV Index", propertyValue);
+                case "srain_piezo":
+                    // todo: check value
+                    return new Sensor<string>(propertyName, "Rain State", propertyValue, "");
                 case "rainratein":
                 case "rrain_piezo":
                     return BuildRainRateSensor(propertyName, "Rain Rate", propertyValue, isMetric);

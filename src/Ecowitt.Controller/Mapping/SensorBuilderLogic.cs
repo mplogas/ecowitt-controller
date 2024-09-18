@@ -1,5 +1,4 @@
-﻿using System.Data.SqlTypes;
-using Ecowitt.Controller.Model;
+﻿using Ecowitt.Controller.Model;
 using System.Text.RegularExpressions;
 
 namespace Ecowitt.Controller.Mapping
