@@ -16,7 +16,7 @@ namespace Ecowitt.Controller.Mapping
             bool isMetric = true, bool isTotal = false)
         {
             return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? L2G(value) : value, isMetric ? "L" : "gal", SensorType.Water, isTotal ? SensorState.TotalIncreasing : SensorState.Measurement)
+                ? new Sensor<double>(propertyName, alias, isMetric ? value : L2G(value), isMetric ? "L" : "gal", SensorType.Water, isTotal ? SensorState.TotalIncreasing : SensorState.Measurement)
                 : null;
         }
 
@@ -79,7 +79,9 @@ namespace Ecowitt.Controller.Mapping
                     value = value * multiplier;
                     if(value > 100) value = 100; //fix for the 120% battery level when powered by USB
                 }
-                return new Sensor<int>(propertyName, alias, value, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic)
+
+                return new Sensor<int>(propertyName, alias, value, "%", SensorType.Battery,
+                    sensorCategory: SensorCategory.Diagnostic);
             } 
             return null;
         }
