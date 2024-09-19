@@ -71,9 +71,17 @@ namespace Ecowitt.Controller.Mapping
 
         private static Sensor<int>? BuildBatterySensor(string propertyName, string alias, string propertyValue, bool withMultiplier = false )
         {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, withMultiplier ? value * 20 : value, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic)
-                : null;
+            const int multiplier = 20; // I forsee this will change in the future with new sensors
+            if (int.TryParse(propertyValue, out var value))
+            {
+                if (withMultiplier)
+                {
+                    value = value * multiplier;
+                    if(value > 100) value = 100; //fix for the 120% battery level when powered by USB
+                }
+                return new Sensor<int>(propertyName, alias, value, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic)
+            } 
+            return null;
         }
 
         private static Sensor<int>? BuildPPMSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isTotal = false)
