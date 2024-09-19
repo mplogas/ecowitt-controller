@@ -83,10 +83,10 @@ namespace Ecowitt.Controller.Mapping
                 : null;
         }
 
-        private static Sensor<int>? BuildParticleSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isMetric = true, bool isTotal = false)
+        private static Sensor<double>? BuildParticleSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isMetric = true, bool isTotal = false)
         {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, "µg/m³", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
+            return double.TryParse(propertyValue, out var value)
+                ? new Sensor<double>(propertyName, alias, value, "µg/m³", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
                 : null;
         }
 
