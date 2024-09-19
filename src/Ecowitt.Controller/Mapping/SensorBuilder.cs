@@ -26,6 +26,7 @@ weeklyrainin
 monthlyrainin 
 yearlyrainin
 totalrainin
+srain_piezo
 rrain_piezo
 erain_piezo
 hrain_piezo
@@ -137,8 +138,7 @@ namespace Ecowitt.Controller.Mapping
                 case "uv":
                     return BuildIntSensor(propertyName, "UV Index", propertyValue);
                 case "srain_piezo":
-                    // todo: check value
-                    return new Sensor<string>(propertyName, "Rain State", propertyValue, "");
+                    return BuildBinarySensor(propertyName, "Rain State", propertyValue, false);
                 case "rainratein":
                 case "rrain_piezo":
                     return BuildRainRateSensor(propertyName, "Rain Rate", propertyValue, isMetric);
