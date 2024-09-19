@@ -373,7 +373,7 @@ namespace Ecowitt.Controller.Mapping
                 case "elect_total":
                     return BuildConsumptionSensor(propertyName, "Total Consumption", propertyValue, true);
                 case "happen_elect":
-                    return BuildConsumptionSensor(propertyName, "Daily Consumption", propertyValue);
+                    return BuildConsumptionSensor(propertyName, "Last Planned Consumption", propertyValue);
                 case "realtime_power":
                     return BuildPowerSensor(propertyName, "Realtime Power", propertyValue);
                 case "ac_voltage":
@@ -390,7 +390,7 @@ namespace Ecowitt.Controller.Mapping
                     return BuildWaterConsumptionSensor(propertyName, "Total Water", propertyValue, isMetric, true);
                 case "happen_water":
                     //new Sensor<double?>("Daily Consumption", isMetric ? (double?)device.water_total - (double?)device.happen_water : L2G(device.water_total) - L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
-                    return BuildWaterConsumptionSensor(propertyName, "Last Water Consumption", propertyValue, isMetric);
+                    return BuildWaterConsumptionSensor(propertyName, "Last Planned Consumption", propertyValue, isMetric);
                 case "flow_velocity":
                     return BuildWaterFlowSensor(propertyName, "Flow Velocity", propertyValue, isMetric);
                 case "water_temp":
