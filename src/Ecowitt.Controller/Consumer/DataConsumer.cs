@@ -26,9 +26,9 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
     public Task OnHandle(GatewayApiData message)
     {
         _logger.LogDebug($"Received ApiData: {message.Model} ({message.PASSKEY}) \n {message.Payload}");
-        var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric);
+        var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
         updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.','-');
-        
+
         var storedGateway = _deviceStore.GetGateway(updatedGateway.IpAddress);
         if(storedGateway == null)
         {
@@ -95,7 +95,7 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
             var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);
             foreach (var data in subdeviceApiData)
             {
-                var updatedSubDevice = data.Map(_controllerOptions.Units == Units.Metric);
+                var updatedSubDevice = data.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
                 var storedSubDevice = storedGateway.Subdevices.FirstOrDefault(gwsd => gwsd.Id == updatedSubDevice.Id);
                 if (storedSubDevice == null)
                 {

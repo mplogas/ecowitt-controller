@@ -11,7 +11,7 @@ public static class ApiDataExtension
     /// <param name="subdeviceApiData"></param>
     /// <param name="isMetric"></param>
     /// <returns></returns>
-    public static Model.Subdevice Map(this SubdeviceApiData subdeviceApiData, bool isMetric = true)
+    public static Model.Subdevice Map(this SubdeviceApiData subdeviceApiData, bool isMetric = true, bool calculateValues = true)
     {
         var result = new Model.Subdevice
         {
@@ -57,6 +57,14 @@ public static class ApiDataExtension
                     
                 }
             }
+
+            if (calculateValues)
+            {
+                if (result.Model == SubdeviceModel.WFC01)
+                {
+                    SensorBuilder.CalculateWFC01Addons(ref result);
+                }
+            }
         }
 
         return result;
@@ -68,7 +76,7 @@ public static class ApiDataExtension
     /// <param name="gatewayApiData"></param>
     /// <param name="isMetric"></param>
     /// <returns></returns>
-    public static Gateway Map(this GatewayApiData gatewayApiData, bool isMetric = true)
+    public static Gateway Map(this GatewayApiData gatewayApiData, bool isMetric = true, bool calculateValues = true)
     {
         var result = new Gateway
         {
@@ -98,52 +106,34 @@ public static class ApiDataExtension
                     result.Sensors.Add(sensor);
                 }
             }
+
+            if (calculateValues)
+            {
+                /*if (sensor.Name.Equals("winddir", StringComparison.InvariantCultureIgnoreCase))
+                   {
+                       sensor.Value = sensor.Value switch
+                       {
+                           "N" => "0",
+                           "NNE" => "22.5",
+                           "NE" => "45",
+                           "ENE" => "67.5",
+                           "E" => "90",
+                           "ESE" => "112.5",
+                           "SE" => "135",
+                           "SSE" => "157.5",
+                           "S" => "180",
+                           "SSW" => "202.5",
+                           "SW" => "225",
+                           "WSW" => "247.5",
+                           "W" => "270",
+                           "WNW" => "292.5",
+                           "NW" => "315",
+                           "NNW" => "337.5",
+                           _ => sensor.Value
+                       };
+                   }*/
+            }
         }
         return result;
-    }
-
-    private static DateTime? T2TS(string value)
-    {
-        if(long.TryParse(value, out var ts))
-        {
-            return DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime;
-        }
-
-        return null;
-    }
-
-    private static double? K2M(double result)
-    {
-        return result * 0.621371;
-    }
-
-    private static double? IM2HP(double im)
-    {
-        return im * 0.0338639;
-    }
-
-    private static double? F2C(double? fahrenheit)
-    {
-        return ((fahrenheit - 32) * 5 / 9);
-    }
-
-    private static double? C2F(double? celsius)
-    {
-        return celsius * 9 / 5 + 32;
-    }
-
-    private static double? M2K(double? mph)
-    {
-        return mph * 1.60934;
-    }
-
-    private static double? I2M(double? inches)
-    {
-        return inches * 25.4;
-    }
-
-    private static double? L2G(double? liters)
-    {
-        return liters * 0.264172;
     }
 }
