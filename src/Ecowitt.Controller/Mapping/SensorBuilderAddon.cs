@@ -31,7 +31,7 @@ namespace Ecowitt.Controller.Mapping
                 var dewPoint = BuildTemperatureSensor("dewpointin", "Indoor Dewpoint",
                     isMetric
                         ? CalculateDewPointMetric((double)tempin.Value, (double)humidityin.Value).ToString()
-                        : CalculateDewPointImperial((double)tempin.Value, (double)humidityin.Value).ToString(), isMetric);
+                        : CalculateDewPointImperial((double)tempin.Value, (double)humidityin.Value).ToString(), isMetric, isMetricdot);
                 if (dewPoint != null) gateway.Sensors.Add(dewPoint);
             }
 
@@ -39,7 +39,7 @@ namespace Ecowitt.Controller.Mapping
             var humidity = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("humidity", StringComparison.InvariantCultureIgnoreCase));
             if (temp != null && humidity != null)
             {
-                var dewPoint = BuildTemperatureSensor("dewpointin", "Outdoor Dewpoint",
+                var dewPoint = BuildTemperatureSensor("dewpoint", "Outdoor Dewpoint",
                     isMetric
                         ? CalculateDewPointMetric((double)temp.Value, (double)humidity.Value).ToString()
                         : CalculateDewPointImperial((double)temp.Value, (double)humidity.Value).ToString(), isMetric, isMetric);
