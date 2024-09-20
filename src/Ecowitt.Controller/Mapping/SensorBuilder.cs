@@ -379,7 +379,7 @@ namespace Ecowitt.Controller.Mapping
                 case "ac_voltage":
                     return BuildVoltageSensor(propertyName, "AC Voltage", propertyValue);
                 case "ac_current":
-                    return BuildCurrentSensor(propertyName, "AC Current", propertyValue);
+                    return BuildCurrentSensor(propertyName, "AC Current", propertyValue, true);
                 case "water_status":
                     return BuildBinarySensor(propertyName, "Water Status", propertyValue);
                 case "water_action":

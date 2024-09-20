@@ -20,12 +20,13 @@ namespace Ecowitt.Controller.Mapping
                 : null;
         }
 
-        private static Sensor<int>? BuildCurrentSensor(string propertyName, string alias, string propertyValue)
+        private static Sensor<int>? BuildCurrentSensor(string propertyName, string alias, string propertyValue, bool isMilliAmp = false)
         {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, "A", SensorType.Current)
+            return int.TryParse(propertyValue, out var value) 
+                ? new Sensor<int>(propertyName, alias, isMilliAmp ?  value / 1000 : value, "A", SensorType.Current) 
                 : null;
-        }
+        }   
+        
 
         private static Sensor<int>? BuildPowerSensor(string propertyName, string alias, string propertyValue)
         {
