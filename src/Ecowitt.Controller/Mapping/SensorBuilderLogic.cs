@@ -8,7 +8,7 @@ namespace Ecowitt.Controller.Mapping
         private static Sensor<double>? BuildWaterFlowSensor(string propertyName, string alias, string propertyValue, bool isMetric = true)
         {
             return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? L2G(value) : value, isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate)
+                ? new Sensor<double>(propertyName, alias, isMetric ? value : L2G(value), isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate)
                 : null;
         }
 
