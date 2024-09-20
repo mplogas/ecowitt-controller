@@ -134,7 +134,7 @@ namespace Ecowitt.Controller.Mapping
                 case "winddir":
                     return BuildIntSensor(propertyName, "Wind Direction", propertyValue, "°");
                 case "solarradiation":
-                    return BuildIntSensor(propertyName, "Solar Radiation", propertyValue, "W/m²", SensorType.Irradiance);
+                    return BuildDoubleSensor(propertyName, "Solar Radiation", propertyValue, "W/m²", SensorType.Irradiance);
                 case "uv":
                     return BuildIntSensor(propertyName, "UV Index", propertyValue);
                 case "srain_piezo":

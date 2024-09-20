@@ -66,7 +66,7 @@ namespace Ecowitt.Controller.Mapping
             if (winddirection != null)
             {
                 var compass = BuildStringSensor("winddir-comp", "Wind Direction (Compass)",
-                    CalculateWindDirection((int)winddirection.Value).ToString());
+                    CalculateWindDirection((int)winddirection.Value));
                 gateway.Sensors.Add(compass);
             }
 
