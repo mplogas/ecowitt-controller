@@ -179,6 +179,11 @@ namespace Ecowitt.Controller.Mapping
                 : null;
         }
 
+        private static Sensor<string> BuildStringSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
+        {
+            return new Sensor<string>(propertyName, alias, propertyValue, unitOfMeasurement: string.Empty, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
+        }
+
         // well, that (https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-source-generators?pivots=dotnet-8-0) doesn't work
         //[GeneratedRegex(@"(\D*)(\d+)", RegexOptions.IgnoreCase)]
         //private static partial Regex SensorNumberRegex();

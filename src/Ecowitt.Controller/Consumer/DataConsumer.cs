@@ -33,6 +33,8 @@ public class DataConsumer : IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAgg
         if(storedGateway == null)
         {
             updatedGateway.DiscoveryUpdate = true;
+
+
             foreach (var sensor in updatedGateway.Sensors)
             {
                 sensor.DiscoveryUpdate = true;
