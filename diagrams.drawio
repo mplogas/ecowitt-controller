@@ -140,10 +140,10 @@
         <mxCell id="-ht9dSatDGKn7XZMMg2l-5" value="" style="shape=message;html=1;html=1;outlineConnect=0;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;" vertex="1" parent="1">
           <mxGeometry x="250" y="400" width="60" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="-ht9dSatDGKn7XZMMg2l-12" value="MQTTConfig&lt;br&gt;HAConfig&lt;br&gt;HADiscoverySend&lt;br&gt;DeviceData" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="-ht9dSatDGKn7XZMMg2l-12" value="MQTTConfig&lt;br&gt;HomeAssistantConfig&lt;br&gt;HomeAssistantDiscoveryEvent&lt;br&gt;DeviceData" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="225" y="450" width="110" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="-ht9dSatDGKn7XZMMg2l-13" value="DeviceCommand&lt;br&gt;HAReconnect&lt;br&gt;MQTTConnectionEvent" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+        <mxCell id="-ht9dSatDGKn7XZMMg2l-13" value="DeviceCommand&lt;br&gt;HomeAssistantReconnectEvent&lt;br&gt;MQTTConnectionEvent" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="540" y="465" width="60" height="50" as="geometry" />
         </mxCell>
       </root>
@@ -184,7 +184,7 @@
         <mxCell id="x2hsCuoyqA3_KZvCk1Fe-11" value="SubdeviceConfig" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="x2hsCuoyqA3_KZvCk1Fe-1">
           <mxGeometry x="225" y="450" width="110" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="x2hsCuoyqA3_KZvCk1Fe-12" value="SubdeviceData&lt;br&gt;HTTPPublishingStatus" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="x2hsCuoyqA3_KZvCk1Fe-1">
+        <mxCell id="x2hsCuoyqA3_KZvCk1Fe-12" value="SubdeviceData&lt;br&gt;HTTPPublishingEvent" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="x2hsCuoyqA3_KZvCk1Fe-1">
           <mxGeometry x="540" y="465" width="60" height="50" as="geometry" />
         </mxCell>
       </root>
@@ -225,7 +225,7 @@
         <mxCell id="OoalwBj2Nix8NHettSkM-11" value="API Config" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OoalwBj2Nix8NHettSkM-1">
           <mxGeometry x="225" y="450" width="110" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="OoalwBj2Nix8NHettSkM-12" value="GatewayData&lt;br&gt;APIStatus (?)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OoalwBj2Nix8NHettSkM-1">
+        <mxCell id="OoalwBj2Nix8NHettSkM-12" value="GatewayData&lt;br&gt;APIEvent" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="OoalwBj2Nix8NHettSkM-1">
           <mxGeometry x="520" y="465" width="100" height="50" as="geometry" />
         </mxCell>
       </root>
