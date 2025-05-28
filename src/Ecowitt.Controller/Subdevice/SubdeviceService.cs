@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Ecowitt.Controller.Configuration;
+using Ecowitt.Controller.Message;
 using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;

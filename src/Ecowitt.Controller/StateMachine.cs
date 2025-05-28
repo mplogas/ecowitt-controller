@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Mapping;
+using Ecowitt.Controller.Message;
 using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
@@ -126,7 +128,7 @@ public class StateMachine : IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApi
                     return Task.CompletedTask;
                 }
                 
-                storedGateway = new Gateway {IpAddress = ip};
+                storedGateway = new Device {IpAddress = ip};
                 storedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == storedGateway.IpAddress)?.Name ?? storedGateway.IpAddress.Replace('.','-');
                 storedGateway.DiscoveryUpdate = true;
             }

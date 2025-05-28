@@ -1,5 +1,6 @@
 using Ecowitt.Controller.Model;
 using System.Text.Json;
+using Ecowitt.Controller.Model.Api;
 
 namespace Ecowitt.Controller.Mapping;
 
@@ -76,9 +77,9 @@ public static class ApiDataExtension
     /// <param name="gatewayApiData"></param>
     /// <param name="isMetric"></param>
     /// <returns></returns>
-    public static Gateway Map(this GatewayApiData gatewayApiData, bool isMetric = true, bool calculateValues = true)
+    public static Device Map(this GatewayApiData gatewayApiData, bool isMetric = true, bool calculateValues = true)
     {
-        var result = new Gateway
+        var result = new Device
         {
             PASSKEY = gatewayApiData.PASSKEY,
             Model = gatewayApiData.Model,

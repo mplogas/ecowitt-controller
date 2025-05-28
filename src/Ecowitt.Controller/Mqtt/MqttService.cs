@@ -3,6 +3,7 @@ using Ecowitt.Controller.Model;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
 using System.Text.Json;
+using Ecowitt.Controller.Model.Api;
 
 namespace Ecowitt.Controller.Mqtt;
 
