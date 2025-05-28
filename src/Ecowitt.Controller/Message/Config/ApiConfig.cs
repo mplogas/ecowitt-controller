@@ -1,4 +1,4 @@
-namespace Ecowitt.Controller.Model;
+namespace Ecowitt.Controller.Message.Config;
 
 public class ApiConfig
 {

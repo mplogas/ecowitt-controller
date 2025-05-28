@@ -31,5 +31,10 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Discovery\Model\" />
+      <Folder Include="Model\Config\" />
+    </ItemGroup>
+
 
 </Project>

@@ -60,21 +60,23 @@ public class Program
         {
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer();
-            smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
-            smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-data"));
-            smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
-            smb.Consume<GatewayApiData>(x => x
-                .Topic("api-data")
-                .WithConsumer<StateMachine>()
-            );
-            smb.Consume<SubdeviceApiAggregate>(x => x
-                .Topic("subdevice-data")
-                .WithConsumer<StateMachine>()
-            );
-            smb.Consume<SubdeviceApiCommand>(x => x
-                .Topic("subdevice-command")
-                .WithConsumer<StateMachine>()
-            );
+            
+            
+            // smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
+            // smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-data"));
+            // smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
+            // smb.Consume<GatewayApiData>(x => x
+            //     .Topic("api-data")
+            //     .WithConsumer<StateMachine>()
+            // );
+            // smb.Consume<SubdeviceApiAggregate>(x => x
+            //     .Topic("subdevice-data")
+            //     .WithConsumer<StateMachine>()
+            // );
+            // smb.Consume<SubdeviceApiCommand>(x => x
+            //     .Topic("subdevice-command")
+            //     .WithConsumer<StateMachine>()
+            // );
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 

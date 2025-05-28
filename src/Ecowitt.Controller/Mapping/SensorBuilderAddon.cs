@@ -21,10 +21,10 @@ namespace Ecowitt.Controller.Mapping
             }
         }
 
-        public static void CalculateGatewayAddons(ref Model.Gateway gateway, bool isMetric)
+        public static void CalculateGatewayAddons(ref Model.Device device, bool isMetric)
         {
-            var tempin = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("tempinf", StringComparison.InvariantCultureIgnoreCase));
-            var humidityin = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("humidityin", StringComparison.InvariantCultureIgnoreCase));
+            var tempin = device.Sensors.FirstOrDefault(s => s.Name.Equals("tempinf", StringComparison.InvariantCultureIgnoreCase));
+            var humidityin = device.Sensors.FirstOrDefault(s => s.Name.Equals("humidityin", StringComparison.InvariantCultureIgnoreCase));
 
             if (tempin != null && humidityin != null)
             {
@@ -32,11 +32,11 @@ namespace Ecowitt.Controller.Mapping
                     isMetric
                         ? CalculateDewPointMetric((double)tempin.Value, (double)humidityin.Value).ToString()
                         : CalculateDewPointImperial((double)tempin.Value, (double)humidityin.Value).ToString(), isMetric, isMetric);
-                if (dewPoint != null) gateway.Sensors.Add(dewPoint);
+                if (dewPoint != null) device.Sensors.Add(dewPoint);
             }
 
-            var temp = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("tempf", StringComparison.InvariantCultureIgnoreCase));
-            var humidity = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("humidity", StringComparison.InvariantCultureIgnoreCase));
+            var temp = device.Sensors.FirstOrDefault(s => s.Name.Equals("tempf", StringComparison.InvariantCultureIgnoreCase));
+            var humidity = device.Sensors.FirstOrDefault(s => s.Name.Equals("humidity", StringComparison.InvariantCultureIgnoreCase));
             if (temp != null && humidity != null)
             {
                 var dewPoint = BuildTemperatureSensor("dewpoint", "Outdoor Dewpoint",
@@ -48,36 +48,36 @@ namespace Ecowitt.Controller.Mapping
                         ? CalculateHeatIndexMetric((double)temp.Value, (double)humidity.Value).ToString()
                         : CalculateHeatIndexImperial((double)temp.Value, (double)humidity.Value).ToString(), isMetric, isMetric);
                 
-                if (dewPoint != null) gateway.Sensors.Add(dewPoint);
-                if (heatIndex != null) gateway.Sensors.Add(heatIndex);
+                if (dewPoint != null) device.Sensors.Add(dewPoint);
+                if (heatIndex != null) device.Sensors.Add(heatIndex);
             }
 
-            var windspeed = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("windspeedmph", StringComparison.InvariantCultureIgnoreCase));
+            var windspeed = device.Sensors.FirstOrDefault(s => s.Name.Equals("windspeedmph", StringComparison.InvariantCultureIgnoreCase));
             if (temp != null && windspeed != null)
             {
                 var windChill = BuildTemperatureSensor("windchill", "Wind Chill",
                     isMetric
                         ? CalculateWindChillMetric((double)temp.Value, (double)windspeed.Value).ToString()
                         : CalculateWindChillImperial((double)temp.Value, (double)windspeed.Value).ToString(), isMetric, isMetric);
-                if (windChill != null) gateway.Sensors.Add(windChill);
+                if (windChill != null) device.Sensors.Add(windChill);
             }
 
-            var winddirection = gateway.Sensors.FirstOrDefault(s => s.Name.Equals("winddir", StringComparison.InvariantCultureIgnoreCase));
+            var winddirection = device.Sensors.FirstOrDefault(s => s.Name.Equals("winddir", StringComparison.InvariantCultureIgnoreCase));
             if (winddirection != null)
             {
                 var compass = BuildStringSensor("winddir-comp", "Wind Direction (Compass)",
                     CalculateWindDirection((int)winddirection.Value).ToString());
-                gateway.Sensors.Add(compass);
+                device.Sensors.Add(compass);
             }
 
             var sensorsToAdd = new List<ISensor>();
-            var pm25 = gateway.Sensors.Where(s => s.Name.StartsWith("pm25_avg_24h") || s.Name.StartsWith("pm25_24h"));
+            var pm25 = device.Sensors.Where(s => s.Name.StartsWith("pm25_avg_24h") || s.Name.StartsWith("pm25_24h"));
             sensorsToAdd.AddRange(pm25.Select(sensor => BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm25Aqi24h((double)sensor.Value))));
 
-            var pm10 = gateway.Sensors.Where(s => s.Name.StartsWith("pm10_avg_24h") || s.Name.StartsWith("pm10_24h"));
+            var pm10 = device.Sensors.Where(s => s.Name.StartsWith("pm10_avg_24h") || s.Name.StartsWith("pm10_24h"));
             sensorsToAdd.AddRange(pm10.Select(sensor => BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm10Aqi24h((double)sensor.Value))));
 
-            gateway.Sensors.AddRange(sensorsToAdd);
+            device.Sensors.AddRange(sensorsToAdd);
         }
 
         // shout out to wikipedia for the formulas! <3

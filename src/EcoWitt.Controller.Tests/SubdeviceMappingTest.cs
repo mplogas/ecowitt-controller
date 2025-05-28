@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Api;
 using Newtonsoft.Json;
 
 namespace EcoWitt.Controller.Tests;
