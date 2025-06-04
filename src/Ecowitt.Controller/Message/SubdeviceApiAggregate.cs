@@ -1,4 +1,6 @@
-﻿namespace Ecowitt.Controller.Model;
+﻿using Ecowitt.Controller.Model.Api;
+
+namespace Ecowitt.Controller.Message;
 
 public class SubdeviceApiAggregate
 {

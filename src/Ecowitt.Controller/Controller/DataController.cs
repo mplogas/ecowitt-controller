@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Api;
 using Microsoft.AspNetCore.Mvc;
 using SlimMessageBus;
 

@@ -1,4 +1,4 @@
-﻿namespace Ecowitt.Controller.Model;
+﻿namespace Ecowitt.Controller.Model.Api;
 
 public class SubdeviceApiData
 {

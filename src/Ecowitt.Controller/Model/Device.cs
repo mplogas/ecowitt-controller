@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Ecowitt.Controller.Model;
 
-public class Gateway
+public class Device
 {
     // important properties
     public string IpAddress { get; set; }

@@ -110,7 +110,7 @@ public class DataPublishService : BackgroundService
         };
     }                        
 
-    private dynamic BuildGatewayPayload(Gateway gw)
+    private dynamic BuildGatewayPayload(Device gw)
     {
         if (string.IsNullOrWhiteSpace(gw.Model))
         {

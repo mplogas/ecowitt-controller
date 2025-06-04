@@ -1,4 +1,4 @@
-namespace Ecowitt.Controller.Discovery.Model;
+namespace Ecowitt.Controller.Model.Discovery;
 
 public enum EntityCategory
 {

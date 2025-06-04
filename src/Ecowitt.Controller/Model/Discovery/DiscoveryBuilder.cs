@@ -1,7 +1,4 @@
-using Ecowitt.Controller.Discovery.Model;
-using Ecowitt.Controller.Model;
-
-namespace Ecowitt.Controller.Discovery;
+namespace Ecowitt.Controller.Model.Discovery;
 
 public static class DiscoveryBuilder
 {

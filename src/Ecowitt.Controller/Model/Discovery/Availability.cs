@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Ecowitt.Controller.Discovery.Model;
+namespace Ecowitt.Controller.Model.Discovery;
 
 public class Availability
 {
