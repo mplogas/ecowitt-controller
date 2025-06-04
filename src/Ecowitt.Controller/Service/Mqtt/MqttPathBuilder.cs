@@ -1,6 +1,6 @@
 namespace Ecowitt.Controller.Service.Mqtt;
 
-public static class Helper
+public static class MqttPathBuilder
 {
     public static string BuildMqttGatewayTopic(string gwName)
     {
