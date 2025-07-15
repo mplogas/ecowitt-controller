@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Ecowitt.Controller.Message.Config;
 using Ecowitt.Controller.Message.Data;
 using Ecowitt.Controller.Message.Event;
+using Ecowitt.Controller.Model.Api;
 using MQTTnet;
 using MQTTnet.Client;
 using SlimMessageBus;
@@ -111,18 +112,26 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
         }
     }
 
-    private Task ClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
+    private async Task ClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
     {
         var payload = arg.ApplicationMessage.ConvertPayloadToString();
         var topic = arg.ApplicationMessage.Topic;
         _logger.LogDebug($"Message received for topic {topic}: {payload}");
-        
-        if (topic.EndsWith("homeassistant"))
+
+        if (topic.Equals("homeassistant/status", StringComparison.OrdinalIgnoreCase))
         {
+            // home assistant status topic
+            if (payload.Equals("online", StringComparison.OrdinalIgnoreCase))
+                await _messageBus.Publish(new HomeAssistantStatusEvent() { Status = HomeAssistantStatusType.Online });
+            else if (payload.Equals("offline", StringComparison.OrdinalIgnoreCase)) await _messageBus.Publish(new HomeAssistantStatusEvent { Status = HomeAssistantStatusType.Offline });
+            else await _messageBus.Publish(new HomeAssistantStatusEvent { Status = HomeAssistantStatusType.Unknown });
+        } else if (topic.EndsWith("cmd/homeassistant"))
+        {
+            // commands coming from home assistant
             if (int.TryParse(topic.Split('/')[3], out var result))
             {
-                //var cmd = payload.Equals("ON", StringComparison.InvariantCultureIgnoreCase) ? Command.Start : Command.Stop; //I know, everything that's not "ON" is "OFF"
-                //await _messageBus.Publish(new SubdeviceApiCommand() { Cmd = cmd, Id = result });
+                var cmd = payload.Equals("ON", StringComparison.InvariantCultureIgnoreCase) ? Command.Start : Command.Stop; //I know, everything that's not "ON" is "OFF"
+                await _messageBus.Publish(new SubdeviceApiCommand() { Cmd = cmd, Id = result });
             }
             else
             {
@@ -131,12 +140,18 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
         }
         else
         {
-            // var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(e.Payload);
-            // await _messageBus.Publish(cmd);
+            // direct commands via mqtt
+            try
+            {
+                var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(payload);
+                await _messageBus.Publish(cmd);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
-
-        return Task.CompletedTask;
-        
     }
 
     private async Task ClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)
