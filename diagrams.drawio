@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.5 Chrome/134.0.6998.205 Electron/35.3.0 Safari/537.36" version="27.0.5" pages="4">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.0.4 Chrome/138.0.7204.97 Electron/37.2.1 Safari/537.36" version="28.0.4" pages="4">
   <diagram name="Overview" id="UudPNPbEjSv01BHqzGnG">
-    <mxGraphModel dx="1152" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="641" dy="589" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -25,8 +25,23 @@
         <mxCell id="bcH6blwgw5PZ9SIc6Ai5-4" value="HTTP Subscriber" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="50" y="270" width="120" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="bcH6blwgw5PZ9SIc6Ai5-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="kxZVsk3Ngxl5p7TVfFzf-2" target="bcH6blwgw5PZ9SIc6Ai5-3" edge="1">
+        <mxCell id="bcH6blwgw5PZ9SIc6Ai5-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;endArrow=none;endFill=0;" parent="1" source="kxZVsk3Ngxl5p7TVfFzf-2" target="bcH6blwgw5PZ9SIc6Ai5-3" edge="1">
           <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="JDoonRU_2qOLDRsUPLIP-2" value="MqttConfig" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bcH6blwgw5PZ9SIc6Ai5-20">
+          <mxGeometry x="0.7548" y="-2" relative="1" as="geometry">
+            <mxPoint x="24" y="-18" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JDoonRU_2qOLDRsUPLIP-3" value="HomeAssistantDiscoveryEvent" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bcH6blwgw5PZ9SIc6Ai5-20">
+          <mxGeometry x="0.6581" y="-3" relative="1" as="geometry">
+            <mxPoint x="4" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="JDoonRU_2qOLDRsUPLIP-4" value="DeviceData" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="bcH6blwgw5PZ9SIc6Ai5-20">
+          <mxGeometry x="0.329" y="-3" relative="1" as="geometry">
+            <mxPoint x="-108" y="3" as="offset" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="bcH6blwgw5PZ9SIc6Ai5-7" value="HTTP Publisher" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="200" y="270" width="120" height="60" as="geometry" />
