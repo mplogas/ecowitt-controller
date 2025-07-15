@@ -1,11 +1,11 @@
 using System.Net;
 using System.Reflection;
 using Ecowitt.Controller.Configuration;
-using Ecowitt.Controller.Discovery;
-using Ecowitt.Controller.Model;
-using Ecowitt.Controller.Mqtt;
+using Ecowitt.Controller.Message.Config;
+using Ecowitt.Controller.Message.Data;
+using Ecowitt.Controller.Message.Event;
+using Ecowitt.Controller.Service.Mqtt;
 using Ecowitt.Controller.Store;
-using Ecowitt.Controller.Subdevice;
 using MQTTnet;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -60,6 +60,9 @@ public class Program
         {
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer();
+            smb.Consume<MqttConfig>(x => x.Topic("config-mqtt").WithConsumer<MqttService>());
+            smb.Consume<HomeAssistantDiscoveryEvent>(x => x.Topic("home-assistant-discovery").WithConsumer<MqttService>());
+            smb.Consume<DeviceData>(x => x.Topic("device-data").WithConsumer<MqttService>());
             
             
             // smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
@@ -81,12 +84,12 @@ public class Program
         });
 
         builder.Services.AddTransient<MqttFactory>();
-        builder.Services.AddSingleton<IMqttClient, MqttClient>();
-        
         builder.Services.AddHostedService<MqttService>();
-        builder.Services.AddHostedService<SubdeviceService>();
-        builder.Services.AddHostedService<DataPublishService>();
-        builder.Services.AddHostedService<DiscoveryPublishService>();
+        //
+        // builder.Services.AddHostedService<MqttService>();
+        // builder.Services.AddHostedService<SubdeviceService>();
+        // builder.Services.AddHostedService<DataPublishService>();
+        // builder.Services.AddHostedService<DiscoveryPublishService>();
 
         builder.Services.AddControllers();
         //builder.Services.AddEndpointsApiExplorer();
