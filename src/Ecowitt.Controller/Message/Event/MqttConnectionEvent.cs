@@ -2,11 +2,11 @@ namespace Ecowitt.Controller.Message.Event;
 
 public class MqttConnectionEvent
 {
-    public EventType EventType { get; set; }
+    public MqttConnectionEventType EventType { get; set; }
     public string? Message { get; set; }
 }
 
-public enum EventType
+public enum MqttConnectionEventType
 {
     Connected,
     Disconnected,

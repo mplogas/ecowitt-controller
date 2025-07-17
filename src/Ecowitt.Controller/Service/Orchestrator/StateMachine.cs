@@ -1,17 +1,18 @@
-using System.Text.Json;
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Message;
 using Ecowitt.Controller.Message.Config;
+using Ecowitt.Controller.Message.Event;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
+using System.Text.Json;
 
 namespace Ecowitt.Controller.Service.Orchestrator;
 
-public class StateMachine : BackgroundService, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
+public class StateMachine : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
 {
     private readonly ILogger<StateMachine> _logger;
     private readonly IDeviceStore _deviceStore;
@@ -19,6 +20,8 @@ public class StateMachine : BackgroundService, IConsumer<SubdeviceApiCommand>, I
     private readonly ControllerOptions _controllerOptions;
     private readonly MqttOptions _mqttOptions;
     private readonly IMessageBus _messageBus;
+    private MqttServiceEventType _lastServiceState = MqttServiceEventType.Unknown;
+    //private readonly TaskCompletionSource<bool> _mqttServiceStarted = new TaskCompletionSource<bool>();
 
     public StateMachine(ILogger<StateMachine> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions) 
     {
@@ -30,11 +33,39 @@ public class StateMachine : BackgroundService, IConsumer<SubdeviceApiCommand>, I
         _messageBus = messageBus;
     }
     
-    
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Starting Orchestrator");
-        
+
+        // emit initial MQTT configuration with a 1s timeout
+        // this is to ensure that the MQTT service has time to start
+
+        // Wait for MQTT service to start with timeout
+        // for whatever reasons this did not work as expected, so it'S back to dumb task.delay().
+        //try
+        //{
+        //    await _mqttServiceStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), stoppingToken);
+        //    _logger.LogInformation("MQTT service started signal received");
+        //    await EmitMqttConfig();
+        //}
+        //catch (TimeoutException)
+        //{
+        //    _logger.LogWarning("Timeout waiting for MQTT service to start");
+        //    await EmitMqttConfig(); // Try to proceed anyway
+        //}
+        //catch (OperationCanceledException)
+        //{
+        //    _logger.LogInformation("Cancellation requested while waiting for MQTT service");
+        //}
+
+
+        _logger.LogInformation("Emitting initial MQTT configuration");
+        await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+        await EmitMqttConfig();
+    }
+
+    private async Task EmitMqttConfig()
+    {
         var mqttConfig = new MqttConfig
         {
             Host = _mqttOptions.Host,
@@ -52,27 +83,60 @@ public class StateMachine : BackgroundService, IConsumer<SubdeviceApiCommand>, I
             mqttConfig.User = _mqttOptions.User;
             mqttConfig.Password = _mqttOptions.Password;
         }
-        
+
         await _messageBus.Publish(mqttConfig);
+    }
 
+    public Task OnHandle(MqttServiceEvent message)
+    {
+        switch(message.EventType)
+        {
+            case MqttServiceEventType.Started:
+                _logger.LogInformation("MQTT Service started");
+                _lastServiceState = MqttServiceEventType.Started;
+                //_mqttServiceStarted.TrySetResult(true);
+                break;
+            case MqttServiceEventType.Stopped:
+                _logger.LogWarning("MQTT Service stopped");
+                _lastServiceState = MqttServiceEventType.Stopped;
+                break;
+            case MqttServiceEventType.Error:
+                _logger.LogError($"MQTT Service error: {message.Message}");
+                _lastServiceState = MqttServiceEventType.Error;
+                break;
+            case MqttServiceEventType.Heartbeat:
+                _logger.LogDebug("MQTT Service heartbeat received");
+                _lastServiceState = MqttServiceEventType.Heartbeat;
+                break;
+            case MqttServiceEventType.Unknown:
+            default:
+                _logger.LogWarning($"Unknown MQTT Service event: {message.EventType}");
+                break;
+        }
 
-        // using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
-        // try
-        // {
-        //     while(await timer.WaitForNextTickAsync(stoppingToken))
-        //     {
-        //         if (_client is { IsConnected: true } && _mqttConfig != null)
-        //         {
-        //             await Publish($"{_mqttConfig.BaseTopic}/{_mqttConfig.HeartbeatTopic}",
-        //                 JsonSerializer.Serialize(new { service = DateTime.UtcNow }));
-        //             _logger.LogInformation("Sent heartbeat");
-        //         }
-        //     }
-        // }
-        // catch (OperationCanceledException)
-        // {
-        //     _logger.LogInformation("Stopping MqttService");
-        // }
+        return Task.CompletedTask;
+    }
+
+    public Task OnHandle(MqttConnectionEvent message)
+    {
+        switch (message.EventType)
+        {
+            case MqttConnectionEventType.Connected:
+                _logger.LogInformation("MQTT Client connected");
+                break;
+            case MqttConnectionEventType.Disconnected:
+                _logger.LogWarning("MQTT Client disconnected");
+                break;
+            case MqttConnectionEventType.Error:
+                _logger.LogInformation($"MQTT Client error {message.Message}");
+                break;
+            case MqttConnectionEventType.MessageReceived:
+                default:
+                _logger.LogInformation($"MQTT Connection event received: {message.EventType}");
+                break;
+        }
+
+        return Task.CompletedTask;
     }
 
     public async Task OnHandle(SubdeviceApiCommand message)
@@ -98,11 +162,11 @@ public class StateMachine : BackgroundService, IConsumer<SubdeviceApiCommand>, I
             //await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model, val: val, valType: (int)valType, alwaysOn: alwaysOn);
             
             //default always-on message for now
-            await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model);
+            //await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model);
 
         } else if (message.Cmd == Command.Stop)
         {
-            await SendCommand(gw.IpAddress, "quick_stop", message.Id, (int)subdevice!.Model);
+            //await SendCommand(gw.IpAddress, "quick_stop", message.Id, (int)subdevice!.Model);
         }
         else
         {
@@ -281,4 +345,24 @@ public class StateMachine : BackgroundService, IConsumer<SubdeviceApiCommand>, I
     //     }
     // }
 
+
+    public Task StartedAsync(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task StartingAsync(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task StoppedAsync(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task StoppingAsync(CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }
