@@ -11,7 +11,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Mqtt;
 
-public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DeviceData>
+public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DeviceData>
 {
     private readonly ILogger<MqttService> _logger;
     private readonly MqttFactory _factory;
@@ -91,9 +91,7 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting MqttService");
-        
-        using PeriodicTimer timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
         try
         {
             while(await timer.WaitForNextTickAsync(stoppingToken))
@@ -102,6 +100,7 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
                 {
                     await Publish($"{_mqttConfig.BaseTopic}/{_mqttConfig.HeartbeatTopic}",
                         JsonSerializer.Serialize(new { service = DateTime.UtcNow }));
+                    await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Heartbeat }, cancellationToken: stoppingToken);
                     _logger.LogInformation("Sent heartbeat");
                 }
             }
@@ -109,7 +108,28 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
         catch (OperationCanceledException)
         {
             _logger.LogInformation("Stopping MqttService");
+            await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Stopped }, cancellationToken: stoppingToken);
         }
+    }
+
+    public async Task StartedAsync(CancellationToken cancellationToken)
+    {
+         await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Started }, cancellationToken: cancellationToken);
+    }
+
+    public Task StartingAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task StoppedAsync(CancellationToken cancellationToken)
+    {
+        await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Stopped }, cancellationToken: cancellationToken);
+    }
+
+    public Task StoppingAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 
     private async Task ClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
@@ -157,7 +177,7 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
     private async Task ClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)
     {
         _logger.LogInformation("MQTT client disconnected.");
-        await _messageBus.Publish<MqttConnectionEvent>(new MqttConnectionEvent { EventType = EventType.Disconnected });
+        await _messageBus.Publish<MqttConnectionEvent>(new MqttConnectionEvent { EventType = MqttConnectionEventType.Disconnected });
         if (_mqttConfig is { Reconnect: true } && !_isConnecting)
         {
             _logger.LogInformation("Attempting to reconnect to MQTT broker...");
@@ -191,7 +211,7 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
         _logger.LogInformation("MQTT client connected.");
         await _messageBus.Publish<MqttConnectionEvent>(new MqttConnectionEvent
         {
-            EventType = EventType.Connected
+            EventType = MqttConnectionEventType.Connected
         });
     }
 
@@ -202,9 +222,10 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
             _logger.LogWarning("MQTT client is not connected or is currently connecting. Cannot subscribe to Home Assistant state.");
             return;
         }
-        
-        _client.SubscribeAsync($"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
-        _logger.LogInformation("Subscribed to Home Assistant state topic: {Topic}", $"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
+
+        var topic = "homeassistant/state";
+        _client.SubscribeAsync(topic);
+        _logger.LogInformation($"Subscribed to Home Assistant state topic: {topic}");
     }
     
     private void UnsubscribeHomeAssistantState()
@@ -261,4 +282,6 @@ public class MqttService : BackgroundService, IConsumer<MqttConfig>, IConsumer<H
         else _logger.LogWarning($"Can't publish message {message} to topic {topic}. Client not connected.");
         return false;
     }
+
+
 }

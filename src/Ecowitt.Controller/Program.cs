@@ -5,6 +5,7 @@ using Ecowitt.Controller.Message.Config;
 using Ecowitt.Controller.Message.Data;
 using Ecowitt.Controller.Message.Event;
 using Ecowitt.Controller.Service.Mqtt;
+using Ecowitt.Controller.Service.Orchestrator;
 using Ecowitt.Controller.Store;
 using MQTTnet;
 using Polly;
@@ -60,9 +61,22 @@ public class Program
         {
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer();
+            // statemachine -> mqttservice
+            smb.Produce<MqttConfig>(x => x.DefaultTopic("config-mqtt"));
+            smb.Produce<HomeAssistantDiscoveryEvent>(x => x.DefaultTopic("home-assistant-discovery"));
+            smb.Produce<DeviceData>(x => x.DefaultTopic("device-data"));
             smb.Consume<MqttConfig>(x => x.Topic("config-mqtt").WithConsumer<MqttService>());
             smb.Consume<HomeAssistantDiscoveryEvent>(x => x.Topic("home-assistant-discovery").WithConsumer<MqttService>());
             smb.Consume<DeviceData>(x => x.Topic("device-data").WithConsumer<MqttService>());
+           
+            // mqttservice -> statemachine
+            smb.Produce<MqttServiceEvent>(x => x.DefaultTopic("mqtt-service-event"));
+            smb.Produce<MqttConnectionEvent>(x => x.DefaultTopic("mqtt-connection-event"));
+            smb.Consume<MqttServiceEvent>(x => x.Topic("mqtt-service-event").WithConsumer<StateMachine>());
+            smb.Consume<MqttConnectionEvent>(x => x.Topic("mqtt-connection-event").WithConsumer<StateMachine>());
+
+
+
             
             
             // smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
@@ -82,6 +96,8 @@ public class Program
             // );
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
+
+        builder.Services.AddHostedService<StateMachine>();
 
         builder.Services.AddTransient<MqttFactory>();
         builder.Services.AddHostedService<MqttService>();
