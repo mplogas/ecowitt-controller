@@ -399,3 +399,5 @@ FodyWeavers.xsd
 *.sln.iml
 .idea/
 /.$diagrams.drawio.bkp
+/.continue/mcpServers
+/.vscode
