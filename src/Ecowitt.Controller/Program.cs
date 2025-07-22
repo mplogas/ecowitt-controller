@@ -22,6 +22,11 @@ namespace Ecowitt.Controller;
 
 public class Program
 {
+    public class ServiceProviderAccessor
+    {
+        public IServiceProvider ServiceProvider { get; set; }
+    }
+
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -55,12 +60,21 @@ public class Program
             .MinimumLevel.Warning()
             .ReadFrom.Configuration(builder.Configuration));
 
+
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
+        builder.Services.AddSingleton<MqttService>();
+        builder.Services.AddSingleton<StateMachine>();
+
+        var sp = builder.Services.BuildServiceProvider();
 
         builder.Services.AddSlimMessageBus(smb =>
         {
+            
+
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer();
+            smb.WithDependencyResolver(sp);
+
             // statemachine -> mqttservice
             smb.Produce<MqttConfig>(x => x.DefaultTopic("config-mqtt"));
             smb.Produce<HomeAssistantDiscoveryEvent>(x => x.DefaultTopic("home-assistant-discovery"));
@@ -72,8 +86,10 @@ public class Program
             // mqttservice -> statemachine
             smb.Produce<MqttServiceEvent>(x => x.DefaultTopic("mqtt-service-event"));
             smb.Produce<MqttConnectionEvent>(x => x.DefaultTopic("mqtt-connection-event"));
+            smb.Produce<HomeAssistantStatusEvent>(x => x.DefaultTopic("home-assistant-status"));
             smb.Consume<MqttServiceEvent>(x => x.Topic("mqtt-service-event").WithConsumer<StateMachine>());
             smb.Consume<MqttConnectionEvent>(x => x.Topic("mqtt-connection-event").WithConsumer<StateMachine>());
+            smb.Consume<HomeAssistantStatusEvent>(x => x.Topic("home-assistant-status").WithConsumer<StateMachine>());
 
 
 
@@ -97,10 +113,10 @@ public class Program
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
-        builder.Services.AddHostedService<StateMachine>();
-
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<StateMachine>());
+        
         builder.Services.AddTransient<MqttFactory>();
-        builder.Services.AddHostedService<MqttService>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<MqttService>());
         //
         // builder.Services.AddHostedService<MqttService>();
         // builder.Services.AddHostedService<SubdeviceService>();

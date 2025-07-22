@@ -19,7 +19,8 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
     private IMqttClient? _client;
     private bool _isConnecting;
     private MqttConfig? _mqttConfig;
-    
+    private Guid _serviceId = Guid.NewGuid();
+    private const string HaStatusTopic = "homeassistant/status";
 
     public MqttService(ILogger<MqttService> logger, MqttFactory factory, IMessageBus messageBus)
     {
@@ -30,11 +31,12 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
     
     public async Task OnHandle(MqttConfig message)
     {
+        _logger.LogInformation($"{_serviceId}: handle mqttConfig");
         if(_client != null)
         {
             try
             {
-                if (_mqttConfig is { HomeAssistantDiscovery: true }) UnsubscribeHomeAssistantState();
+                if (_mqttConfig is { HomeAssistantDiscovery: true }) await UnsubscribeHomeAssistant();
                 
                 if(_client.IsConnected) await _client.DisconnectAsync();
                 _client.ApplicationMessageReceivedAsync -= ClientOnApplicationMessageReceivedAsync;
@@ -71,7 +73,7 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
         await _client.ConnectAsync(optionsBuilder.Build());
         await _client.SubscribeAsync($"{_mqttConfig.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceCommandTopic()}");
         
-        if(_mqttConfig.HomeAssistantDiscovery) SubscribeHomeAssistantState();
+        if(_mqttConfig.HomeAssistantDiscovery) await SubscribeHomeAssistant();
     }
 
     public async Task OnHandle(HomeAssistantDiscoveryEvent message)
@@ -91,17 +93,18 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(60));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
         try
         {
-            while(await timer.WaitForNextTickAsync(stoppingToken))
+            _logger.LogInformation($"{_serviceId}: handle heartbeat");
+            while (await timer.WaitForNextTickAsync(stoppingToken))
             {
                 if (_client is { IsConnected: true } && _mqttConfig != null)
                 {
                     await Publish($"{_mqttConfig.BaseTopic}/{_mqttConfig.HeartbeatTopic}",
                         JsonSerializer.Serialize(new { service = DateTime.UtcNow }));
                     await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Heartbeat }, cancellationToken: stoppingToken);
-                    _logger.LogInformation("Sent heartbeat");
+                    _logger.LogDebug("Sent heartbeat");
                 }
             }
         }
@@ -215,7 +218,7 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
         });
     }
 
-    private void SubscribeHomeAssistantState()
+    private async Task SubscribeHomeAssistant()
     {
         if(_client != null && (!_client.IsConnected || _isConnecting))
         {
@@ -223,21 +226,22 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
             return;
         }
 
-        var topic = "homeassistant/state";
-        _client.SubscribeAsync(topic);
-        _logger.LogInformation($"Subscribed to Home Assistant state topic: {topic}");
+        await _client.SubscribeAsync(HaStatusTopic);
+        await _client.SubscribeAsync($"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
+        _logger.LogInformation("Subscribed to Home Assistant");
     }
     
-    private void UnsubscribeHomeAssistantState()
+    private async Task UnsubscribeHomeAssistant()
     {
         if(_client != null && (!_client.IsConnected || _isConnecting))
         {
             _logger.LogWarning("MQTT client is not connected or is currently connecting. Cannot unsubscribe from Home Assistant state.");
             return;
         }
-        
-        _client.UnsubscribeAsync($"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
-        _logger.LogInformation("Unsubscribed from Home Assistant state topic: {Topic}", $"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
+
+        await _client.UnsubscribeAsync(HaStatusTopic);
+        await _client.UnsubscribeAsync($"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
+        _logger.LogInformation("Unsubscribed from Home Assistant");
     }
 
     private void EmitHomeAssistantDiscovery()
