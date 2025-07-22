@@ -11,7 +11,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Mqtt;
 
-public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DeviceData>
+public partial class MqttService : BackgroundService, IHostedLifecycleService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DeviceData>
 {
     private readonly ILogger<MqttService> _logger;
     private readonly MqttFactory _factory;
@@ -28,68 +28,6 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
         _factory = factory;
         _messageBus = messageBus;
     }  
-    
-    public async Task OnHandle(MqttConfig message)
-    {
-        _logger.LogInformation($"{_serviceId}: handle mqttConfig");
-        if(_client != null)
-        {
-            try
-            {
-                if (_mqttConfig is { HomeAssistantDiscovery: true }) await UnsubscribeHomeAssistant();
-                
-                if(_client.IsConnected) await _client.DisconnectAsync();
-                _client.ApplicationMessageReceivedAsync -= ClientOnApplicationMessageReceivedAsync;
-                _client.DisconnectedAsync -= ClientOnDisconnectedAsync;
-                _client.ConnectedAsync -= ClientOnConnectedAsync;
-                _client.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while disconnecting, unregistering or disposing MQTT client.");
-                return;
-            }
-        }
-        
-        _mqttConfig = message;
-        
-        if(!message.Enabled) 
-        {
-            _logger.LogInformation("MQTT is disabled");
-            return;
-        }
-
-        _client = _factory.CreateMqttClient();
-        _client.ConnectedAsync += ClientOnConnectedAsync;
-        _client.DisconnectedAsync += ClientOnDisconnectedAsync;
-        _client.ApplicationMessageReceivedAsync += ClientOnApplicationMessageReceivedAsync;
-        var optionsBuilder = new MqttClientOptionsBuilder()
-            .WithTcpServer(_mqttConfig.Host, _mqttConfig.Port)
-            .WithClientId(_mqttConfig.ClientId)
-            .WithCleanSession();
-        if(!string.IsNullOrWhiteSpace(_mqttConfig.User))
-            optionsBuilder.WithCredentials(_mqttConfig.User, _mqttConfig.Password);
-        
-        await _client.ConnectAsync(optionsBuilder.Build());
-        await _client.SubscribeAsync($"{_mqttConfig.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceCommandTopic()}");
-        
-        if(_mqttConfig.HomeAssistantDiscovery) await SubscribeHomeAssistant();
-    }
-
-    public async Task OnHandle(HomeAssistantDiscoveryEvent message)
-    {
-        EmitHomeAssistantDiscovery();
-    }
-
-    public Task OnHandle(DeviceData message)
-    {
-        if (_client == null || !_client.IsConnected)
-        {
-            _logger.LogWarning("MQTT client is not connected. Cannot publish device data.");
-        }
-
-        return Task.CompletedTask;
-    }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -115,108 +53,7 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
         }
     }
 
-    public async Task StartedAsync(CancellationToken cancellationToken)
-    {
-         await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Started }, cancellationToken: cancellationToken);
-    }
-
-    public Task StartingAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    public async Task StoppedAsync(CancellationToken cancellationToken)
-    {
-        await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Stopped }, cancellationToken: cancellationToken);
-    }
-
-    public Task StoppingAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    private async Task ClientOnApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
-    {
-        var payload = arg.ApplicationMessage.ConvertPayloadToString();
-        var topic = arg.ApplicationMessage.Topic;
-        _logger.LogDebug($"Message received for topic {topic}: {payload}");
-
-        if (topic.Equals("homeassistant/status", StringComparison.OrdinalIgnoreCase))
-        {
-            // home assistant status topic
-            if (payload.Equals("online", StringComparison.OrdinalIgnoreCase))
-                await _messageBus.Publish(new HomeAssistantStatusEvent() { Status = HomeAssistantStatusType.Online });
-            else if (payload.Equals("offline", StringComparison.OrdinalIgnoreCase)) await _messageBus.Publish(new HomeAssistantStatusEvent { Status = HomeAssistantStatusType.Offline });
-            else await _messageBus.Publish(new HomeAssistantStatusEvent { Status = HomeAssistantStatusType.Unknown });
-        } else if (topic.EndsWith("cmd/homeassistant"))
-        {
-            // commands coming from home assistant
-            if (int.TryParse(topic.Split('/')[3], out var result))
-            {
-                var cmd = payload.Equals("ON", StringComparison.InvariantCultureIgnoreCase) ? Command.Start : Command.Stop; //I know, everything that's not "ON" is "OFF"
-                await _messageBus.Publish(new SubdeviceApiCommand() { Cmd = cmd, Id = result });
-            }
-            else
-            {
-                _logger.LogWarning("Invalid subdevice id in topic {Topic}", topic);
-            }
-        }
-        else
-        {
-            // direct commands via mqtt
-            try
-            {
-                var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(payload);
-                await _messageBus.Publish(cmd);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-    }
-
-    private async Task ClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)
-    {
-        _logger.LogInformation("MQTT client disconnected.");
-        await _messageBus.Publish<MqttConnectionEvent>(new MqttConnectionEvent { EventType = MqttConnectionEventType.Disconnected });
-        if (_mqttConfig is { Reconnect: true } && !_isConnecting)
-        {
-            _logger.LogInformation("Attempting to reconnect to MQTT broker...");
-            _isConnecting = true;
-            try
-            {
-                for (var i = 0; i < _mqttConfig.ReconnectAttempts; i++)
-                {
-                    try
-                    {
-                        var result = await _client?.ConnectAsync(_client.Options)!;
-                        if(result.ResultCode == MqttClientConnectResultCode.Success) break;
-                        else _logger.LogWarning($"Failed to reconnect to MQTT broker. Attempt {i + 1} of {_mqttConfig.ReconnectAttempts}. Reason: {result.ResultCode}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Exception during MQTT reconnect attempt {i + 1} of {_mqttConfig.ReconnectAttempts}: {ex.Message}");
-                    }
-                    await Task.Delay(TimeSpan.FromSeconds(2));
-                }
-            }
-            finally
-            {
-                _isConnecting = false;
-            }
-        }
-    }
-
-    private async Task ClientOnConnectedAsync(MqttClientConnectedEventArgs arg)
-    {
-        _logger.LogInformation("MQTT client connected.");
-        await _messageBus.Publish<MqttConnectionEvent>(new MqttConnectionEvent
-        {
-            EventType = MqttConnectionEventType.Connected
-        });
-    }
+    
 
     private async Task SubscribeHomeAssistant()
     {
@@ -248,8 +85,6 @@ public class MqttService : BackgroundService, IHostedLifecycleService, IConsumer
     {
         
     }
-    
-    
 
     private async Task PublishMessage(string topic, dynamic payload)
     {
