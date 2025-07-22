@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace Ecowitt.Controller.Service.Orchestrator;
 
-public class StateMachine : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
+public class StateMachine : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
 {
     private readonly ILogger<StateMachine> _logger;
     private readonly IDeviceStore _deviceStore;
@@ -133,6 +133,25 @@ public class StateMachine : BackgroundService, IConsumer<MqttServiceEvent>, ICon
             case MqttConnectionEventType.MessageReceived:
                 default:
                 _logger.LogInformation($"MQTT Connection event received: {message.EventType}");
+                break;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task OnHandle(HomeAssistantStatusEvent message)
+    {
+        switch (message.Status)
+        {
+            case HomeAssistantStatusType.Online:
+                _logger.LogInformation("HomeAssistant is online");
+                break;
+            case HomeAssistantStatusType.Offline:
+                _logger.LogInformation("HomeAssistant is offline");
+                break;
+            case HomeAssistantStatusType.Unknown:
+            default:
+                _logger.LogInformation("Unknown HomeAssistant status received");
                 break;
         }
 
