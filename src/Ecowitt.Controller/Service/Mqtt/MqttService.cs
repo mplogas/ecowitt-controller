@@ -19,7 +19,6 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
     private IMqttClient? _client;
     private bool _isConnecting;
     private MqttConfig? _mqttConfig;
-    private Guid _serviceId = Guid.NewGuid();
     private const string HaStatusTopic = "homeassistant/status";
 
     public MqttService(ILogger<MqttService> logger, MqttFactory factory, IMessageBus messageBus)
@@ -34,7 +33,6 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
         try
         {
-            _logger.LogInformation($"{_serviceId}: handle heartbeat");
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
                 if (_client is { IsConnected: true } && _mqttConfig != null)

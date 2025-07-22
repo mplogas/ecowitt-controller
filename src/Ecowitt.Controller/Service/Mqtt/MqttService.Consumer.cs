@@ -9,7 +9,6 @@ namespace Ecowitt.Controller.Service.Mqtt
     {
         public async Task OnHandle(MqttConfig message)
         {
-            _logger.LogInformation($"{_serviceId}: handle mqttConfig");
             if (_client != null)
             {
                 try
