@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Ecowitt.Controller.Model;
 
-namespace Ecowitt.Controller.Store;
+namespace Ecowitt.Controller.Service.Orchestrator;
 
 public interface IDeviceStore
 {
