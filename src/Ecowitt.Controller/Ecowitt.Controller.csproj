@@ -9,9 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="Mqtt\**" />
       <Compile Remove="old\Discovery\Model\**" />
+      <Content Remove="Mqtt\**" />
       <Content Remove="old\Discovery\Model\**" />
+      <EmbeddedResource Remove="Mqtt\**" />
       <EmbeddedResource Remove="old\Discovery\Model\**" />
+      <None Remove="Mqtt\**" />
       <None Remove="old\Discovery\Model\**" />
     </ItemGroup>
 
