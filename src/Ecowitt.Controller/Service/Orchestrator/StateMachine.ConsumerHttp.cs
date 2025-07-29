@@ -1,13 +1,15 @@
 ﻿using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Mapping;
-using Ecowitt.Controller.Message;
+using Ecowitt.Controller.Message.Data;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using System.Text.Json;
+using Ecowitt.Controller.Message.Event;
+using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Orchestrator
 {
-    public partial class StateMachine
+    public partial class StateMachine : IConsumer<HttpServiceEvent>
     {
         public async Task OnHandle(SubdeviceApiCommand message)
         {
@@ -175,6 +177,33 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 }
 
                 _deviceStore.UpsertGateway(storedGateway);
+            }
+
+            return Task.CompletedTask;
+        }
+
+
+        public Task OnHandle(HttpServiceEvent message)
+        {
+            switch (message.EventType)
+            {
+                case HttpServiceEventType.Started:
+                    _logger.LogInformation("HTTP Service started");
+                    _lastHttpServiceState = HttpServiceEventType.Started;
+                    break;
+                case HttpServiceEventType.Stopped:
+                    _logger.LogWarning("HTTP Service stopped");
+                    _lastHttpServiceState = HttpServiceEventType.Stopped;
+                    break;
+                case HttpServiceEventType.Error:
+                    _logger.LogError($"HTTP Service error: {message.Message}");
+                    _lastHttpServiceState = HttpServiceEventType.Error;
+                    break;
+                case HttpServiceEventType.Unknown:
+                default:
+                    _logger.LogWarning($"Unknown HTTP Service event: {message.EventType}");
+                    _lastHttpServiceState = HttpServiceEventType.Unknown;
+                    break;
             }
 
             return Task.CompletedTask;
