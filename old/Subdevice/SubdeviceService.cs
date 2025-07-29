@@ -3,7 +3,7 @@ using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Message;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
-using Ecowitt.Controller.Store;
+using Ecowitt.Controller.Service.Orchestrator;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
 

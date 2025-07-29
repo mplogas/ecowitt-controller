@@ -2,12 +2,12 @@
 using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Mqtt;
-using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Ecowitt.Controller.Model.Discovery;
 using Device = Ecowitt.Controller.Model.Device;
+using Ecowitt.Controller.Service.Orchestrator;
 
 namespace Ecowitt.Controller.Discovery;
 
