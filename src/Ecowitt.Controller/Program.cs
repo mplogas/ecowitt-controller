@@ -4,9 +4,10 @@ using Ecowitt.Controller.Configuration;
 using Ecowitt.Controller.Message.Config;
 using Ecowitt.Controller.Message.Data;
 using Ecowitt.Controller.Message.Event;
+using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Service.Http;
 using Ecowitt.Controller.Service.Mqtt;
 using Ecowitt.Controller.Service.Orchestrator;
-using Ecowitt.Controller.Store;
 using MQTTnet;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -22,11 +23,6 @@ namespace Ecowitt.Controller;
 
 public class Program
 {
-    public class ServiceProviderAccessor
-    {
-        public IServiceProvider ServiceProvider { get; set; }
-    }
-
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +59,7 @@ public class Program
 
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
         builder.Services.AddSingleton<MqttService>();
+        builder.Services.AddSingleton<HttpPublishingService>();
         builder.Services.AddSingleton<StateMachine>();
 
         var sp = builder.Services.BuildServiceProvider();
@@ -91,10 +88,21 @@ public class Program
             smb.Consume<MqttConnectionEvent>(x => x.Topic("mqtt-connection-event").WithConsumer<StateMachine>());
             smb.Consume<HomeAssistantStatusEvent>(x => x.Topic("home-assistant-status").WithConsumer<StateMachine>());
 
+            // controller -> statemachine
+            smb.Produce<GatewayApiData>(x => x.DefaultTopic("gw-api-data"));
+            smb.Consume<GatewayApiData>(x => x.Topic("gw-api-data"));
+
+            // statemachine -> HttpPublishingService
+            smb.Produce<HttpConfig>(x => x.DefaultTopic("config-http"));
+            smb.Consume<HttpConfig>(x => x.Topic("config-http").WithConsumer<HttpPublishingService>());
+
+            // HttpPublishingService -> statemachine
+            smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-api-data"));
+            smb.Produce<HttpServiceEvent>(x => x.DefaultTopic("http-service-event"));
+            smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<StateMachine>());
+            smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<StateMachine>());
 
 
-            
-            
             // smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
             // smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-data"));
             // smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
@@ -113,10 +121,13 @@ public class Program
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<StateMachine>());
+        builder.Services.AddHostedService(s => s.GetRequiredService<StateMachine>());
         
         builder.Services.AddTransient<MqttFactory>();
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<MqttService>());
+        builder.Services.AddHostedService(s => s.GetRequiredService<MqttService>());
+
+        builder.Services.AddHostedService(s => s.GetRequiredService<HttpPublishingService>());
+
         //
         // builder.Services.AddHostedService<MqttService>();
         // builder.Services.AddHostedService<SubdeviceService>();

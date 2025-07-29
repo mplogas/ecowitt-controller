@@ -2,12 +2,12 @@
 
 public class GatewayApiData
 {
-    public string PASSKEY { get; set; }
-    public string StationType { get; set; }
+    public string PASSKEY { get; set; } = string.Empty;
+    public string StationType { get; set; } = string.Empty;
     public int Runtime { get; set; }
     public DateTime DateUtc { get; set; }
-    public string Freq { get; set; }
-    public string Model { get; set; }
+    public string Freq { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
     public string? IpAddress { get; set; }
     public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 

@@ -1,9 +1,8 @@
 using Ecowitt.Controller.Configuration;
-using Ecowitt.Controller.Message;
 using Ecowitt.Controller.Message.Config;
+using Ecowitt.Controller.Message.Data;
 using Ecowitt.Controller.Message.Event;
 using Ecowitt.Controller.Model.Api;
-using Ecowitt.Controller.Store;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
 
@@ -17,8 +16,8 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
     private readonly ControllerOptions _controllerOptions;
     private readonly MqttOptions _mqttOptions;
     private readonly IMessageBus _messageBus;
-    private MqttServiceEventType _lastServiceState = MqttServiceEventType.Unknown;
-    //private readonly TaskCompletionSource<bool> _mqttServiceStarted = new TaskCompletionSource<bool>();
+    private MqttServiceEventType _lastMqttServiceState = MqttServiceEventType.Unknown;
+    private HttpServiceEventType _lastHttpServiceState = HttpServiceEventType.Unknown;
 
     public StateMachine(ILogger<StateMachine> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions) 
     {
@@ -34,31 +33,22 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
     {
         _logger.LogInformation("Starting Orchestrator");
 
-        // emit initial MQTT configuration with a 1s timeout
-        // this is to ensure that the MQTT service has time to start
-
-        // Wait for MQTT service to start with timeout
-        // for whatever reasons this did not work as expected, so it'S back to dumb task.delay().
-        //try
-        //{
-        //    await _mqttServiceStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), stoppingToken);
-        //    _logger.LogInformation("MQTT service started signal received");
-        //    await EmitMqttConfig();
-        //}
-        //catch (TimeoutException)
-        //{
-        //    _logger.LogWarning("Timeout waiting for MQTT service to start");
-        //    await EmitMqttConfig(); // Try to proceed anyway
-        //}
-        //catch (OperationCanceledException)
-        //{
-        //    _logger.LogInformation("Cancellation requested while waiting for MQTT service");
-        //}
-
-
-        _logger.LogInformation("Emitting initial MQTT configuration");
+        _logger.LogInformation("Emitting initial configuration");
         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         await EmitMqttConfig();
+        await EmitHttpConfig();
+    }
+
+    private async Task EmitHttpConfig()
+    {
+        var httpConfig = new HttpConfig
+        {
+            Hosts = _ecowittOptions.Gateways.Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password)).ToList(),
+            PollingInterval = _ecowittOptions.PollingInterval,
+            AutoDiscovery = _ecowittOptions.AutoDiscovery
+        };
+
+        await _messageBus.Publish(httpConfig);
     }
 
     private async Task EmitMqttConfig()
