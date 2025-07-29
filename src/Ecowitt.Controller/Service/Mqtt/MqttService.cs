@@ -1,10 +1,10 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Ecowitt.Controller.Message.Config;
-using Ecowitt.Controller.Message.Data;
-using Ecowitt.Controller.Message.Event;
 using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
+using Ecowitt.Controller.Model.Message.Event;
 using MQTTnet;
 using MQTTnet.Client;
 using SlimMessageBus;

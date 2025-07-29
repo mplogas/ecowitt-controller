@@ -1,5 +1,5 @@
-using Ecowitt.Controller.Message.Config;
 using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Message.Config;
 using SlimMessageBus;
 using System.Text.Json;
 

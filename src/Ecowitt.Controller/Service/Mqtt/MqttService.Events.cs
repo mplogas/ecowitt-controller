@@ -1,5 +1,5 @@
-﻿using Ecowitt.Controller.Message.Event;
-using Ecowitt.Controller.Model.Api;
+﻿using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Message.Event;
 using MQTTnet;
 using MQTTnet.Client;
 using System.Text.Json;

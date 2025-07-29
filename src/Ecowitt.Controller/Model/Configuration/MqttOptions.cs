@@ -1,4 +1,4 @@
-﻿namespace Ecowitt.Controller.Configuration;
+﻿namespace Ecowitt.Controller.Model.Configuration;
 
 public class MqttOptions
 {

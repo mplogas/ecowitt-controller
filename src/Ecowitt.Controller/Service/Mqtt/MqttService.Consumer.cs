@@ -1,6 +1,6 @@
-﻿using Ecowitt.Controller.Message.Config;
-using Ecowitt.Controller.Message.Data;
-using Ecowitt.Controller.Message.Event;
+﻿using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
+using Ecowitt.Controller.Model.Message.Event;
 using MQTTnet.Client;
 
 namespace Ecowitt.Controller.Service.Mqtt

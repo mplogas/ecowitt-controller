@@ -1,6 +1,6 @@
 ﻿using Ecowitt.Controller.Model.Api;
 
-namespace Ecowitt.Controller.Message.Data;
+namespace Ecowitt.Controller.Model.Message.Data;
 
 public class SubdeviceApiAggregate
 {

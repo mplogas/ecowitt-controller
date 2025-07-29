@@ -1,4 +1,4 @@
-﻿namespace Ecowitt.Controller.Message.Event
+﻿namespace Ecowitt.Controller.Model.Message.Event
 {
     public class MqttServiceEvent
     {

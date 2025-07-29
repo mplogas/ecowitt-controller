@@ -1,5 +1,5 @@
-﻿using Ecowitt.Controller.Message.Data;
-using Ecowitt.Controller.Message.Event;
+﻿using Ecowitt.Controller.Model.Message.Data;
+using Ecowitt.Controller.Model.Message.Event;
 
 namespace Ecowitt.Controller.Service.Http
 {
