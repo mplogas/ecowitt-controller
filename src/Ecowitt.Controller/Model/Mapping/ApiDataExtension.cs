@@ -1,8 +1,9 @@
 using Ecowitt.Controller.Model;
 using System.Text.Json;
 using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Mapping;
 
-namespace Ecowitt.Controller.Mapping;
+namespace Ecowitt.Controller.Model.Mapping;
 
 public static class ApiDataExtension
 {
@@ -12,9 +13,9 @@ public static class ApiDataExtension
     /// <param name="subdeviceApiData"></param>
     /// <param name="isMetric"></param>
     /// <returns></returns>
-    public static Model.Subdevice Map(this SubdeviceApiData subdeviceApiData, bool isMetric = true, bool calculateValues = true)
+    public static Subdevice Map(this SubdeviceApiData subdeviceApiData, bool isMetric = true, bool calculateValues = true)
     {
-        var result = new Model.Subdevice
+        var result = new Subdevice
         {
             Id = subdeviceApiData.Id,
             Model = (SubdeviceModel)subdeviceApiData.Model,

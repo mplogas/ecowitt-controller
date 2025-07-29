@@ -1,4 +1,4 @@
-﻿using Ecowitt.Controller.Message.Event;
+﻿using Ecowitt.Controller.Model.Message.Event;
 
 namespace Ecowitt.Controller.Service.Orchestrator
 {

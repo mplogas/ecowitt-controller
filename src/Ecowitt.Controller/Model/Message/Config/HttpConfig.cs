@@ -1,4 +1,4 @@
-namespace Ecowitt.Controller.Message.Config;
+namespace Ecowitt.Controller.Model.Message.Config;
 
 public class HttpConfig
 {

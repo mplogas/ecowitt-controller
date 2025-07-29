@@ -1,8 +1,8 @@
-using Ecowitt.Controller.Configuration;
-using Ecowitt.Controller.Message.Config;
-using Ecowitt.Controller.Message.Data;
-using Ecowitt.Controller.Message.Event;
 using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Configuration;
+using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
+using Ecowitt.Controller.Model.Message.Event;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
 

@@ -1,4 +1,4 @@
-﻿using Ecowitt.Controller.Message.Config;
+﻿using Ecowitt.Controller.Model.Message.Config;
 
 namespace Ecowitt.Controller.Service.Http
 {
