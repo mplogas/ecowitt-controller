@@ -1,6 +1,9 @@
+*so you found the hidden refactoring branch? sweet, follow me on this journey, there diagrams, api spec and mqtt spec. and a lot of almost working code.* 
+
 ## Supported Devices  
 
 ### Gateways  
+- **GW3000**: The new one. yes i'm already using it.
 - **GW2000**: The GW2000 is a displayless console/gateway available since April 2022. It offers an extended range of functions, including a browser interface (WebUI) for display and configuration. It supports both Ethernet and WLAN connections, though it's recommended not to use both interfaces simultaneously to avoid blocking the web interface. The GW2000 firmware supports various sensors, including the WFC01 IoT sensor.  
 - **GW1200**: This gateway supports bidirectional communication necessary for controlling intelligent components like switches and water valves. It supports a WebUI and also supports the WS View Plus app for configuration .  
 - **GW1x00**: The GW1100 is similar to the GW1200 but does not support a WebUI and no subdevices. It is configured and displayed via the WS View Plus app. The GW1100 includes a temperature/humidity sensor for indoor measurements and supports local data display through applications like PWT (Personal Weather Tablet).
@@ -9,7 +12,8 @@
 ### Subdevices  
 - **AC1100 Smart Plug**: The AC1100 is a switchable socket that can be controlled manually, time-controlled, or based on measured values from the weather station. It requires an IoT-enabled console (e.g., GW2000, GW1200) and the Ecowitt app for automatic operation. It supports different regions with corresponding plugs and maximum wattages .  
 - **WFC01 Intelligent Water Timer (WittFlow)**: The WFC01 is a timer-controlled or sensor-measurement-dependent water valve. It features a built-in liquid flow sensor and a temperature sensor for the liquid. The valve can be controlled via the Ecowitt app, and it supports various operating modes, including manual, plan, and smart modes . The device is waterproof and dustproof to IP66 standards and built from corrosion-resistant materials .  
-  
+- **WFC02 Intelligent Water Valve**: Similar to the WFC01, the WFC02 is a water valve and comes with an optional flow sensor. more later i'm satill testing it.
+
 ### Compatibility  
 - **Weather Stations**: Fine Offset and its clones (Ecowitt, Froggit, Ambient Weather...) are generally supported if your gateway/weather station supports custom weather station uploads in Ecowitt format.  
 - **Web API Devices**: If your device offers a web API (e.g., GW2000, GW1200), this tool offers bidirectional communication, allowing you to control actors like the AC1100 smart plug or the WFC01 water valve .  
