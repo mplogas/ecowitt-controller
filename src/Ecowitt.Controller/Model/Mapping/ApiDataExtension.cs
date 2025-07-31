@@ -1,7 +1,8 @@
-using Ecowitt.Controller.Model;
-using System.Text.Json;
-using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Mapping;
+using Ecowitt.Controller.Model.Api;
+using System.Text.Json;
+using Serilog;
+using Serilog.Core;
 
 namespace Ecowitt.Controller.Model.Mapping;
 
@@ -55,6 +56,8 @@ public static class ApiDataExtension
                     if (sensor != null)
                     {
                         result.Sensors.Add(sensor);
+                        Log.Debug("Mapped sensor {SensorName} with value {SensorValue} for subdevice {SubdeviceId}", 
+                            sensor.Name, sensor.Value, result.Id);
                     }
                     
                 }
