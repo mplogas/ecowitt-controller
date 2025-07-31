@@ -1,109 +1,6 @@
 ﻿using Ecowitt.Controller.Model;
 using Serilog;
 
-/* all currently available sensors. their naming scheme is not consistent, so we have to map them manually
-PASSKEY
-stationtype
-runtime
-dateutc
-tempinf
-humidityin 
-baromrelin 
-baromabsin 
-tempf  
-humidity   
-winddir
-windspeedmph
-windgustmph
-maxdailygust
-solarradiation
-uv     
-rainratein 
-eventrainin
-hourlyrainin
-dailyrainin
-weeklyrainin
-monthlyrainin 
-yearlyrainin
-totalrainin
-srain_piezo
-rrain_piezo
-erain_piezo
-hrain_piezo
-drain_piezo
-wrain_piezo
-mrain_piezo
-yrain_piezo
-ws90cap_volt
-ws90_ver   
-tempf1,….,,tempf8             
-humidity1,….,humidity8        
-soilmoisture1,….., soilmoisture8  
-soilad1,…., soilad8           
-pm25_ch1, …., pm25_ch4        
-pm25_avg_24h_ch1,…..,pm25_avg_24h_ch4
-tf_co2                        
-humi_co2                      
-pm1_co2                       
-pm1_24h_co2                   
-pm25_co2                      
-pm25_24h_co2                  
-pm4_co2                       
-pm4_24h_co2                   
-pm10_co2                      
-pm10_24h_co2                  
-co2                           
-co2_24h                       
-lightning_num                 
-lightning                     
-lightning_time                
-leak_ch1 …., leak_ch4         
-tf_ch1, …., tf_ch8            
-leafwetness_ch1,…, leafwetness_ch8
-console_batt                  
-wh65batt                      
-wh80batt                      
-wh26batt                      
-batt1,….,batt8                
-soilbatt1,…,soilbatt8         
-pm25batt1, …, pm25batt4       
-wh57batt                      
-leakbatt1, …,leakbatt4        
-tf_batt1, …, tf_batt8 
-co2_batt          
-leaf_batt1, …, leaf_batt8
-wh90batt          
-freq              
-model             
-interval          
-ac_status         
-warning           
-always_on         
-val_type          
-val               
-run_time          
-rssi              
-gw_rssi           
-timeutc           
-publish_time      
-ac_action         
-ac_running        
-plan_status       
-elect_total       
-happen_elect      
-realtime_power    
-ac_voltage        
-ac_current        
-water_status      
-water_action      
-water_running     
-water_total       
-happen_water      
-flow_velocity     
-water_temp        
-wfc01batt         
-*/
-
 namespace Ecowitt.Controller.Mapping
 {
     public partial class SensorBuilder
@@ -387,11 +284,13 @@ namespace Ecowitt.Controller.Mapping
                 case "water_running":
                     return BuildBinarySensor(propertyName, "Running", propertyValue);
                 case "water_total":
+                case "wfc02_total":
                     return BuildWaterConsumptionSensor(propertyName, "Total Water", propertyValue, isMetric, true);
                 case "happen_water":
                     //new Sensor<double?>("Daily Consumption", isMetric ? (double?)device.water_total - (double?)device.happen_water : L2G(device.water_total) - L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
                     return BuildWaterConsumptionSensor(propertyName, "Last Planned Consumption", propertyValue, isMetric);
                 case "flow_velocity":
+                case "wfc02_flow_velocity":
                     return BuildWaterFlowSensor(propertyName, "Flow Velocity", propertyValue, isMetric);
                 case "water_temp":
                     return BuildTemperatureSensor(propertyName, "Water Temperature", propertyValue, isMetric, true);
@@ -399,6 +298,22 @@ namespace Ecowitt.Controller.Mapping
                     return BuildBatterySensor(propertyName, "WFC01 Battery", propertyValue, true);
                 case "heap":
                     return BuildIntSensor(propertyName, "Gateway Heap", propertyValue, "byte", isDiag: true);
+                case "wfc02_status":
+                    return BuildIntSensor(propertyName, "WFC02 Status", propertyValue, isDiag: true);
+                case "wfc02rssi":
+                    return BuildIntSensor(propertyName, "WFC02 RSSI", propertyValue, "/5", SensorType.SignalStrength, true);
+                case "wfc02batt":
+                    return BuildIntSensor(propertyName, "WFC02 Battery", propertyValue, "%", SensorType.Battery, true);
+                case "capacity":
+                    return BuildIntSensor(propertyName, "Capacity", propertyValue, "byte", isDiag: true);
+                case "transition":
+                    return BuildIntSensor(propertyName, "Transition", propertyValue, isDiag: true);
+                case "flowmeter":
+                    return BuildBinarySensor(propertyName, "Flowmeter Available", propertyValue, isDiag: true);
+                case "valve":
+                    return BuildBinarySensor(propertyName, "Valve Available", propertyValue, isDiag: true);
+                case "wfc02_position":
+                    return BuildIntSensor(propertyName, "wfc02-position", propertyValue, isDiag: true);
                 case "PASSKEY":
                 case "stationtype":
                 case "runtime":
