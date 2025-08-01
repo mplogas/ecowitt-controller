@@ -1,7 +1,6 @@
-﻿using Ecowitt.Controller.Model;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace Ecowitt.Controller.Mapping
+namespace Ecowitt.Controller.Model.Mapping
 {
     public partial class SensorBuilder
     {

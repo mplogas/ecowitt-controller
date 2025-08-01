@@ -1,8 +1,6 @@
-using Ecowitt.Controller.Mapping;
 using Ecowitt.Controller.Model.Api;
-using System.Text.Json;
 using Serilog;
-using Serilog.Core;
+using System.Text.Json;
 
 namespace Ecowitt.Controller.Model.Mapping;
 

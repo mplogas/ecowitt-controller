@@ -1,7 +1,8 @@
-﻿using Ecowitt.Controller.Model;
-using Serilog;
+﻿using Serilog;
 
-namespace Ecowitt.Controller.Mapping
+// TODO: read this from a json config file 
+
+namespace Ecowitt.Controller.Model.Mapping
 {
     public partial class SensorBuilder
     {

@@ -1,7 +1,4 @@
-﻿using System.Transactions;
-using Ecowitt.Controller.Model;
-
-namespace Ecowitt.Controller.Mapping
+﻿namespace Ecowitt.Controller.Model.Mapping
 {
     public partial class SensorBuilder
     {
