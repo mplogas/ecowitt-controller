@@ -1,5 +1,6 @@
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Configuration;
+using Ecowitt.Controller.Model.Mapping;
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
@@ -16,10 +17,11 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
     private readonly ControllerOptions _controllerOptions;
     private readonly MqttOptions _mqttOptions;
     private readonly IMessageBus _messageBus;
+    private readonly SensorBuilder _sensorBuilder;
     private MqttServiceEventType _lastMqttServiceState = MqttServiceEventType.Unknown;
     private HttpServiceEventType _lastHttpServiceState = HttpServiceEventType.Unknown;
 
-    public StateMachine(ILogger<StateMachine> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions) 
+    public StateMachine(ILogger<StateMachine> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions, SensorBuilder sensorBuilder) 
     {
         _logger = logger;
         _deviceStore = deviceStore;
@@ -27,6 +29,7 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
         _ecowittOptions = ecowittOptions.Value;
         _controllerOptions = controllerOptions.Value;
         _messageBus = messageBus;
+        _sensorBuilder = sensorBuilder;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

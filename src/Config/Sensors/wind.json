@@ -1,0 +1,44 @@
+{
+  "ExactMappings": {
+    "windspeedmph": {
+      "DisplayName": "Wind Speed",
+      "BuilderMethod": "BuildWindSpeedSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    "windgustmph": {
+      "DisplayName": "Wind Gust",
+      "BuilderMethod": "BuildWindSpeedSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    "maxdailygust": {
+      "DisplayName": "Max Daily Gust",
+      "BuilderMethod": "BuildWindSpeedSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    "winddir": {
+      "DisplayName": "Wind Direction",
+      "BuilderMethod": "BuildIntSensor",
+      "Parameters": [
+        {
+          "Type": "string",
+          "Value": "°"
+        }
+      ]
+    }
+  }
+}

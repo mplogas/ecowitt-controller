@@ -1,0 +1,72 @@
+{
+  "ExactMappings": {
+    "tempinf": {
+      "DisplayName": "Indoor Temperature",
+      "BuilderMethod": "BuildTemperatureSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    "tempf": {
+      "DisplayName": "Outdoor Temperature", 
+      "BuilderMethod": "BuildTemperatureSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    "tf_co2": {
+      "DisplayName": "CO2 Temperature",
+      "BuilderMethod": "BuildTemperatureSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    "water_temp": {
+      "DisplayName": "Water Temperature",
+      "BuilderMethod": "BuildTemperatureSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        },
+        {
+          "Type": "bool",
+          "Value": "true"
+        }
+      ]
+    }
+  },
+  "PatternMappings": [
+    {
+      "Pattern": "tempf([1-8])",
+      "DisplayNameFormat": "Temperature {0}",
+      "BuilderMethod": "BuildTemperatureSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    },
+    {
+      "Pattern": "tf_ch([1-8])",
+      "DisplayNameFormat": "Temperature {0}",
+      "BuilderMethod": "BuildTemperatureSensor",
+      "Parameters": [
+        {
+          "Type": "metric",
+          "Value": ""
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@ using System.Net;
 using System.Reflection;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Configuration;
+using Ecowitt.Controller.Model.Mapping;
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
@@ -56,6 +57,19 @@ public class Program
             .MinimumLevel.Warning()
             .ReadFrom.Configuration(builder.Configuration));
 
+        // Register sensor configuration service
+        var sensorConfigPath = File.Exists("/config/sensors") 
+            ? "/config/sensors" 
+            : Path.Combine(builder.Environment.ContentRootPath, "Config", "Sensors");
+        
+        builder.Services.AddSingleton<SensorConfigurationService>(provider => 
+            new SensorConfigurationService(
+                provider.GetRequiredService<ILogger<SensorConfigurationService>>(), 
+                sensorConfigPath));
+
+        // Register SensorBuilder as singleton with configuration service
+        builder.Services.AddSingleton<SensorBuilder>(provider => 
+            new SensorBuilder(provider.GetRequiredService<SensorConfigurationService>()));
 
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
         builder.Services.AddSingleton<MqttService>();
@@ -108,15 +122,15 @@ public class Program
             // smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
             // smb.Consume<GatewayApiData>(x => x
             //     .Topic("api-data")
-            //     .WithConsumer<StateMachine>()
+            //     .WithConsumer<StateMachine>
             // );
             // smb.Consume<SubdeviceApiAggregate>(x => x
             //     .Topic("subdevice-data")
-            //     .WithConsumer<StateMachine>()
+            //     .WithConsumer<StateMachine>
             // );
             // smb.Consume<SubdeviceApiCommand>(x => x
             //     .Topic("subdevice-command")
-            //     .WithConsumer<StateMachine>()
+            //     .WithConsumer<StateMachine>
             // );
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });

@@ -1,12 +1,134 @@
 ﻿using Serilog;
-
-// TODO: read this from a json config file 
+using System.Reflection;
 
 namespace Ecowitt.Controller.Model.Mapping
 {
     public partial class SensorBuilder
     {
-        public static ISensor? BuildSensor(string propertyName, string propertyValue, bool isMetric = true)
+        private readonly SensorConfigurationService? _configService;
+        private static readonly MethodInfo[] _builderMethods;
+
+        static SensorBuilder()
+        {
+            _builderMethods = typeof(SensorBuilder)
+                .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                .Where(m => m.Name.StartsWith("Build") && m.Name.EndsWith("Sensor"))
+                .ToArray();
+        }
+
+        public SensorBuilder(SensorConfigurationService? configService = null)
+        {
+            _configService = configService;
+        }
+
+        public ISensor? BuildSensor(string propertyName, string propertyValue, bool isMetric = true)
+        {
+            if (string.IsNullOrEmpty(propertyName) || string.IsNullOrEmpty(propertyValue))
+                return null;
+
+            // Try to use configuration if available
+            if (_configService != null)
+            {
+                // Check if property is explicitly ignored
+                if (_configService.IsPropertyIgnored(propertyName))
+                {
+                    Log.Debug("Property {PropertyName} is configured to be ignored", propertyName);
+                    return null;
+                }
+
+                var mapping = _configService.GetMappingForProperty(propertyName);
+                if (mapping != null)
+                {
+                    try
+                    {
+                        return BuildSensorFromConfiguration(propertyName, propertyValue, mapping, isMetric);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Error building sensor for property '{PropertyName}' using configuration", propertyName);
+                        // Fall through to switch-case as fallback
+                    }
+                }
+            }
+
+            // Fall back to switch-case implementation
+            return BuildSensorFromSwitch(propertyName, propertyValue, isMetric);
+        }
+
+        private ISensor? BuildSensorFromConfiguration(string propertyName, string propertyValue, SensorMapping mapping, bool isMetric)
+        {
+            // Find the builder method
+            var methodName = mapping.BuilderMethod;
+            var method = Array.Find(_builderMethods, m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase));
+
+            if (method == null)
+            {
+                Log.Error("Builder method '{MethodName}' not found for property '{PropertyName}'", methodName, propertyName);
+                return null;
+            }
+
+            // Prepare parameters
+            var parameters = new List<object>
+            {
+                propertyName,     // First parameter is always propertyName
+                mapping.DisplayName, // Second parameter is always displayName
+                propertyValue     // Third parameter is always propertyValue
+            };
+
+            // Add additional parameters based on configuration
+            foreach (var param in mapping.Parameters)
+            {
+                try
+                {
+                    var paramValue = ConvertParameterValue(param, isMetric);
+                    parameters.Add(paramValue);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to convert parameter {Type}:{Value} for property '{PropertyName}'", param.Type, param.Value, propertyName);
+                    return null;
+                }
+            }
+
+            // Validate parameter count
+            var methodParams = method.GetParameters();
+            if (parameters.Count != methodParams.Length)
+            {
+                Log.Warning("Parameter count mismatch for method {MethodName}. Expected {Expected}, got {Actual}",
+                    methodName, methodParams.Length, parameters.Count);
+                return null;
+            }
+
+            // Invoke the builder method
+            try
+            {
+                return (ISensor?)method.Invoke(null, parameters.ToArray());
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to invoke builder method {MethodName} for property '{PropertyName}'", methodName, propertyName);
+                return null;
+            }
+        }
+
+        private static object ConvertParameterValue(BuilderParameter param, bool isMetric)
+        {
+            return param.Type.ToLowerInvariant() switch
+            {
+                "bool" => bool.Parse(param.Value),
+                "string" => param.Value,
+                "int" => int.Parse(param.Value),
+                "double" => double.Parse(param.Value),
+                "sensortype" => Enum.Parse<SensorType>(param.Value, true),
+                "sensorstate" => Enum.Parse<SensorState>(param.Value, true),
+                "sensorclass" => Enum.Parse<SensorClass>(param.Value, true),
+                "sensorcategory" => Enum.Parse<SensorCategory>(param.Value, true),
+                "metric" => isMetric, // Use the isMetric parameter
+                _ => throw new ArgumentException($"Unknown parameter type '{param.Type}'")
+            };
+        }
+
+        private ISensor? BuildSensorFromSwitch(string propertyName, string propertyValue, bool isMetric)
         {
             switch (propertyName)
             {
@@ -26,7 +148,6 @@ namespace Ecowitt.Controller.Model.Mapping
                     return BuildWindSpeedSensor(propertyName, "Wind Speed", propertyValue, isMetric);
                 case "windgustmph":
                     return BuildWindSpeedSensor(propertyName, "Wind Gust", propertyValue, isMetric);
-                    //return BuildDoubleSensor(propertyName, "Wind Gust", propertyValue, "km/h", SensorType.WindSpeed);
                 case "maxdailygust":
                     return BuildWindSpeedSensor(propertyName, "Max Daily Gust", propertyValue, isMetric);
                 case "winddir":
@@ -148,7 +269,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leak_ch2":
                 case "leak_ch3":
                 case "leak_ch4":
-                    // maybe it's bool, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildIntSensor(propertyName, $"Leak Channel {number}", propertyValue);
                 case "tf_ch1":
@@ -169,20 +289,15 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leafwetness_ch6":
                 case "leafwetness_ch7":
                 case "leafwetness_ch8":
-                    // maybe it's double, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildIntSensor(propertyName, $"Leaf Wetness {number}", propertyValue, "%");
                 case "console_batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "Console Battery", propertyValue);
                 case "wh65batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH65 Battery", propertyValue);
                 case "wh80batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH80 Battery", propertyValue);
                 case "wh26batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH26 Battery", propertyValue);
                 case "batt1":
                 case "batt2":
@@ -192,10 +307,8 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "batt6":
                 case "batt7":
                 case "batt8":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Battery {number}", propertyValue);
-                    //return BuildVoltageSensor(propertyName, $"Battery {number}", propertyValue, isDiag: true);
                 case "soilbatt1":
                 case "soilbatt2":
                 case "soilbatt3":
@@ -210,7 +323,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "pm25batt2":
                 case "pm25batt3":
                 case "pm25batt4":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"PM2.5 Battery {number}", propertyValue);
                 case "wh57batt":
@@ -219,7 +331,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leakbatt2":
                 case "leakbatt3":
                 case "leakbatt4":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Leak Battery {number}", propertyValue);
                 case "tf_batt1":
@@ -230,7 +341,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "tf_batt6":
                 case "tf_batt7":
                 case "tf_batt8":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Temperature Battery {number}", propertyValue);
                 case "co2_batt":
@@ -243,7 +353,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leaf_batt6":
                 case "leaf_batt7":
                 case "leaf_batt8":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Leaf Battery {number}", propertyValue);
                 case "wh90batt":
@@ -288,7 +397,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "wfc02_total":
                     return BuildWaterConsumptionSensor(propertyName, "Total Water", propertyValue, isMetric, true);
                 case "happen_water":
-                    //new Sensor<double?>("Daily Consumption", isMetric ? (double?)device.water_total - (double?)device.happen_water : L2G(device.water_total) - L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
                     return BuildWaterConsumptionSensor(propertyName, "Last Planned Consumption", propertyValue, isMetric);
                 case "flow_velocity":
                 case "wfc02_flow_velocity":
@@ -331,13 +439,9 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "devicename":
                 case "version":
                 default:
-                    Log.Information($"Ignored property {propertyName}.");
+                    Log.Information("Ignored property {PropertyName}", propertyName);
                     return null;
             }
         }
-
-        
     }
-
-
 }

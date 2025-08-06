@@ -1,0 +1,27 @@
+{
+  "ExactMappings": {
+    "humidity": {
+      "DisplayName": "Outdoor Humidity",
+      "BuilderMethod": "BuildHumiditySensor",
+      "Parameters": []
+    },
+    "humidityin": {
+      "DisplayName": "Indoor Humidity",
+      "BuilderMethod": "BuildHumiditySensor",
+      "Parameters": []
+    },
+    "humi_co2": {
+      "DisplayName": "CO2 Humidity",
+      "BuilderMethod": "BuildHumiditySensor", 
+      "Parameters": []
+    }
+  },
+  "PatternMappings": [
+    {
+      "Pattern": "humidity([1-8])",
+      "DisplayNameFormat": "Humidity {0}",
+      "BuilderMethod": "BuildHumiditySensor",
+      "Parameters": []
+    }
+  ]
+}

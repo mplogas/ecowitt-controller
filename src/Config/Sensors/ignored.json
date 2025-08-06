@@ -1,0 +1,19 @@
+{
+  "IgnoredProperties": [
+    "PASSKEY",
+    "stationtype", 
+    "runtime",
+    "dateutc",
+    "freq",
+    "model",
+    "ws90_ver",
+    "interval",
+    "rssi",
+    "timeutc",
+    "publish_time",
+    "id",
+    "nickname",
+    "devicename",
+    "version"
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "ExactMappings": {
+    "console_batt": {
+      "DisplayName": "Console Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    "wh65batt": {
+      "DisplayName": "WH65 Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    "wh80batt": {
+      "DisplayName": "WH80 Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    "wh26batt": {
+      "DisplayName": "WH26 Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    "wh57batt": {
+      "DisplayName": "WH57 Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": [
+        {
+          "Type": "bool",
+          "Value": "true"
+        }
+      ]
+    },
+    "co2_batt": {
+      "DisplayName": "CO2 Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": [
+        {
+          "Type": "bool",
+          "Value": "true"
+        }
+      ]
+    },
+    "wfc01batt": {
+      "DisplayName": "WFC01 Battery",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": [
+        {
+          "Type": "bool",
+          "Value": "true"
+        }
+      ]
+    },
+    "wh90batt": {
+      "DisplayName": "WH90 Battery",
+      "BuilderMethod": "BuildVoltageSensor",
+      "Parameters": [
+        {
+          "Type": "bool",
+          "Value": "true"
+        }
+      ]
+    }
+  },
+  "PatternMappings": [
+    {
+      "Pattern": "batt([1-8])",
+      "DisplayNameFormat": "Battery {0}",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    {
+      "Pattern": "soilbatt([1-8])",
+      "DisplayNameFormat": "Soil Battery {0}",
+      "BuilderMethod": "BuildVoltageSensor",
+      "Parameters": [
+        {
+          "Type": "bool",
+          "Value": "true"
+        }
+      ]
+    },
+    {
+      "Pattern": "pm25batt([1-4])",
+      "DisplayNameFormat": "PM2.5 Battery {0}",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    {
+      "Pattern": "leakbatt([1-4])",
+      "DisplayNameFormat": "Leak Battery {0}",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    {
+      "Pattern": "tf_batt([1-8])",
+      "DisplayNameFormat": "Temperature Battery {0}",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    },
+    {
+      "Pattern": "leaf_batt([1-8])",
+      "DisplayNameFormat": "Leaf Battery {0}",
+      "BuilderMethod": "BuildBatterySensor",
+      "Parameters": []
+    }
+  ]
+}
