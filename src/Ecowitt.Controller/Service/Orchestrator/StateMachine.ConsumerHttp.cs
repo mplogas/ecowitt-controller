@@ -48,7 +48,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             }
         }
 
-        public Task OnHandle(GatewayApiData message)
+        public async Task OnHandle(GatewayApiData message)
         {
             _logger.LogDebug($"Received ApiData: {message.Model} ({message.PASSKEY}) \n {message.Payload}");
             var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
@@ -63,14 +63,18 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 {
                     sensor.DiscoveryUpdate = true;
                 }
-                if (!_deviceStore.UpsertGateway(updatedGateway)) _logger.LogWarning($"failed to add gateway {updatedGateway.IpAddress} ({updatedGateway.Model}) to the store");
-                else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
+                if (_deviceStore.UpsertGateway(updatedGateway)) 
+                {
+                    _logger.LogDebug($"gateway added: {JsonSerializer.Serialize(storedGateway)})");
+                    await EmitGatewayFull(updatedGateway);
+                }
+                else _logger.LogWarning($"failed to add gateway {updatedGateway.IpAddress} ({updatedGateway.Model}) to the store");
             }
             else
             {
-                // no other property should update besides sensors 
-                // and i'm stupid, because TS is required for availability :(
+                // no other property should update besides sensors - it seems fw isn't reported by the GW 
                 storedGateway.TimestampUtc = updatedGateway.TimestampUtc;
+                var changedSensors = new List<ISensor>();
 
                 foreach (var sensor in updatedGateway.Sensors)
                 {
@@ -79,12 +83,16 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     {
                         sensor.DiscoveryUpdate = true;
                         storedGateway.Sensors.Add(sensor);
+                        changedSensors.Add(sensor);
                     }
-                    else
+                    else if (DeNoiserHelper.HasSignificantChange(storedSensor, sensor.Value))
                     {
                         storedSensor.Value = sensor.Value;
+                        changedSensors.Add(storedSensor);
                     }
                 }
+
+                await EmitGatewayChanged(changedSensors, storedGateway.IpAddress);
 
                 var sensorsToRemove = storedGateway.Sensors.Where(s => updatedGateway.Sensors.All(gs => gs.Name != s.Name)).ToList();
                 foreach (var sensor in sensorsToRemove)
@@ -92,16 +100,16 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     storedGateway.Sensors.Remove(sensor);
                 }
 
+                // TODO: emit removed gateway sensors to mqtt (maybe... is it really needed?)
+
                 if (!_deviceStore.UpsertGateway(storedGateway)) { _logger.LogWarning($"failed to update {storedGateway.IpAddress} ({storedGateway.Model}) in the store"); }
                 else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
             }
 
             LogStorageState();
-
-            return Task.CompletedTask;
         }
 
-        public Task OnHandle(SubdeviceApiAggregate message)
+        public async Task OnHandle(SubdeviceApiAggregate message)
         {
             var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
             foreach (var ip in ips)
@@ -112,7 +120,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     if (_ecowittOptions.AutoDiscovery)
                     {
                         _logger.LogWarning($"Gateway {ip} not found while in autodiscovery mode. Not updating subdevices. (Try turning off autodiscovery)");
-                        return Task.CompletedTask;
+                        return;
                     }
 
                     storedGateway = new Device { IpAddress = ip };
@@ -135,7 +143,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                         storedGateway.Subdevices.Add(updatedSubDevice);
                         _logger.LogInformation($"subdevice added: {data.Id} ({data.Model})");
 
-
+                        await EmitSubdeviceFull(updatedSubDevice);
                     }
                     else
                     {
@@ -149,10 +157,13 @@ namespace Ecowitt.Controller.Service.Orchestrator
                             storedSubDevice.Devicename = updatedSubDevice.Devicename;
                             storedSubDevice.Nickname = updatedSubDevice.Nickname;
                             storedSubDevice.DiscoveryUpdate = true;
+
+                            await EmitSubdeviceFull(storedSubDevice);
                         }
 
                         // update sensors one by one and find out if there are new ones
                         // if there are new ones, mark the subdevice for discovery update
+                        var changedSensors = new List<ISensor>();
                         foreach (var sensor in updatedSubDevice.Sensors)
                         {
                             var storedSensor = storedSubDevice.Sensors.FirstOrDefault(s => s.Name == sensor.Name);
@@ -160,12 +171,16 @@ namespace Ecowitt.Controller.Service.Orchestrator
                             {
                                 sensor.DiscoveryUpdate = true;
                                 storedSubDevice.Sensors.Add(sensor);
+                                changedSensors.Add(sensor);
                             }
-                            else
+                            else if (DeNoiserHelper.HasSignificantChange(storedSensor, sensor.Value))
                             {
                                 storedSensor.Value = sensor.Value;
+                                changedSensors.Add(storedSensor);
                             }
                         }
+
+                        await EmitSubdeviceChanged(changedSensors, storedGateway.IpAddress, storedSubDevice.Id);
 
                         // remove sensors that are not in the update
                         var sensorsToRemove = storedSubDevice.Sensors.Where(s => updatedSubDevice.Sensors.All(us => us.Name != s.Name)).ToList();
@@ -173,6 +188,8 @@ namespace Ecowitt.Controller.Service.Orchestrator
                         {
                             storedSubDevice.Sensors.Remove(sensor);
                         }
+
+                        // TODO: emit removed subdevice sensors to mqtt (maybe... is it really needed?)
 
                         _logger.LogInformation($"subdevice updated: {data.Id} ({data.Model})");
                     }
@@ -182,8 +199,6 @@ namespace Ecowitt.Controller.Service.Orchestrator
             }
 
             LogStorageState();
-
-            return Task.CompletedTask;
         }
 
 

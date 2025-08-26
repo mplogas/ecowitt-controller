@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Configuration;
 using Ecowitt.Controller.Model.Message.Config;
@@ -84,7 +85,49 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
             _logger.LogDebug($"Storage dump: \n {JsonSerializer.Serialize(gateway)}");
         }
     }
-    
+
+    private async Task EmitGatewayFull(Device device)
+    {
+        await _messageBus.Publish(new DeviceDataFull
+        {
+            Device = device,
+            GatewayId = device.IpAddress,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
+    private async Task EmitSubdeviceFull(Subdevice subdevice)
+    {
+        await _messageBus.Publish(new SubdeviceDataFull
+        {
+            Subdevice = subdevice,
+            GatewayId = subdevice.GwIp,
+            SubdeviceId = subdevice.Id,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
+    private async Task EmitGatewayChanged(List<ISensor> sensorsChanged, string gatewayId)
+    {
+        await _messageBus.Publish(new DeviceData()
+        {
+            ChangedSensors = sensorsChanged,
+            GatewayId = gatewayId,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
+    private async Task EmitSubdeviceChanged(List<ISensor> sensorsChanged, string gatewayId, int subdeviceId)
+    {
+        await _messageBus.Publish(new SubdeviceData()
+        {
+            ChangedSensors = sensorsChanged,
+            GatewayId = gatewayId,
+            SubdeviceId = subdeviceId,
+            Timestamp = DateTime.UtcNow
+        });
+    }
+
     // public async Task<bool> SendCommand(string ipAddress, string cmd, int id, int model, int val = 0, int valType = 0, int onType = 0, int offType = 0, int alwaysOn = 1, int onTime = 0, int offTime = 0)
     // {
     //     var client = _httpClientFactory.CreateClient("ecowitt-client");

@@ -1,9 +1,8 @@
-using Ecowitt.Controller.Model;
-
 namespace Ecowitt.Controller.Model.Message.Data;
 
 public class DeviceData
 {
-    public Device Device { get; set; }
-    
+    public string GatewayId { get; set; } = string.Empty;
+    public List<ISensor> ChangedSensors { get; set; } = new();
+    public DateTime Timestamp { get; set; }
 }

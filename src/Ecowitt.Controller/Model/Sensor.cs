@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System.Text.Json.Serialization;
 
 namespace Ecowitt.Controller.Model;
@@ -21,10 +22,16 @@ public interface ISensor
 public interface ISensor<T> : ISensor
 {
     new T Value { get; set; }
+    public bool HasChanged { get; }
+    void ResetChangeFlag();
 }
 
 public class Sensor<T> : ISensor<T>
 {
+    private int _lastValueHash;
+    private T _value;
+
+    public bool HasChanged { get; private set; }
     public string Name { get; }
     public string Alias { get; }
     public DateTime TimestampUtc { get; set; }
@@ -33,8 +40,23 @@ public class Sensor<T> : ISensor<T>
     public SensorClass SensorClass { get; }
     public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get; }
-    public T Value { get; set;  }
-    
+    //public T Value { get; set;  }
+    public T Value
+    {
+        get => _value;
+        set
+        {
+            var newHash = value?.GetHashCode() ?? 0;
+            HasChanged = _lastValueHash != newHash;
+            _lastValueHash = newHash;
+            _value = value;
+            if (HasChanged)
+            {
+                TimestampUtc = DateTime.UtcNow;
+            }
+        }
+    }
+
     object ISensor.Value
     {
         get => Value;
@@ -71,6 +93,8 @@ public class Sensor<T> : ISensor<T>
         Value = value;
         TimestampUtc = DateTime.UtcNow;
     }
+
+    public void ResetChangeFlag() => HasChanged = false;
 }
 
 /// <summary>
