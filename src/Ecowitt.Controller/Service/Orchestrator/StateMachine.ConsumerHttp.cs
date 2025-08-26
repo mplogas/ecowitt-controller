@@ -96,6 +96,8 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
             }
 
+            LogStorageState();
+
             return Task.CompletedTask;
         }
 
@@ -178,6 +180,8 @@ namespace Ecowitt.Controller.Service.Orchestrator
 
                 _deviceStore.UpsertGateway(storedGateway);
             }
+
+            LogStorageState();
 
             return Task.CompletedTask;
         }

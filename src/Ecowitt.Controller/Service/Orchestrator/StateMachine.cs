@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Configuration;
 using Ecowitt.Controller.Model.Message.Config;
@@ -74,7 +75,15 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
         await _messageBus.Publish(mqttConfig);
     }
 
-    
+    private void LogStorageState()
+    {
+        foreach (var gw in _deviceStore.GetGatewaysShort())
+        {
+            _logger.LogInformation($"Gateway {gw.Key} - {gw.Value}");
+            var gateway = _deviceStore.GetGateway(gw.Key);
+            _logger.LogDebug($"Storage dump: \n {JsonSerializer.Serialize(gateway)}");
+        }
+    }
     
     // public async Task<bool> SendCommand(string ipAddress, string cmd, int id, int model, int val = 0, int valType = 0, int onType = 0, int offType = 0, int alwaysOn = 1, int onTime = 0, int offTime = 0)
     // {

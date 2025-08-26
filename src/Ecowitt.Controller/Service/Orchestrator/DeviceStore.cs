@@ -9,7 +9,7 @@ public interface IDeviceStore
     Device? GetGatewayBySubdeviceId(int id);
     bool UpsertGateway(Device data);
     void Clear();
-    Dictionary<string, string> GetGatewaysShort();
+    Dictionary<string, string?> GetGatewaysShort();
 }
 
 public class DeviceStore : IDeviceStore
@@ -22,9 +22,9 @@ public class DeviceStore : IDeviceStore
         _logger = logger;
     }
     
-    public Dictionary<string, string> GetGatewaysShort()
+    public Dictionary<string, string?> GetGatewaysShort()
     {
-        return _gateways.ToArray().ToDictionary(gateway => gateway.Key, gateway => gateway.Value.Model);
+        return _gateways.ToDictionary(gateway => gateway.Key, gateway => gateway.Value.Model);
     }
     
     public Device? GetGateway(string ipAddress)
