@@ -2,7 +2,7 @@
 
 namespace Ecowitt.Controller.Service.Orchestrator
 {
-    public partial class StateMachine
+    public partial class Dispatcher
     {
         public Task OnHandle(MqttServiceEvent message)
         {

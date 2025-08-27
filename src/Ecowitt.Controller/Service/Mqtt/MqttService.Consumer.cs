@@ -1,4 +1,5 @@
-﻿using Ecowitt.Controller.Model.Message.Config;
+﻿using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
 using MQTTnet.Client;
@@ -58,14 +59,79 @@ namespace Ecowitt.Controller.Service.Mqtt
             EmitHomeAssistantDiscovery();
         }
 
-        public Task OnHandle(DeviceData message)
+        public async Task OnHandle(DeviceData message)
         {
             if (_client == null || !_client.IsConnected)
             {
                 _logger.LogWarning("MQTT client is not connected. Cannot publish device data.");
+                return;
             }
 
-            return Task.CompletedTask;
+            if (string.IsNullOrWhiteSpace(message.GatewayName))
+            {
+                _logger.LogWarning("Gateway name is empty. Cannot publish device data.");
+                return;
+            }
+
+            await PublishSensors(message.ChangedSensors, message.GatewayName);
+            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(message.GatewayName), DateTime.UtcNow);
+        }
+
+        public async Task OnHandle(DeviceDataFull message)
+        {
+            if (_client == null || !_client.IsConnected)
+            {
+                _logger.LogWarning("MQTT client is not connected. Cannot publish device data.");
+                return;
+            }
+            var gateway = message.Device;
+            if (string.IsNullOrWhiteSpace(gateway.Name))
+            {
+                _logger.LogWarning("Gateway name is empty. Cannot publish device data.");
+                return;
+            }
+
+            await PublishGateway(gateway);
+            await PublishSensors(gateway.Sensors, gateway.Name);
+            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(gateway.Name), gateway.TimestampUtc);
+        }
+
+        public async Task OnHandle(SubdeviceData message)
+        {
+            if (_client == null || !_client.IsConnected)
+            {
+                _logger.LogWarning("MQTT client is not connected. Cannot publish device data.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(message.GatewayName))
+            {
+                _logger.LogWarning("Gateway name is empty. Cannot publish device data.");
+                return;
+            }
+
+            await PublishSubdeviceSensors(message.ChangedSensors, message.GatewayName, message.SubdeviceId);
+            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttSubdeviceTopic(message.GatewayName, message.SubdeviceId.ToString()), DateTime.UtcNow);
+        }
+
+        public async Task OnHandle(SubdeviceDataFull message)
+        {
+            if (_client == null || !_client.IsConnected)
+            {
+                _logger.LogWarning("MQTT client is not connected. Cannot publish device data.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(message.GatewayName))
+            {
+                _logger.LogWarning("Gateway name is empty. Cannot publish device data.");
+                return;
+            }
+
+            var subdevice = message.Subdevice;
+            await PublishSubdevice(subdevice, message.GatewayName);
+            await PublishSubdeviceSensors(message.ChangedSensors, message.GatewayName, message.SubdeviceId);
+            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttSubdeviceTopic(message.GatewayName, message.SubdeviceId.ToString()), DateTime.UtcNow);
         }
     }
 }

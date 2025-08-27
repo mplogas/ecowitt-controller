@@ -10,9 +10,9 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Orchestrator;
 
-public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
+public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
 {
-    private readonly ILogger<StateMachine> _logger;
+    private readonly ILogger<Dispatcher> _logger;
     private readonly IDeviceStore _deviceStore;
     private readonly EcowittOptions _ecowittOptions;
     private readonly ControllerOptions _controllerOptions;
@@ -21,7 +21,7 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
     private MqttServiceEventType _lastMqttServiceState = MqttServiceEventType.Unknown;
     private HttpServiceEventType _lastHttpServiceState = HttpServiceEventType.Unknown;
 
-    public StateMachine(ILogger<StateMachine> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions) 
+    public Dispatcher(ILogger<Dispatcher> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions) 
     {
         _logger = logger;
         _deviceStore = deviceStore;
@@ -92,6 +92,7 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
         {
             Device = device,
             GatewayId = device.IpAddress,
+            GatewayName = device.Name,
             Timestamp = DateTime.UtcNow
         });
     }
@@ -107,12 +108,13 @@ public partial class StateMachine : BackgroundService, IConsumer<MqttServiceEven
         });
     }
 
-    private async Task EmitGatewayChanged(List<ISensor> sensorsChanged, string gatewayId)
+    private async Task EmitGatewayChanged(List<ISensor> sensorsChanged, string gatewayId, string gatewayName)
     {
         await _messageBus.Publish(new DeviceData()
         {
             ChangedSensors = sensorsChanged,
             GatewayId = gatewayId,
+            GatewayName = gatewayName,
             Timestamp = DateTime.UtcNow
         });
     }

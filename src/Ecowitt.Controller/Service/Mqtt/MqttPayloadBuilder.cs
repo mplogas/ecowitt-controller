@@ -30,7 +30,7 @@ public static class MqttPayloadBuilder
         };
     }
 
-    public static dynamic BuildGatewayPayload(Device gw, int? publishingInterval)
+    public static dynamic BuildGatewayPayload(Device gw)
     {
         if (string.IsNullOrWhiteSpace(gw.Model))
         {
@@ -40,14 +40,6 @@ public static class MqttPayloadBuilder
                 name = gw.Name
             };
         }
-        
-        var state = "offline"; // Default state
-        if (publishingInterval.HasValue)
-        {
-            // Determine state based on last update time and publishing interval
-            state = (DateTime.UtcNow - gw.TimestampUtc).TotalSeconds < publishingInterval.Value * 3 ? "online" : "offline";
-        }
-        
         return new
         {
             ip = gw.IpAddress,
@@ -56,7 +48,7 @@ public static class MqttPayloadBuilder
             passkey = gw.PASSKEY,
             stationType = gw.StationType,
             runtime = gw.Runtime,
-            state = state,
+            state = "online",
             freq = gw.Freq
         };
     }

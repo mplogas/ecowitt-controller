@@ -9,7 +9,7 @@ using Ecowitt.Controller.Model.Configuration;
 
 namespace Ecowitt.Controller.Service.Orchestrator
 {
-    public partial class StateMachine : IConsumer<HttpServiceEvent>
+    public partial class Dispatcher : IConsumer<HttpServiceEvent>
     {
         public async Task OnHandle(SubdeviceApiCommand message)
         {
@@ -92,7 +92,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     }
                 }
 
-                await EmitGatewayChanged(changedSensors, storedGateway.IpAddress);
+                await EmitGatewayChanged(changedSensors, storedGateway.IpAddress, storedGateway.Name);
 
                 var sensorsToRemove = storedGateway.Sensors.Where(s => updatedGateway.Sensors.All(gs => gs.Name != s.Name)).ToList();
                 foreach (var sensor in sensorsToRemove)

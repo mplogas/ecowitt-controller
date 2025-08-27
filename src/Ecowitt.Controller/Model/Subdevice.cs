@@ -18,5 +18,6 @@ public enum SubdeviceModel
 {
     Unknown = 0,
     WFC01 = 1,
-    AC1100 = 2
+    AC1100 = 2,
+    WFC02 = 3
 }

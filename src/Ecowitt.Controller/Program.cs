@@ -9,6 +9,7 @@ using Ecowitt.Controller.Service.Http;
 using Ecowitt.Controller.Service.Mqtt;
 using Ecowitt.Controller.Service.Orchestrator;
 using MQTTnet;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -60,7 +61,7 @@ public class Program
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
         builder.Services.AddSingleton<MqttService>();
         builder.Services.AddSingleton<HttpPublishingService>();
-        builder.Services.AddSingleton<StateMachine>();
+        builder.Services.AddSingleton<Dispatcher>();
 
         var sp = builder.Services.BuildServiceProvider();
 
@@ -69,24 +70,30 @@ public class Program
             
 
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
-            smb.AddJsonSerializer();
+            smb.AddJsonSerializer(jsonSerializerSettings: JsonSettings);
             smb.WithDependencyResolver(sp);
 
             // statemachine -> mqttservice
             smb.Produce<MqttConfig>(x => x.DefaultTopic("config-mqtt"));
             smb.Produce<HomeAssistantDiscoveryEvent>(x => x.DefaultTopic("home-assistant-discovery"));
             smb.Produce<DeviceData>(x => x.DefaultTopic("device-data"));
+            smb.Produce<DeviceDataFull>(x => x.DefaultTopic("device-data-full"));
+            smb.Produce<SubdeviceData>(x => x.DefaultTopic("subdevice-data"));
+            smb.Produce<SubdeviceDataFull>(x => x.DefaultTopic("subdevice-data-full"));
             smb.Consume<MqttConfig>(x => x.Topic("config-mqtt").WithConsumer<MqttService>());
             smb.Consume<HomeAssistantDiscoveryEvent>(x => x.Topic("home-assistant-discovery").WithConsumer<MqttService>());
             smb.Consume<DeviceData>(x => x.Topic("device-data").WithConsumer<MqttService>());
-           
+            smb.Consume<DeviceDataFull>(x => x.Topic("device-data-full").WithConsumer<MqttService>());
+            smb.Consume<SubdeviceData>(x => x.Topic("subdevice-data").WithConsumer<MqttService>());
+            smb.Consume<SubdeviceDataFull>(x => x.Topic("subdevice-data-full").WithConsumer<MqttService>());
+
             // mqttservice -> statemachine
             smb.Produce<MqttServiceEvent>(x => x.DefaultTopic("mqtt-service-event"));
             smb.Produce<MqttConnectionEvent>(x => x.DefaultTopic("mqtt-connection-event"));
             smb.Produce<HomeAssistantStatusEvent>(x => x.DefaultTopic("home-assistant-status"));
-            smb.Consume<MqttServiceEvent>(x => x.Topic("mqtt-service-event").WithConsumer<StateMachine>());
-            smb.Consume<MqttConnectionEvent>(x => x.Topic("mqtt-connection-event").WithConsumer<StateMachine>());
-            smb.Consume<HomeAssistantStatusEvent>(x => x.Topic("home-assistant-status").WithConsumer<StateMachine>());
+            smb.Consume<MqttServiceEvent>(x => x.Topic("mqtt-service-event").WithConsumer<Dispatcher>());
+            smb.Consume<MqttConnectionEvent>(x => x.Topic("mqtt-connection-event").WithConsumer<Dispatcher>());
+            smb.Consume<HomeAssistantStatusEvent>(x => x.Topic("home-assistant-status").WithConsumer<Dispatcher>());
 
             // controller -> statemachine
             smb.Produce<GatewayApiData>(x => x.DefaultTopic("gw-api-data"));
@@ -99,8 +106,8 @@ public class Program
             // HttpPublishingService -> statemachine
             smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-api-data"));
             smb.Produce<HttpServiceEvent>(x => x.DefaultTopic("http-service-event"));
-            smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<StateMachine>());
-            smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<StateMachine>());
+            smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<Dispatcher>());
+            smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<Dispatcher>());
 
 
             // smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
@@ -108,20 +115,20 @@ public class Program
             // smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
             // smb.Consume<GatewayApiData>(x => x
             //     .Topic("api-data")
-            //     .WithConsumer<StateMachine>()
+            //     .WithConsumer<Dispatcher>()
             // );
             // smb.Consume<SubdeviceApiAggregate>(x => x
             //     .Topic("subdevice-data")
-            //     .WithConsumer<StateMachine>()
+            //     .WithConsumer<Dispatcher>()
             // );
             // smb.Consume<SubdeviceApiCommand>(x => x
             //     .Topic("subdevice-command")
-            //     .WithConsumer<StateMachine>()
+            //     .WithConsumer<Dispatcher>()
             // );
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
-        builder.Services.AddHostedService(s => s.GetRequiredService<StateMachine>());
+        builder.Services.AddHostedService(s => s.GetRequiredService<Dispatcher>());
         
         builder.Services.AddTransient<MqttFactory>();
         builder.Services.AddHostedService(s => s.GetRequiredService<MqttService>());
@@ -176,4 +183,11 @@ public class Program
             //.WaitAndRetryAsync(retries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
             .WaitAndRetryAsync(delay);
     }
+
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        Converters = { new SensorConverter() },
+        TypeNameHandling = TypeNameHandling.Auto,
+        NullValueHandling = NullValueHandling.Ignore
+    };
 }

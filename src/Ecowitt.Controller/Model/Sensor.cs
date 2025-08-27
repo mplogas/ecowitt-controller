@@ -14,16 +14,15 @@ public interface ISensor
     public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get;  }
     public object Value { get; set; }
-    [JsonIgnore]
     public Type DataType { get; }
     public bool DiscoveryUpdate { get; set; }
+    public bool HasChanged { get; }
+    void ResetChangeFlag();
 }
 
 public interface ISensor<T> : ISensor
 {
     new T Value { get; set; }
-    public bool HasChanged { get; }
-    void ResetChangeFlag();
 }
 
 public class Sensor<T> : ISensor<T>
