@@ -6,75 +6,76 @@
         {
             if (subdevice.Model == SubdeviceModel.WFC01)
             {
-                var waterTotal = subdevice.Sensors.FirstOrDefault(s =>
-                    s.Name.Equals("water_total", StringComparison.InvariantCultureIgnoreCase));
-                var waterHappen = subdevice.Sensors.FirstOrDefault(s =>
-                    s.Name.Equals("happen_water", StringComparison.InvariantCultureIgnoreCase));
+                var waterTotal = subdevice.Sensors.FirstOrDefault(s => s.Name.Equals("water_total", StringComparison.InvariantCultureIgnoreCase));
+                var waterHappen = subdevice.Sensors.FirstOrDefault(s => s.Name.Equals("happen_water", StringComparison.InvariantCultureIgnoreCase));
 
                 if (waterTotal != null && waterHappen != null)
                 {
-                    waterHappen.Value = (double)waterTotal.Value - (double)waterHappen.Value;
+                    // re-calc delta
+                    var newVal = waterTotal is Sensor wt ? wt.AsDouble() - (waterHappen is Sensor wh ? wh.AsDouble() : 0d) : 0d;
+                    if (waterHappen is Sensor whSensor)
+                    {
+                        whSensor.Value = newVal;
+                    }
                 }
             }
         }
 
         public static void CalculateGatewayAddons(ref Model.Device device, bool isMetric)
         {
-            var tempin = device.Sensors.FirstOrDefault(s => s.Name.Equals("tempinf", StringComparison.InvariantCultureIgnoreCase));
-            var humidityin = device.Sensors.FirstOrDefault(s => s.Name.Equals("humidityin", StringComparison.InvariantCultureIgnoreCase));
+            var tempin = device.Sensors.FirstOrDefault(s => s.Name.Equals("tempinf", StringComparison.InvariantCultureIgnoreCase)) as Sensor;
+            var humidityin = device.Sensors.FirstOrDefault(s => s.Name.Equals("humidityin", StringComparison.InvariantCultureIgnoreCase)) as Sensor;
 
             if (tempin != null && humidityin != null)
             {
-                var dewPoint = BuildTemperatureSensor("dewpointin", "Indoor Dewpoint",
-                    isMetric
-                        ? CalculateDewPointMetric((double)tempin.Value, (double)humidityin.Value).ToString()
-                        : CalculateDewPointImperial((double)tempin.Value, (double)humidityin.Value).ToString(), isMetric, isMetric);
+                var dewPointVal = isMetric ? CalculateDewPointMetric(tempin.AsDouble(), humidityin.AsDouble()) : CalculateDewPointImperial(tempin.AsDouble(), humidityin.AsDouble());
+                var dewPoint = BuildTemperatureSensor("dewpointin", "Indoor Dewpoint", dewPointVal.ToString(), isMetric, isMetric);
                 if (dewPoint != null) device.Sensors.Add(dewPoint);
             }
 
-            var temp = device.Sensors.FirstOrDefault(s => s.Name.Equals("tempf", StringComparison.InvariantCultureIgnoreCase));
-            var humidity = device.Sensors.FirstOrDefault(s => s.Name.Equals("humidity", StringComparison.InvariantCultureIgnoreCase));
+            var temp = device.Sensors.FirstOrDefault(s => s.Name.Equals("tempf", StringComparison.InvariantCultureIgnoreCase)) as Sensor;
+            var humidity = device.Sensors.FirstOrDefault(s => s.Name.Equals("humidity", StringComparison.InvariantCultureIgnoreCase)) as Sensor;
             if (temp != null && humidity != null)
             {
-                var dewPoint = BuildTemperatureSensor("dewpoint", "Outdoor Dewpoint",
-                    isMetric
-                        ? CalculateDewPointMetric((double)temp.Value, (double)humidity.Value).ToString()
-                        : CalculateDewPointImperial((double)temp.Value, (double)humidity.Value).ToString(), isMetric, isMetric);
-                var heatIndex = BuildTemperatureSensor("heatindex", "Heat Index",
-                    isMetric
-                        ? CalculateHeatIndexMetric((double)temp.Value, (double)humidity.Value).ToString()
-                        : CalculateHeatIndexImperial((double)temp.Value, (double)humidity.Value).ToString(), isMetric, isMetric);
-                
+                var dewPointVal = isMetric ? CalculateDewPointMetric(temp.AsDouble(), humidity.AsDouble()) : CalculateDewPointImperial(temp.AsDouble(), humidity.AsDouble());
+                var heatIndexVal = isMetric ? CalculateHeatIndexMetric(temp.AsDouble(), humidity.AsDouble()) : CalculateHeatIndexImperial(temp.AsDouble(), humidity.AsDouble());
+                var dewPoint = BuildTemperatureSensor("dewpoint", "Outdoor Dewpoint", dewPointVal.ToString(), isMetric, isMetric);
+                var heatIndex = BuildTemperatureSensor("heatindex", "Heat Index", heatIndexVal.ToString(), isMetric, isMetric);
                 if (dewPoint != null) device.Sensors.Add(dewPoint);
                 if (heatIndex != null) device.Sensors.Add(heatIndex);
             }
 
-            var windspeed = device.Sensors.FirstOrDefault(s => s.Name.Equals("windspeedmph", StringComparison.InvariantCultureIgnoreCase));
+            var windspeed = device.Sensors.FirstOrDefault(s => s.Name.Equals("windspeedmph", StringComparison.InvariantCultureIgnoreCase)) as Sensor;
             if (temp != null && windspeed != null)
             {
-                var windChill = BuildTemperatureSensor("windchill", "Wind Chill",
-                    isMetric
-                        ? CalculateWindChillMetric((double)temp.Value, (double)windspeed.Value).ToString()
-                        : CalculateWindChillImperial((double)temp.Value, (double)windspeed.Value).ToString(), isMetric, isMetric);
+                var windChillVal = isMetric ? CalculateWindChillMetric(temp.AsDouble(), windspeed.AsDouble()) : CalculateWindChillImperial(temp.AsDouble(), windspeed.AsDouble());
+                var windChill = BuildTemperatureSensor("windchill", "Wind Chill", windChillVal.ToString(), isMetric, isMetric);
                 if (windChill != null) device.Sensors.Add(windChill);
             }
 
-            var winddirection = device.Sensors.FirstOrDefault(s => s.Name.Equals("winddir", StringComparison.InvariantCultureIgnoreCase));
+            var winddirection = device.Sensors.FirstOrDefault(s => s.Name.Equals("winddir", StringComparison.InvariantCultureIgnoreCase)) as Sensor;
             if (winddirection != null)
             {
-                var compass = BuildStringSensor("winddir-comp", "Wind Direction (Compass)",
-                    CalculateWindDirection((int)winddirection.Value).ToString());
+                var compass = BuildStringSensor("winddir-comp", "Wind Direction (Compass)", CalculateWindDirection(winddirection.AsInt()));
                 device.Sensors.Add(compass);
             }
 
             var sensorsToAdd = new List<ISensor>();
             var pm25 = device.Sensors.Where(s => s.Name.StartsWith("pm25_avg_24h") || s.Name.StartsWith("pm25_24h"));
-            sensorsToAdd.AddRange(pm25.Select(sensor => BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm25Aqi24h((double)sensor.Value))));
+            sensorsToAdd.AddRange(pm25.Select(sensor =>
+            {
+                var s = sensor as Sensor;
+                return BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm25Aqi24h(s?.AsDouble() ?? 0));
+            }));
 
             var pm10 = device.Sensors.Where(s => s.Name.StartsWith("pm10_avg_24h") || s.Name.StartsWith("pm10_24h"));
-            sensorsToAdd.AddRange(pm10.Select(sensor => BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm10Aqi24h((double)sensor.Value))));
+            sensorsToAdd.AddRange(pm10.Select(sensor =>
+            {
+                var s = sensor as Sensor;
+                return BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm10Aqi24h(s?.AsDouble() ?? 0));
+            }));
 
-            device.Sensors.AddRange(sensorsToAdd);
+            device.Sensors.AddRange(sensorsToAdd.Where(s => s != null));
         }
 
         // shout out to wikipedia for the formulas! <3

@@ -130,7 +130,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var subdevice = message.Subdevice;
             await PublishSubdevice(subdevice, message.GatewayName);
-            await PublishSubdeviceSensors(message.ChangedSensors, message.GatewayName, message.SubdeviceId);
+            await PublishSubdeviceSensors(message.Subdevice.Sensors, message.GatewayName, message.SubdeviceId);
             await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttSubdeviceTopic(message.GatewayName, message.SubdeviceId.ToString()), DateTime.UtcNow);
         }
     }

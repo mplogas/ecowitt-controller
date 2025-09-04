@@ -1,233 +1,249 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
+using Serilog;
 
 namespace Ecowitt.Controller.Model.Mapping
 {
     public partial class SensorBuilder
     {
-        private static Sensor<double>? BuildWaterFlowSensor(string propertyName, string alias, string propertyValue, bool isMetric = true)
+        private static readonly HashSet<string> InvalidTokens = new(StringComparer.InvariantCultureIgnoreCase)
         {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? value : L2G(value), isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate)
+            "-","--","na","n/a","nan","null","none",""
+        };
+
+        private static bool TryParseDouble(string? raw, out double value, string? prop = null)
+        {
+            value = default;
+            if (string.IsNullOrWhiteSpace(raw)) return false;
+            raw = raw.Trim();
+            if (InvalidTokens.Contains(raw)) return false;
+            if (raw.Contains(',') && !raw.Contains('.') && raw.IndexOf(',') == raw.LastIndexOf(','))
+            {
+                raw = raw.Replace(',', '.');
+            }
+            var ok = double.TryParse(raw, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out value);
+            if (!ok)
+            {
+                Log.Debug("Could not parse double value '{Raw}' for sensor property {Property}", raw, prop ?? "<unknown>");
+            }
+            return ok;
+        }
+
+        private static bool TryParseInt(string? raw, out int value, string? prop = null)
+        {
+            value = default;
+            if (string.IsNullOrWhiteSpace(raw)) return false;
+            raw = raw.Trim();
+            if (InvalidTokens.Contains(raw)) return false;
+            if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out value)) return true;
+            if (double.TryParse(raw, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var dbl))
+            {
+                if (dbl % 1 == 0 && dbl <= int.MaxValue && dbl >= int.MinValue)
+                {
+                    value = (int)dbl;
+                    return true;
+                }
+            }
+            Log.Debug("Could not parse int value '{Raw}' for sensor property {Property}", raw, prop ?? "<unknown>");
+            return false;
+        }
+
+        private static bool IsInvalidString(string? raw) => string.IsNullOrWhiteSpace(raw) || InvalidTokens.Contains(raw.Trim());
+
+        private static Sensor? BuildWaterFlowSensor(string propertyName, string alias, string propertyValue, bool isMetric = true)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? value : L2G(value), SensorDataType.Double, isMetric ? "L/min" : "gal/min", SensorType.VolumeFlowRate)
                 : null;
         }
 
-        private static Sensor<double>? BuildWaterConsumptionSensor(string propertyName, string alias, string propertyValue,
+        private static Sensor? BuildWaterConsumptionSensor(string propertyName, string alias, string propertyValue,
             bool isMetric = true, bool isTotal = false)
         {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? value : L2G(value), isMetric ? "L" : "gal", SensorType.Water, isTotal ? SensorState.TotalIncreasing : SensorState.Measurement)
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? value : L2G(value), SensorDataType.Double, isMetric ? "L" : "gal", SensorType.Water, isTotal ? SensorState.TotalIncreasing : SensorState.Measurement)
                 : null;
         }
 
-        private static Sensor<int>? BuildCurrentSensor(string propertyName, string alias, string propertyValue, bool isMilliAmp = false)
+        private static Sensor? BuildCurrentSensor(string propertyName, string alias, string propertyValue, bool isMilliAmp = false)
         {
-            return int.TryParse(propertyValue, out var value) 
-                ? new Sensor<int>(propertyName, alias, value, isMilliAmp ?  "mA" : "A", SensorType.Current) 
+            return TryParseInt(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Integer, isMilliAmp ? "mA" : "A", SensorType.Current)
                 : null;
         }   
         
 
-        private static Sensor<int>? BuildPowerSensor(string propertyName, string alias, string propertyValue)
+        private static Sensor? BuildPowerSensor(string propertyName, string alias, string propertyValue)
         {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, "W", SensorType.Power)
+            return TryParseInt(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Integer, "W", SensorType.Power)
                 : null;
         }
 
-        private static Sensor<int>? BuildConsumptionSensor(string propertyName, string alias, string propertyValue, bool isTotal = false)
+        private static Sensor? BuildConsumptionSensor(string propertyName, string alias, string propertyValue, bool isTotal = false)
         {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, "Wh", SensorType.Energy, isTotal ? SensorState.TotalIncreasing : SensorState.Measurement)
+            return TryParseInt(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Integer, "Wh", SensorType.Energy, isTotal ? SensorState.TotalIncreasing : SensorState.Measurement)
                 : null;
         }
 
-        private static Sensor<double>? BuildDistanceSensor(string propertyName, string alias, string propertyValue,
+        private static Sensor? BuildDistanceSensor(string propertyName, string alias, string propertyValue,
             bool isMetric = true)
         {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? value : K2M(value), isMetric ? "km" : "miles", SensorType.Distance)
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? value : K2M(value), SensorDataType.Double, isMetric ? "km" : "miles", SensorType.Distance)
                 : null;
         }
 
-        private static Sensor<bool>? BuildBinarySensor(string propertyName, string alias, string propertyValue, bool isDiag = true)
+        private static Sensor? BuildBinarySensor(string propertyName, string alias, string propertyValue, bool isDiag = true)
         {
+            if (propertyValue == null) return null;
             bool value;
-            switch (propertyValue)
+            switch (propertyValue.Trim().ToLowerInvariant())
             {
                 case "0":
                 case "false":
-                    value = false;
-                    break;
+                case "off":
+                case "no":
+                    value = false; break;
                 case "1":
                 case "true":
-                    value = true;
-                    break;
+                case "on":
+                case "yes":
+                    value = true; break;
                 default:
+                    Log.Debug("Could not parse boolean value '{Raw}' for sensor property {Property}", propertyValue, propertyName);
                     return null;
             }
-
-            return new Sensor<bool>(propertyName, alias, value, sensorClass: SensorClass.BinarySensor, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
+            return new Sensor(propertyName, alias, value, SensorDataType.Boolean, sensorType: SensorType.None, sensorClass: SensorClass.BinarySensor, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
         }
 
-        private static Sensor<int>? BuildBatterySensor(string propertyName, string alias, string propertyValue, bool withMultiplier = false )
+        private static Sensor? BuildBatterySensor(string propertyName, string alias, string propertyValue, bool withMultiplier = false )
         {
-            const int multiplier = 20; // I forsee this will change in the future with new sensors
-            if (int.TryParse(propertyValue, out var value))
+            if (!TryParseInt(propertyValue, out var value, propertyName)) return null;
+            if (withMultiplier)
             {
-                if (withMultiplier)
-                {
-                    value = value * multiplier;
-                    if(value > 100) value = 100; //fix for the 120% battery level when powered by USB
-                }
-
-                return new Sensor<int>(propertyName, alias, value, "%", SensorType.Battery,
-                    sensorCategory: SensorCategory.Diagnostic);
-            } 
-            return null;
-        }
-
-        private static Sensor<int>? BuildPPMSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isTotal = false)
-        {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, "ppm", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
-                : null;
-        }
-
-        private static Sensor<double>? BuildParticleSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isMetric = true, bool isTotal = false)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, value, "µg/m³", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
-                : null;
-        }
-
-        private static Sensor<double>? BuildVoltageSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, value, "V", SensorType.Voltage, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
-                : null;
-        }
-
-        private static Sensor<double>? BuildRainRateSensor(string propertyName, string alias, string propertyValue, bool isMetric)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? I2M(value) : value, isMetric ? "mm/h" : "in/h", SensorType.PrecipitationIntensity)
-                : null;
-        }
-
-        private static Sensor<double>? BuildRainSensor(string propertyName, string alias, string propertyValue, bool isMetric)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? I2M(value) : value, isMetric ? "mm" : "in", SensorType.Precipitation)
-                : null;
-        }
-
-        private static Sensor<double>? BuildWindSpeedSensor(string propertyName, string alias, string propertyValue, bool isMetric)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? M2K(value) : value, isMetric ? "km/h" : "mph", SensorType.WindSpeed)
-                : null;
-        }
-
-        private static Sensor<double>? BuildPressureSensor(string propertyName, string alias, string propertyValue, bool isMetric)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, isMetric ? IM2HP(value) : value, isMetric ? "hPa" : "inHg", SensorType.Pressure)
-                : null;
-        }
-
-        private static Sensor<double>? BuildHumiditySensor(string propertyName, string alias, string propertyValue)
-        {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias, value, "%", SensorType.Humidity)
-                : null;
-        }
-
-        private static Sensor<double>? BuildTemperatureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
-        {
-            if (double.TryParse(propertyValue, out var value))
-            {
-                var unit = isMetric ? "°C" : "F";
-                if (startMetric != isMetric)
-                {
-                    value = startMetric ? C2F(value) : F2C(value);
-                }
-
-                return new Sensor<double>(propertyName, alias, value, unit, SensorType.Temperature);
+                value *= 20; // multiplier
             }
+            if (value > 100) value = 100;
+            if (value < 0) value = 0;
+            return new Sensor(propertyName, alias, value, SensorDataType.Integer, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic);
+        }
 
+        private static Sensor? BuildPPMSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isTotal = false)
+        {
+            return TryParseInt(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Integer, "ppm", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
+                : null;
+        }
+
+        private static Sensor? BuildParticleSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isMetric = true, bool isTotal = false)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Double, "µg/m³", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
+                : null;
+        }
+
+        private static Sensor? BuildVoltageSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Double, "V", SensorType.Voltage, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
+                : null;
+        }
+
+        private static Sensor? BuildRainRateSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? I2M(value) : value, SensorDataType.Double, isMetric ? "mm/h" : "in/h", SensorType.PrecipitationIntensity)
+                : null;
+        }
+
+        private static Sensor? BuildRainSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? I2M(value) : value, SensorDataType.Double, isMetric ? "mm" : "in", SensorType.Precipitation)
+                : null;
+        }
+
+        private static Sensor? BuildWindSpeedSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? M2K(value) : value, SensorDataType.Double, isMetric ? "km/h" : "mph", SensorType.WindSpeed)
+                : null;
+        }
+
+        private static Sensor? BuildPressureSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, isMetric ? IM2HP(value) : value, SensorDataType.Double, isMetric ? "hPa" : "inHg", SensorType.Pressure)
+                : null;
+        }
+
+        private static Sensor? BuildHumiditySensor(string propertyName, string alias, string propertyValue)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Double, "%", SensorType.Humidity)
+                : null;
+        }
+
+        private static Sensor? BuildTemperatureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
+        {
+            if (!TryParseDouble(propertyValue, out var value, propertyName)) return null;
+            var unit = isMetric ? "°C" : "F";
+            if (startMetric != isMetric)
+            {
+                value = startMetric ? C2F(value) : F2C(value);
+            }
+            return new Sensor(propertyName, alias, value, SensorDataType.Double, unit, SensorType.Temperature);
+        }
+
+        private static Sensor? BuildDoubleSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
+        {
+            return TryParseDouble(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Double, unit, type, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
+                : null;
+        }
+
+        private static Sensor? BuildDateTimeSensor(string propertyName, string alias, string propertyValue)
+        {
+            if (long.TryParse(propertyValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ts))
+            {
+                return new Sensor(propertyName, alias, DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime, SensorDataType.DateTime);
+            }
+            if (DateTime.TryParse(propertyValue, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dt))
+            {
+                return new Sensor(propertyName, alias, DateTime.SpecifyKind(dt, DateTimeKind.Utc), SensorDataType.DateTime);
+            }
+            Log.Debug("Could not parse datetime value '{Raw}' for sensor property {Property}", propertyValue, propertyName);
             return null;
         }
 
-        private static Sensor<double>? BuildDoubleSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
+        private static Sensor? BuildIntSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
         {
-            return double.TryParse(propertyValue, out var value)
-                ? new Sensor<double>(propertyName, alias,value, unit, type, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config) 
+            return TryParseInt(propertyValue, out var value, propertyName)
+                ? new Sensor(propertyName, alias, value, SensorDataType.Integer, unit, type, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
                 : null;
         }
 
-        private static Sensor<DateTime>? BuildDateTimeSensor(string propertyName, string alias, string propertyValue)
+        private static Sensor? BuildStringSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
         {
-            return long.TryParse(propertyValue, out var ts)
-                ? new Sensor<DateTime>(propertyName, alias, DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime)
-                : null;
+            if (IsInvalidString(propertyValue)) return null;
+            return new Sensor(propertyName, alias, propertyValue, SensorDataType.String, string.Empty, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
         }
 
-        private static Sensor<int>? BuildIntSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
-        {
-            return int.TryParse(propertyValue, out var value)
-                ? new Sensor<int>(propertyName, alias, value, unit, type, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
-                : null;
-        }
-
-        private static Sensor<string> BuildStringSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
-        {
-            return new Sensor<string>(propertyName, alias, propertyValue, unitOfMeasurement: string.Empty, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
-        }
-
-        // well, that (https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-source-generators?pivots=dotnet-8-0) doesn't work
-        //[GeneratedRegex(@"(\D*)(\d+)", RegexOptions.IgnoreCase)]
-        //private static partial Regex SensorNumberRegex();
-        // so we're doing it old school
         private static int GetNumber(string propertyName)
         {
             const string pattern = @"^[a-zA-Z_0-9]*(\d+)$";
             var m = Regex.Match(propertyName, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
-            return m.Success ? int.Parse(m.Groups[1].Value) : -1;
+            return m.Success ? int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) : -1;
         }
 
-        private static double K2M(double result)
-        {
-            return result * 0.621371;
-        }
-
-        private static double IM2HP(double im)
-        {
-            return im * 33.86388;
-        }
-
-        private static double F2C(double fahrenheit)
-        {
-            return ((fahrenheit - 32) * 5 / 9);
-        }
-
-        private static double C2F(double celsius)
-        {
-            return celsius * 9 / 5 + 32;
-        }
-
-        private static double M2K(double mph)
-        {
-            return mph * 1.60934;
-        }
-
-        private static double I2M(double inches)
-        {
-            return inches * 25.4;
-        }
-
-        private static double L2G(double liters)
-        {
-            return liters * 0.264172;
-        }
+        private static double K2M(double result) => result * 0.621371;
+        private static double IM2HP(double im) => im * 33.86388;
+        private static double F2C(double fahrenheit) => (fahrenheit - 32) * 5 / 9;
+        private static double C2F(double celsius) => celsius * 9 / 5 + 32;
+        private static double M2K(double mph) => mph * 1.60934;
+        private static double I2M(double inches) => inches * 25.4;
+        private static double L2G(double liters) => liters * 0.264172;
     }
 }

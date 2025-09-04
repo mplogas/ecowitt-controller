@@ -92,7 +92,8 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     }
                 }
 
-                await EmitGatewayChanged(changedSensors, storedGateway.IpAddress, storedGateway.Name);
+                if(changedSensors.Count > 0) await EmitGatewayChanged(changedSensors, storedGateway.IpAddress, storedGateway.Name);
+                else _logger.LogInformation($"no changes for gateway {storedGateway.IpAddress} ({storedGateway.Model})");
 
                 var sensorsToRemove = storedGateway.Sensors.Where(s => updatedGateway.Sensors.All(gs => gs.Name != s.Name)).ToList();
                 foreach (var sensor in sensorsToRemove)
@@ -106,7 +107,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
             }
 
-            LogStorageState();
+            //LogStorageState();
         }
 
         public async Task OnHandle(SubdeviceApiAggregate message)
@@ -126,6 +127,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     storedGateway = new Device { IpAddress = ip };
                     storedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == storedGateway.IpAddress)?.Name ?? storedGateway.IpAddress.Replace('.', '-');
                     storedGateway.DiscoveryUpdate = true;
+                    _deviceStore.UpsertGateway(storedGateway);
                 }
 
                 var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);
@@ -143,6 +145,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                         storedGateway.Subdevices.Add(updatedSubDevice);
                         _logger.LogInformation($"subdevice added: {data.Id} ({data.Model})");
 
+                        _deviceStore.UpsertGateway(storedGateway);
                         await EmitSubdeviceFull(updatedSubDevice);
                     }
                     else
@@ -164,6 +167,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                         // update sensors one by one and find out if there are new ones
                         // if there are new ones, mark the subdevice for discovery update
                         var changedSensors = new List<ISensor>();
+                        var flushData = false;
                         foreach (var sensor in updatedSubDevice.Sensors)
                         {
                             var storedSensor = storedSubDevice.Sensors.FirstOrDefault(s => s.Name == sensor.Name);
@@ -172,6 +176,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                                 sensor.DiscoveryUpdate = true;
                                 storedSubDevice.Sensors.Add(sensor);
                                 changedSensors.Add(sensor);
+                                flushData = true;
                             }
                             else if (DeNoiserHelper.HasSignificantChange(storedSensor, sensor.Value))
                             {
@@ -179,8 +184,9 @@ namespace Ecowitt.Controller.Service.Orchestrator
                                 changedSensors.Add(storedSensor);
                             }
                         }
-
-                        await EmitSubdeviceChanged(changedSensors, storedGateway.IpAddress, storedSubDevice.Id);
+                        if (flushData) _deviceStore.UpsertGateway(storedGateway);
+                        if (changedSensors.Count > 0) await EmitSubdeviceChanged(changedSensors, storedGateway.IpAddress, storedSubDevice.Id);
+                        else _logger.LogInformation($"no changes for subdevice {data.Id} ({data.Model})");
 
                         // remove sensors that are not in the update
                         var sensorsToRemove = storedSubDevice.Sensors.Where(s => updatedSubDevice.Sensors.All(us => us.Name != s.Name)).ToList();
@@ -198,7 +204,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 _deviceStore.UpsertGateway(storedGateway);
             }
 
-            LogStorageState();
+            //LogStorageState();
         }
 
 

@@ -1,7 +1,5 @@
 ﻿using Serilog;
 
-// TODO: read this from a json config file 
-
 namespace Ecowitt.Controller.Model.Mapping
 {
     public partial class SensorBuilder
@@ -26,7 +24,6 @@ namespace Ecowitt.Controller.Model.Mapping
                     return BuildWindSpeedSensor(propertyName, "Wind Speed", propertyValue, isMetric);
                 case "windgustmph":
                     return BuildWindSpeedSensor(propertyName, "Wind Gust", propertyValue, isMetric);
-                    //return BuildDoubleSensor(propertyName, "Wind Gust", propertyValue, "km/h", SensorType.WindSpeed);
                 case "maxdailygust":
                     return BuildWindSpeedSensor(propertyName, "Max Daily Gust", propertyValue, isMetric);
                 case "winddir":
@@ -148,7 +145,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leak_ch2":
                 case "leak_ch3":
                 case "leak_ch4":
-                    // maybe it's bool, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildIntSensor(propertyName, $"Leak Channel {number}", propertyValue);
                 case "tf_ch1":
@@ -169,20 +165,15 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leafwetness_ch6":
                 case "leafwetness_ch7":
                 case "leafwetness_ch8":
-                    // maybe it's double, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildIntSensor(propertyName, $"Leaf Wetness {number}", propertyValue, "%");
                 case "console_batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "Console Battery", propertyValue);
                 case "wh65batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH65 Battery", propertyValue);
                 case "wh80batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH80 Battery", propertyValue);
                 case "wh26batt":
-                    // maybe it's voltage, I don't have this sensor
                     return BuildBatterySensor(propertyName, "WH26 Battery", propertyValue);
                 case "batt1":
                 case "batt2":
@@ -192,10 +183,8 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "batt6":
                 case "batt7":
                 case "batt8":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Battery {number}", propertyValue);
-                    //return BuildVoltageSensor(propertyName, $"Battery {number}", propertyValue, isDiag: true);
                 case "soilbatt1":
                 case "soilbatt2":
                 case "soilbatt3":
@@ -205,12 +194,11 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "soilbatt7":
                 case "soilbatt8":
                     number = GetNumber(propertyName);
-                    return BuildVoltageSensor(propertyName, $"Soil Battery {number}", propertyValue, isDiag: true);
+                    return BuildVoltageSensor(propertyName, $"Soil Battery {number}", propertyValue, true);
                 case "pm25batt1":
                 case "pm25batt2":
                 case "pm25batt3":
                 case "pm25batt4":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"PM2.5 Battery {number}", propertyValue);
                 case "wh57batt":
@@ -219,7 +207,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leakbatt2":
                 case "leakbatt3":
                 case "leakbatt4":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Leak Battery {number}", propertyValue);
                 case "tf_batt1":
@@ -230,7 +217,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "tf_batt6":
                 case "tf_batt7":
                 case "tf_batt8":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Temperature Battery {number}", propertyValue);
                 case "co2_batt":
@@ -243,7 +229,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "leaf_batt6":
                 case "leaf_batt7":
                 case "leaf_batt8":
-                    // maybe it's voltage, I don't have this sensor
                     number = GetNumber(propertyName);
                     return BuildBatterySensor(propertyName, $"Leaf Battery {number}", propertyValue);
                 case "wh90batt":
@@ -288,7 +273,6 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "wfc02_total":
                     return BuildWaterConsumptionSensor(propertyName, "Total Water", propertyValue, isMetric, true);
                 case "happen_water":
-                    //new Sensor<double?>("Daily Consumption", isMetric ? (double?)device.water_total - (double?)device.happen_water : L2G(device.water_total) - L2G(device.happen_water), isMetric ? "L" : "gal", SensorType.Volume, SensorState.Measurement));
                     return BuildWaterConsumptionSensor(propertyName, "Last Planned Consumption", propertyValue, isMetric);
                 case "flow_velocity":
                 case "wfc02_flow_velocity":
@@ -315,29 +299,10 @@ namespace Ecowitt.Controller.Model.Mapping
                     return BuildBinarySensor(propertyName, "Valve Available", propertyValue, isDiag: true);
                 case "wfc02_position":
                     return BuildIntSensor(propertyName, "wfc02-position", propertyValue, isDiag: true);
-                case "PASSKEY":
-                case "stationtype":
-                case "runtime":
-                case "dateutc":
-                case "freq":
-                case "model":
-                case "ws90_ver":
-                case "interval":
-                case "rssi":
-                case "timeutc":
-                case "publish_time":
-                case "id":
-                case "nickname":
-                case "devicename":
-                case "version":
                 default:
                     Log.Information($"Ignored property {propertyName}.");
                     return null;
             }
         }
-
-        
     }
-
-
 }

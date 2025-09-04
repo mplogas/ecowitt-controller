@@ -19,14 +19,17 @@ public static class MqttPayloadBuilder
 
     public static dynamic BuildSensorPayload(ISensor s, int? precision)
     {
-        // _logger.LogDebug($"Sensor {s.Name} datatype: {s.DataType}"); // Logging removed, can be done by caller
+        object? valueOut = s.Value;
+        if (s.DataType == SensorDataType.Double)
+        {
+            try { valueOut = Math.Round(Convert.ToDouble(s.Value), precision ?? 2); } catch { /* ignore */ }
+        }
         return new
         {
             name = s.Name,
             alias = s.Alias,
-            value = s.DataType == typeof(double) ? Math.Round(Convert.ToDouble(s.Value), precision ?? 2) : s.Value,
+            value = valueOut,
             unit = !string.IsNullOrWhiteSpace(s.UnitOfMeasurement) ? s.UnitOfMeasurement : null
-            //type = s.SensorType != SensorType.None ? s.SensorType.ToString() : null
         };
     }
 

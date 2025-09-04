@@ -67,8 +67,6 @@ public class Program
 
         builder.Services.AddSlimMessageBus(smb =>
         {
-            
-
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer(jsonSerializerSettings: JsonSettings);
             smb.WithDependencyResolver(sp);
@@ -109,22 +107,6 @@ public class Program
             smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<Dispatcher>());
             smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<Dispatcher>());
 
-
-            // smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
-            // smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-data"));
-            // smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
-            // smb.Consume<GatewayApiData>(x => x
-            //     .Topic("api-data")
-            //     .WithConsumer<Dispatcher>()
-            // );
-            // smb.Consume<SubdeviceApiAggregate>(x => x
-            //     .Topic("subdevice-data")
-            //     .WithConsumer<Dispatcher>()
-            // );
-            // smb.Consume<SubdeviceApiCommand>(x => x
-            //     .Topic("subdevice-command")
-            //     .WithConsumer<Dispatcher>()
-            // );
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
@@ -132,41 +114,21 @@ public class Program
         
         builder.Services.AddTransient<MqttFactory>();
         builder.Services.AddHostedService(s => s.GetRequiredService<MqttService>());
-
         builder.Services.AddHostedService(s => s.GetRequiredService<HttpPublishingService>());
 
-        //
-        // builder.Services.AddHostedService<MqttService>();
-        // builder.Services.AddHostedService<SubdeviceService>();
-        // builder.Services.AddHostedService<DataPublishService>();
-        // builder.Services.AddHostedService<DiscoveryPublishService>();
-
         builder.Services.AddControllers();
-        //builder.Services.AddEndpointsApiExplorer();
-        //builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
         app.UseSerilogRequestLogging(options =>
         {
-            // Customize the message template
             options.MessageTemplate = "Handled {RequestPath}";
-    
-            // Emit debug-level events instead of the defaults
             options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
-    
-            // Attach additional properties to the request completion event
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
                 diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
             };
         });
-        
-        //if (app.Environment.IsDevelopment())
-        //{
-        //    app.UseSwagger();
-        //    app.UseSwaggerUI();
-        //}
         
         app.MapControllers();
         
@@ -180,13 +142,11 @@ public class Program
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             .OrResult(msg => msg.StatusCode == HttpStatusCode.NotFound)
-            //.WaitAndRetryAsync(retries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
             .WaitAndRetryAsync(delay);
     }
 
     private static readonly JsonSerializerSettings JsonSettings = new()
     {
-        Converters = { new SensorConverter() },
         TypeNameHandling = TypeNameHandling.Auto,
         NullValueHandling = NullValueHandling.Ignore
     };

@@ -38,7 +38,7 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         _logger.LogInformation("Emitting initial configuration");
         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         await EmitMqttConfig();
-        await EmitHttpConfig();
+        if(_ecowittOptions.Gateways.Count > 0) await EmitHttpConfig();
     }
 
     private async Task EmitHttpConfig()
@@ -99,10 +99,14 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
 
     private async Task EmitSubdeviceFull(Subdevice subdevice)
     {
+        var gateway = _deviceStore.GetGateway(subdevice.GwIp);
+        var gatewayName = gateway != null ? gateway.Name : subdevice.GwIp;
+
         await _messageBus.Publish(new SubdeviceDataFull
         {
             Subdevice = subdevice,
             GatewayId = subdevice.GwIp,
+            GatewayName = gatewayName,
             SubdeviceId = subdevice.Id,
             Timestamp = DateTime.UtcNow
         });
@@ -121,11 +125,15 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
 
     private async Task EmitSubdeviceChanged(List<ISensor> sensorsChanged, string gatewayId, int subdeviceId)
     {
+        var gateway = _deviceStore.GetGatewayBySubdeviceId(subdeviceId);
+        var gatewayName = gateway != null ? gateway.Name : gatewayId;
+
         await _messageBus.Publish(new SubdeviceData()
         {
             ChangedSensors = sensorsChanged,
             GatewayId = gatewayId,
             SubdeviceId = subdeviceId,
+            GatewayName = gatewayName,
             Timestamp = DateTime.UtcNow
         });
     }

@@ -1,46 +1,53 @@
-using Newtonsoft.Json.Linq;
-using System.Text.Json.Serialization;
+
+
+using Newtonsoft.Json;
 
 namespace Ecowitt.Controller.Model;
 
+public enum SensorDataType
+{
+    Integer,
+    Double,
+    Boolean,
+    String,
+    DateTime
+}
+
 public interface ISensor
 {
-    public string Name { get; }
-    public string Alias { get; }
-    public DateTime TimestampUtc { get; set; }
-    public SensorType SensorType { get;  }
-    public SensorState SensorState { get;  }
-    public SensorClass SensorClass { get; }
-    public SensorCategory SensorCategory { get; }
-    public string UnitOfMeasurement { get;  }
-    public object Value { get; set; }
-    public Type DataType { get; }
-    public bool DiscoveryUpdate { get; set; }
-    public bool HasChanged { get; }
+    string Name { get; }
+    string Alias { get; }
+    DateTime TimestampUtc { get; }
+    SensorType SensorType { get; }
+    SensorState SensorState { get; }
+    SensorClass SensorClass { get; }
+    SensorCategory SensorCategory { get; }
+    string UnitOfMeasurement { get; }
+    SensorDataType DataType { get; }
+    object? Value { get; set; }
+    bool DiscoveryUpdate { get; set; }
+    bool HasChanged { get; }
     void ResetChangeFlag();
 }
 
-public interface ISensor<T> : ISensor
-{
-    new T Value { get; set; }
-}
-
-public class Sensor<T> : ISensor<T>
+public sealed class Sensor : ISensor
 {
     private int _lastValueHash;
-    private T _value;
+    private object? _value;
 
-    public bool HasChanged { get; private set; }
     public string Name { get; }
     public string Alias { get; }
-    public DateTime TimestampUtc { get; set; }
+    public DateTime TimestampUtc { get; private set; }
     public SensorType SensorType { get; }
     public SensorState SensorState { get; }
     public SensorClass SensorClass { get; }
     public SensorCategory SensorCategory { get; }
     public string UnitOfMeasurement { get; }
-    //public T Value { get; set;  }
-    public T Value
+    public SensorDataType DataType { get; }
+    public bool DiscoveryUpdate { get; set; }
+    public bool HasChanged { get; private set; }
+
+    public object? Value
     {
         get => _value;
         set
@@ -56,44 +63,105 @@ public class Sensor<T> : ISensor<T>
         }
     }
 
-    object ISensor.Value
-    {
-        get => Value;
-        set => Value = (T)value;
-    }
-
-    public Type DataType => typeof(T);
-    public bool DiscoveryUpdate { get; set; }
-    
-    public Sensor(string name, T value, string unitOfMeasurement = "", SensorType sensorType = SensorType.None, SensorState sensorState = SensorState.Measurement,
-        SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
-    {
-        Name = name;
-        Alias = name;
-        SensorType = sensorType;
-        SensorState = sensorState;
-        SensorClass = sensorClass;
-        SensorCategory = sensorCategory;
-        UnitOfMeasurement = unitOfMeasurement;
-        Value = value;
-        TimestampUtc = DateTime.UtcNow;
-    }
-
-    public Sensor(string name, string alias, T value, string unitOfMeasurement = "", SensorType sensorType = SensorType.None, SensorState sensorState = SensorState.Measurement,
-        SensorClass sensorClass = SensorClass.Sensor, SensorCategory sensorCategory = SensorCategory.Config)
+    [JsonConstructor]
+    private Sensor(string name,
+        string alias,
+        object? value,
+        SensorDataType dataType,
+        string unitOfMeasurement,
+        SensorType sensorType,
+        SensorState sensorState,
+        SensorClass sensorClass,
+        SensorCategory sensorCategory,
+        bool discoveryUpdate,
+        DateTime timestampUtc)
     {
         Name = name;
         Alias = alias;
+        DataType = dataType;
         SensorType = sensorType;
         SensorState = sensorState;
         SensorClass = sensorClass;
         SensorCategory = sensorCategory;
         UnitOfMeasurement = unitOfMeasurement;
-        Value = value;
-        TimestampUtc = DateTime.UtcNow;
+        DiscoveryUpdate = discoveryUpdate;
+        TimestampUtc = timestampUtc == default ? DateTime.UtcNow : DateTime.SpecifyKind(timestampUtc, DateTimeKind.Utc);
+
+        // set value & hash without flagging change
+        _value = CoerceValue(value, dataType);
+        _lastValueHash = _value?.GetHashCode() ?? 0;
+        HasChanged = false;
     }
 
+    public Sensor(string name,
+                  string alias,
+                  object? value,
+                  SensorDataType dataType,
+                  string unitOfMeasurement = "",
+                  SensorType sensorType = SensorType.None,
+                  SensorState sensorState = SensorState.Measurement,
+                  SensorClass sensorClass = SensorClass.Sensor,
+                  SensorCategory sensorCategory = SensorCategory.Config)
+    {
+        Name = name;
+        Alias = alias;
+        DataType = dataType;
+        SensorType = sensorType;
+        SensorState = sensorState;
+        SensorClass = sensorClass;
+        SensorCategory = sensorCategory;
+        UnitOfMeasurement = unitOfMeasurement;
+        TimestampUtc = DateTime.UtcNow;
+        Value = value; // invokes setter => sets hash & timestamp
+    }
+
+    public Sensor(string name,
+                  object? value,
+                  SensorDataType dataType,
+                  string unitOfMeasurement = "",
+                  SensorType sensorType = SensorType.None,
+                  SensorState sensorState = SensorState.Measurement,
+                  SensorClass sensorClass = SensorClass.Sensor,
+                  SensorCategory sensorCategory = SensorCategory.Config)
+        : this(name, name, value, dataType, unitOfMeasurement, sensorType, sensorState, sensorClass, sensorCategory)
+    { }
+
     public void ResetChangeFlag() => HasChanged = false;
+
+    // Helper typed accessors (optional usage)
+    public double AsDouble() => DataType switch
+    {
+        SensorDataType.Double => Convert.ToDouble(Value),
+        SensorDataType.Integer => Convert.ToDouble(Value),
+        _ => throw new InvalidCastException($"Sensor {Name} value is not numeric")
+    };
+    public int AsInt() => DataType == SensorDataType.Integer ? Convert.ToInt32(Value) : (int)Math.Round(AsDouble());
+    public bool AsBool() => DataType == SensorDataType.Boolean ? (bool)(Value ?? false) : throw new InvalidCastException($"Sensor {Name} value is not boolean");
+    public string AsString() => Value?.ToString() ?? string.Empty;
+    public DateTime AsDateTime() => DataType == SensorDataType.DateTime ? (DateTime)(Value ?? DateTime.MinValue) : throw new InvalidCastException($"Sensor {Name} value is not DateTime");
+
+    private static object? CoerceValue(object? raw, SensorDataType dt)
+    {
+        if (raw == null) return null;
+        try
+        {
+            return dt switch
+            {
+                SensorDataType.Integer => Convert.ToInt32(raw),
+                SensorDataType.Double => Convert.ToDouble(raw),
+                SensorDataType.Boolean => Convert.ToBoolean(raw),
+                SensorDataType.String => raw.ToString(),
+                SensorDataType.DateTime => raw is DateTime dtv
+                    ? DateTime.SpecifyKind(dtv, DateTimeKind.Utc)
+                    : DateTime.SpecifyKind(Convert.ToDateTime(raw), DateTimeKind.Utc),
+                _ => raw
+            };
+        }
+        catch
+        {
+            return raw; // fallback, avoid hard failure
+        }
+    }
 }
 
 /// <summary>
@@ -208,7 +276,6 @@ public enum SensorType
     Weight,
     WindSpeed
 }
-
 
 /// <summary>
 /// from: https://developers.home-assistant.io/blog/2021/09/20/state_class_total/
