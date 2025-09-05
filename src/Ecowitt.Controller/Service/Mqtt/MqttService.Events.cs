@@ -32,7 +32,7 @@ namespace Ecowitt.Controller.Service.Mqtt
         {
             var payload = arg.ApplicationMessage.ConvertPayloadToString();
             var topic = arg.ApplicationMessage.Topic;
-            _logger.LogDebug($"Message received for topic {topic}: {payload}");
+            _logger.LogDebug("Message received for topic {Topic}: {Payload}", topic, payload);
 
             if (topic.Equals(HaStatusTopic, StringComparison.OrdinalIgnoreCase))
             {
@@ -87,11 +87,11 @@ namespace Ecowitt.Controller.Service.Mqtt
                         {
                             var result = await _client?.ConnectAsync(_client.Options)!;
                             if (result.ResultCode == MqttClientConnectResultCode.Success) break;
-                            else _logger.LogWarning($"Failed to reconnect to MQTT broker. Attempt {i + 1} of {_mqttConfig.ReconnectAttempts}. Reason: {result.ResultCode}");
+                            else _logger.LogWarning("Failed to reconnect to MQTT broker. Attempt {I} of {MqttConfigReconnectAttempts}. Reason: {MqttClientConnectResultCode}", i + 1, _mqttConfig.ReconnectAttempts, result.ResultCode);
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError($"Exception during MQTT reconnect attempt {i + 1} of {_mqttConfig.ReconnectAttempts}: {ex.Message}");
+                            _logger.LogError("Exception during MQTT reconnect attempt {I} of {MqttConfigReconnectAttempts}: {ExMessage}", i + 1, _mqttConfig.ReconnectAttempts, ex.Message);
                         }
                         await Task.Delay(TimeSpan.FromSeconds(2));
                     }

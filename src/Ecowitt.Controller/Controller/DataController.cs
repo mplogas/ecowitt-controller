@@ -53,7 +53,7 @@ public class DataController : ControllerBase
         else
 
         {
-            _logger.LogInformation($"Received data from IP {ip} ({data.StationType}).");
+            _logger.LogInformation("Received data from IP {Ip} ({DataStationType}).", ip, data.StationType);
             data.IpAddress = ip;
         }
 
@@ -61,7 +61,7 @@ public class DataController : ControllerBase
         //write forms key/values into Payload property as json
         data.Payload =
             JsonSerializer.Serialize(Request.Form.Select(kvp => new { name = kvp.Key, value = kvp.Value[0] }));
-        _logger.LogDebug($"Request form keys: {string.Join(", ", Request.Form.Keys)}");
+        _logger.LogDebug("Request form keys: {Join}", string.Join(", ", Request.Form.Keys));
 
         await _messageBus.Publish(data);
 

@@ -1,4 +1,5 @@
-﻿using Ecowitt.Controller.Model.Message.Event;
+﻿using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Message.Event;
 
 namespace Ecowitt.Controller.Service.Orchestrator
 {
@@ -18,7 +19,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     _lastMqttServiceState = MqttServiceEventType.Stopped;
                     break;
                 case MqttServiceEventType.Error:
-                    _logger.LogError($"MQTT Service error: {message.Message}");
+                    _logger.LogError("MQTT Service error: {MessageMessage}", message.Message);
                     _lastMqttServiceState = MqttServiceEventType.Error;
                     break;
                 case MqttServiceEventType.Heartbeat:
@@ -27,7 +28,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     break;
                 case MqttServiceEventType.Unknown:
                 default:
-                    _logger.LogWarning($"Unknown MQTT Service event: {message.EventType}");
+                    _logger.LogWarning("Unknown MQTT Service event: {MqttServiceEventType}", message.EventType);
                     break;
             }
 
@@ -45,34 +46,43 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     _logger.LogWarning("MQTT Client disconnected");
                     break;
                 case MqttConnectionEventType.Error:
-                    _logger.LogInformation($"MQTT Client error {message.Message}");
+                    _logger.LogInformation("MQTT Client error {MessageMessage}", message.Message);
                     break;
                 case MqttConnectionEventType.MessageReceived:
                 default:
-                    _logger.LogInformation($"MQTT Connection event received: {message.EventType}");
+                    _logger.LogInformation("MQTT Connection event received: {MqttConnectionEventType}", message.EventType);
                     break;
             }
 
             return Task.CompletedTask;
         }
 
-        public Task OnHandle(HomeAssistantStatusEvent message)
+        public async Task OnHandle(HomeAssistantStatusEvent message)
         {
             switch (message.Status)
             {
                 case HomeAssistantStatusType.Online:
-                    _logger.LogInformation("HomeAssistant is online");
+                    _logger.LogWarning("HomeAssistant is online");
+                    foreach (var gateway in _deviceStore.GetGatewaysShort().Select(kvp => _deviceStore.GetGateway(kvp.Key)).OfType<Device>())
+                    {
+                        //await EmitHomeAssistantDiscovery(gateway);
+                        await EmitGatewayFull(gateway);
+                        foreach (var subdevice in gateway.Subdevices)
+                        {
+                            await EmitSubdeviceFull(subdevice);
+                        }
+
+                        _logger.LogInformation("Re-emitted device {deviceIp}", gateway.IpAddress);
+                    }
                     break;
                 case HomeAssistantStatusType.Offline:
-                    _logger.LogInformation("HomeAssistant is offline");
+                    _logger.LogWarning("HomeAssistant is offline");
                     break;
                 case HomeAssistantStatusType.Unknown:
                 default:
                     _logger.LogInformation("Unknown HomeAssistant status received");
                     break;
             }
-
-            return Task.CompletedTask;
         }
 
         

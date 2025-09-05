@@ -7,7 +7,7 @@ public class Device
     // important properties
     public string IpAddress { get; set; }
     public string Name { get; set; }
-    public DateTime TimestampUtc { get; set; }
+    public DateTime TimestampUtc { get; set; } //= DateTime.UtcNow;
     public List<Subdevice> Subdevices { get; set; } = new();
     public bool DiscoveryUpdate { get; set; }
     

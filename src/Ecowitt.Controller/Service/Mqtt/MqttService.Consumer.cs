@@ -56,7 +56,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
         public async Task OnHandle(HomeAssistantDiscoveryEvent message)
         {
-            EmitHomeAssistantDiscovery();
+            await EmitHomeAssistantDiscovery(message.Device);
         }
 
         public async Task OnHandle(DeviceData message)
@@ -74,7 +74,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             }
 
             await PublishSensors(message.ChangedSensors, message.GatewayName);
-            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(message.GatewayName), DateTime.UtcNow);
+            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(message.GatewayName), message.Timestamp);
         }
 
         public async Task OnHandle(DeviceDataFull message)
@@ -93,7 +93,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             await PublishGateway(gateway);
             await PublishSensors(gateway.Sensors, gateway.Name);
-            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(gateway.Name), gateway.TimestampUtc);
+            await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(gateway.Name), message.Timestamp);
         }
 
         public async Task OnHandle(SubdeviceData message)

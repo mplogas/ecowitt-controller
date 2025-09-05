@@ -300,7 +300,7 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "wfc02_position":
                     return BuildIntSensor(propertyName, "wfc02-position", propertyValue, isDiag: true);
                 default:
-                    Log.Information($"Ignored property {propertyName}.");
+                    Log.Information("Ignored property {PropertyName}.", propertyName);
                     return null;
             }
         }

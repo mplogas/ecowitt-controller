@@ -21,7 +21,7 @@ namespace Ecowitt.Controller.Service.Http
                             var data = await GetSubdeviceData(host, stoppingToken);
                             if(data.Count == 0)
                             {
-                                _logger.LogWarning($"No subdevice data received from {host.BaseUrl}");
+                                _logger.LogWarning("No subdevice data received from {HostBaseUrl}", host.BaseUrl);
                             }
 
                             var aggregate = new SubdeviceApiAggregate();
@@ -30,7 +30,7 @@ namespace Ecowitt.Controller.Service.Http
                         }
                         catch (Exception e)
                         {
-                            _logger.LogError($"Failed to get subdevicedata for {host.BaseUrl}", e);
+                            _logger.LogError(e, "Failed to get subdevicedata for {HostBaseUrl}", host.BaseUrl);
                         }
                     }
                 }

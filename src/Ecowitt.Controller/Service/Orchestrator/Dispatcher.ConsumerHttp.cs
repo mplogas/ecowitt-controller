@@ -13,12 +13,12 @@ namespace Ecowitt.Controller.Service.Orchestrator
     {
         public async Task OnHandle(SubdeviceApiCommand message)
         {
-            _logger.LogInformation($"Received SubdeviceCommand: {message.Cmd} for device {message.Id}");
+            _logger.LogInformation("Received SubdeviceCommand: {MessageCmd} for device {MessageId}", message.Cmd, message.Id);
 
             var gw = _deviceStore.GetGatewayBySubdeviceId(message.Id);
             if (gw == null)
             {
-                _logger.LogWarning($"Gateway not found for subdevice {message.Id}");
+                _logger.LogWarning("Gateway not found for subdevice {MessageId}", message.Id);
                 return;
             }
             // hey compiler, this can't be null!
@@ -43,39 +43,46 @@ namespace Ecowitt.Controller.Service.Orchestrator
             }
             else
             {
-                _logger.LogWarning($"Ignoring unsupported command {message.Cmd} for subdevice {message.Id}");
+                _logger.LogWarning("Ignoring unsupported command {MessageCmd} for subdevice {MessageId}", message.Cmd, message.Id);
                 return;
             }
         }
 
         public async Task OnHandle(GatewayApiData message)
         {
-            _logger.LogDebug($"Received ApiData: {message.Model} ({message.PASSKEY}) \n {message.Payload}");
+            _logger.LogDebug("Received ApiData: {MessageModel} ({MessagePasskey}) \n {MessagePayload}", message.Model, message.PASSKEY, message.Payload);
             var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
             updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.', '-');
 
             var storedGateway = _deviceStore.GetGateway(updatedGateway.IpAddress);
             if (storedGateway == null)
             {
-                updatedGateway.DiscoveryUpdate = true;
+               updatedGateway.DiscoveryUpdate = true;
 
                 foreach (var sensor in updatedGateway.Sensors)
                 {
                     sensor.DiscoveryUpdate = true;
                 }
+
+                var firstGateway = _deviceStore.GetGatewaysShort().Count == 0;
                 if (_deviceStore.UpsertGateway(updatedGateway)) 
                 {
-                    _logger.LogDebug($"gateway added: {JsonSerializer.Serialize(storedGateway)})");
+                    _logger.LogDebug("gateway added: {Serialize})", JsonSerializer.Serialize(storedGateway));
+                    if (_ecowittOptions is { AutoDiscovery: true, Gateways.Count: 0 } && firstGateway)
+                    {
+                        await EmitHttpConfig();
+                    }
+                    await EmitHomeAssistantDiscovery(updatedGateway);
                     await EmitGatewayFull(updatedGateway);
                 }
-                else _logger.LogWarning($"failed to add gateway {updatedGateway.IpAddress} ({updatedGateway.Model}) to the store");
+                else _logger.LogWarning("failed to add gateway {UpdatedGatewayIpAddress} ({UpdatedGatewayModel}) to the store", updatedGateway.IpAddress, updatedGateway.Model);
             }
             else
             {
                 // no other property should update besides sensors - it seems fw isn't reported by the GW 
                 storedGateway.TimestampUtc = updatedGateway.TimestampUtc;
                 var changedSensors = new List<ISensor>();
-
+                var emitDiscovery = false;
                 foreach (var sensor in updatedGateway.Sensors)
                 {
                     var storedSensor = storedGateway.Sensors.FirstOrDefault(s => s.Name == sensor.Name);
@@ -84,6 +91,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                         sensor.DiscoveryUpdate = true;
                         storedGateway.Sensors.Add(sensor);
                         changedSensors.Add(sensor);
+                        emitDiscovery = true;
                     }
                     else if (DeNoiserHelper.HasSignificantChange(storedSensor, sensor.Value))
                     {
@@ -93,18 +101,24 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 }
 
                 if(changedSensors.Count > 0) await EmitGatewayChanged(changedSensors, storedGateway.IpAddress, storedGateway.Name);
-                else _logger.LogInformation($"no changes for gateway {storedGateway.IpAddress} ({storedGateway.Model})");
+                else _logger.LogInformation("no changes for gateway {StoredGatewayIpAddress} ({StoredGatewayModel})", storedGateway.IpAddress, storedGateway.Model);
 
                 var sensorsToRemove = storedGateway.Sensors.Where(s => updatedGateway.Sensors.All(gs => gs.Name != s.Name)).ToList();
+                if(sensorsToRemove.Count > 0) emitDiscovery = true;
                 foreach (var sensor in sensorsToRemove)
                 {
                     storedGateway.Sensors.Remove(sensor);
                 }
 
-                // TODO: emit removed gateway sensors to mqtt (maybe... is it really needed?)
-
-                if (!_deviceStore.UpsertGateway(storedGateway)) { _logger.LogWarning($"failed to update {storedGateway.IpAddress} ({storedGateway.Model}) in the store"); }
-                else { _logger.LogDebug($"gateway updated: {JsonSerializer.Serialize(storedGateway)})"); }
+                if (!_deviceStore.UpsertGateway(storedGateway))
+                {
+                    _logger.LogWarning("failed to update {StoredGatewayIpAddress} ({StoredGatewayModel}) in the store", storedGateway.IpAddress, storedGateway.Model);
+                }
+                else
+                {
+                    if(emitDiscovery) await EmitHomeAssistantDiscovery(storedGateway);
+                    _logger.LogDebug("gateway updated: {Serialize})", JsonSerializer.Serialize(storedGateway));
+                }
             }
 
             //LogStorageState();
@@ -120,14 +134,16 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 {
                     if (_ecowittOptions.AutoDiscovery)
                     {
-                        _logger.LogWarning($"Gateway {ip} not found while in autodiscovery mode. Not updating subdevices. (Try turning off autodiscovery)");
+                        _logger.LogWarning("Gateway {Ip} not found while in autodiscovery mode. Not updating subdevices. (Try turning off autodiscovery)", ip);
                         return;
                     }
 
                     storedGateway = new Device { IpAddress = ip };
                     storedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == storedGateway.IpAddress)?.Name ?? storedGateway.IpAddress.Replace('.', '-');
+                    storedGateway.TimestampUtc = DateTime.UtcNow;
                     storedGateway.DiscoveryUpdate = true;
                     _deviceStore.UpsertGateway(storedGateway);
+                    await EmitHomeAssistantDiscovery(storedGateway);
                 }
 
                 var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);
@@ -143,8 +159,9 @@ namespace Ecowitt.Controller.Service.Orchestrator
                             sensor.DiscoveryUpdate = true;
                         }
                         storedGateway.Subdevices.Add(updatedSubDevice);
-                        _logger.LogInformation($"subdevice added: {data.Id} ({data.Model})");
+                        _logger.LogInformation("subdevice added: {DataId} ({DataModel})", data.Id, data.Model);
 
+                        await EmitHomeAssistantDiscovery(storedGateway);
                         _deviceStore.UpsertGateway(storedGateway);
                         await EmitSubdeviceFull(updatedSubDevice);
                     }
@@ -184,24 +201,26 @@ namespace Ecowitt.Controller.Service.Orchestrator
                                 changedSensors.Add(storedSensor);
                             }
                         }
-                        if (flushData) _deviceStore.UpsertGateway(storedGateway);
-                        if (changedSensors.Count > 0) await EmitSubdeviceChanged(changedSensors, storedGateway.IpAddress, storedSubDevice.Id);
-                        else _logger.LogInformation($"no changes for subdevice {data.Id} ({data.Model})");
 
-                        // remove sensors that are not in the update
+                        if (changedSensors.Count > 0) await EmitSubdeviceChanged(changedSensors, storedGateway.IpAddress, storedSubDevice.Id);
+                        else _logger.LogInformation("no changes for subdevice {DataId} ({DataModel})", data.Id, data.Model);
+
                         var sensorsToRemove = storedSubDevice.Sensors.Where(s => updatedSubDevice.Sensors.All(us => us.Name != s.Name)).ToList();
+                        if (sensorsToRemove.Count > 0) flushData = true;
                         foreach (var sensor in sensorsToRemove)
                         {
                             storedSubDevice.Sensors.Remove(sensor);
                         }
+                        
+                        if (flushData)
+                        {
+                            _deviceStore.UpsertGateway(storedGateway);
+                            await EmitHomeAssistantDiscovery(storedGateway);
+                        }
 
-                        // TODO: emit removed subdevice sensors to mqtt (maybe... is it really needed?)
-
-                        _logger.LogInformation($"subdevice updated: {data.Id} ({data.Model})");
+                        _logger.LogInformation("subdevice updated: {DataId} ({DataModel})", data.Id, data.Model);
                     }
                 }
-
-                _deviceStore.UpsertGateway(storedGateway);
             }
 
             //LogStorageState();
@@ -221,12 +240,12 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     _lastHttpServiceState = HttpServiceEventType.Stopped;
                     break;
                 case HttpServiceEventType.Error:
-                    _logger.LogError($"HTTP Service error: {message.Message}");
+                    _logger.LogError("HTTP Service error: {MessageMessage}", message.Message);
                     _lastHttpServiceState = HttpServiceEventType.Error;
                     break;
                 case HttpServiceEventType.Unknown:
                 default:
-                    _logger.LogWarning($"Unknown HTTP Service event: {message.EventType}");
+                    _logger.LogWarning("Unknown HTTP Service event: {HttpServiceEventType}", message.EventType);
                     _lastHttpServiceState = HttpServiceEventType.Unknown;
                     break;
             }

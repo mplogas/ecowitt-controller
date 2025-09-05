@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Discovery;
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
@@ -19,13 +20,16 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
     private IMqttClient? _client;
     private bool _isConnecting;
     private MqttConfig? _mqttConfig;
+    private readonly Origin _origin;
     private const string HaStatusTopic = "homeassistant/status";
+
 
     public MqttService(ILogger<MqttService> logger, MqttFactory factory, IMessageBus messageBus)
     {
         _logger = logger;
         _factory = factory;
         _messageBus = messageBus;
+        _origin = DiscoveryBuilder.BuildOrigin();
     }  
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -79,9 +83,22 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
         _logger.LogInformation("Unsubscribed from Home Assistant");
     }
 
-    private void EmitHomeAssistantDiscovery()
+    private async Task EmitHomeAssistantDiscovery(Model.Device gateway)
     {
-        
+        await PublishGatewayDiscovery(gateway);
+        foreach (var sensor in gateway.Sensors)
+        {
+            await PublishSensorDiscovery(gateway, sensor);
+        }
+
+        foreach (var subdevice in gateway.Subdevices)
+        {
+            await PublishSubdeviceDiscovery(gateway, subdevice);
+            foreach (var sensor in subdevice.Sensors)
+            {
+                await PublishSensorDiscovery(gateway, subdevice, sensor);
+            }
+        }
     }
 
     

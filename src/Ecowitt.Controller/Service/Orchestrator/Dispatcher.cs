@@ -39,6 +39,14 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         await EmitMqttConfig();
         if(_ecowittOptions.Gateways.Count > 0) await EmitHttpConfig();
+
+
+    }
+
+    private async Task EmitHomeAssistantDiscovery(Device device)
+    {
+        var discoveryEvent = new HomeAssistantDiscoveryEvent(device);
+        await _messageBus.Publish(discoveryEvent);
     }
 
     private async Task EmitHttpConfig()
@@ -46,6 +54,18 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         var httpConfig = new HttpConfig
         {
             Hosts = _ecowittOptions.Gateways.Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password)).ToList(),
+            PollingInterval = _ecowittOptions.PollingInterval,
+            AutoDiscovery = _ecowittOptions.AutoDiscovery
+        };
+
+        await _messageBus.Publish(httpConfig);
+    }
+
+    private async Task EmitHttpConfig(List<HttpHost> hosts)
+    {
+        var httpConfig = new HttpConfig
+        {
+            Hosts = hosts,
             PollingInterval = _ecowittOptions.PollingInterval,
             AutoDiscovery = _ecowittOptions.AutoDiscovery
         };
@@ -80,9 +100,9 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
     {
         foreach (var gw in _deviceStore.GetGatewaysShort())
         {
-            _logger.LogInformation($"Gateway {gw.Key} - {gw.Value}");
+            _logger.LogInformation("Gateway {GwKey} - {GwValue}", gw.Key, gw.Value);
             var gateway = _deviceStore.GetGateway(gw.Key);
-            _logger.LogDebug($"Storage dump: \n {JsonSerializer.Serialize(gateway)}");
+            _logger.LogDebug("Storage dump: \n {Serialize}", JsonSerializer.Serialize(gateway));
         }
     }
 
@@ -93,7 +113,7 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
             Device = device,
             GatewayId = device.IpAddress,
             GatewayName = device.Name,
-            Timestamp = DateTime.UtcNow
+            Timestamp = device.TimestampUtc
         });
     }
 
@@ -108,7 +128,7 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
             GatewayId = subdevice.GwIp,
             GatewayName = gatewayName,
             SubdeviceId = subdevice.Id,
-            Timestamp = DateTime.UtcNow
+            Timestamp = subdevice.TimestampUtc
         });
     }
 

@@ -41,12 +41,12 @@ public class DeviceStore : IDeviceStore
     {
         if (_gateways.TryGetValue(data.IpAddress, out var gateway))
         {
-            _logger.LogInformation($"Updateing Gateway {data.IpAddress} ({data.Model})");
+            _logger.LogInformation("Updateing Gateway {DataIpAddress} ({DataModel})", data.IpAddress, data.Model);
             return _gateways.TryUpdate(data.IpAddress, data, gateway);
         }
         else
         {
-            _logger.LogInformation($"Adding Gateway {data.IpAddress} ({data.Model})");
+            _logger.LogInformation("Adding Gateway {DataIpAddress} ({DataModel})", data.IpAddress, data.Model);
             return _gateways.TryAdd(data.IpAddress, data);
         }
     }

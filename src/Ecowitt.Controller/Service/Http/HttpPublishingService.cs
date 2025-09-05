@@ -22,7 +22,7 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
 
     private async Task<List<SubdeviceApiData>> GetSubdeviceData(HttpHost host, CancellationToken cancellationToken)
     {
-        _logger.LogInformation($"Polling subdevices from {host.Host}");
+        _logger.LogInformation("Polling subdevices from {HostHost}", host.Host);
         var subdevices = new List<SubdeviceApiData>();
         try
         {
@@ -36,7 +36,7 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
         }
         catch (Exception e)
         {
-            _logger.LogError(e, $"Exception while trying to get subdevices from {host.Host}");
+            _logger.LogError(e, "Exception while trying to get subdevices from {HostHost}", host.Host);
         }
 
         return subdevices;
@@ -70,18 +70,18 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
                         GwIp = host.Host,
                         TimestampUtc = DateTime.UtcNow
                     };
-                    _logger.LogInformation($"Subdevice: {subdevice.Id} ({subdevice.Model})");
+                    _logger.LogInformation("Subdevice: {SubdeviceId} ({SubdeviceModel})", subdevice.Id, subdevice.Model);
                     subdevices.Add(subdevice);
                 }
             }
             else
             {
-                _logger.LogWarning($"Failed to get subdevices from {host.Host}");
+                _logger.LogWarning("Failed to get subdevices from {HostHost}", host.Host);
             }
         }
         catch (Exception e)
         {
-            _logger.LogError(e, $"Exception while trying to get subdevices from {host.Host}");
+            _logger.LogError(e, "Exception while trying to get subdevices from {HostHost}", host.Host);
         }
 
 
@@ -102,12 +102,12 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             }
             else
             {
-                _logger.LogWarning($"Could not get payload from {host.Host} for subdevice {subdeviceId}");
+                _logger.LogWarning("Could not get payload from {HostHost} for subdevice {SubdeviceId}", host.Host, subdeviceId);
             }
         }
         catch (Exception e)
         {
-            _logger.LogError(e, $"Exception while trying to get payload from {host.Host} for subdevice {subdeviceId}");
+            _logger.LogError(e, "Exception while trying to get payload from {HostHost} for subdevice {SubdeviceId}", host.Host, subdeviceId);
         }
 
         return string.Empty;
