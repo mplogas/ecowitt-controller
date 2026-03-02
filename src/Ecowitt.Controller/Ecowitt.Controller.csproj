@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>a86b1f49-380d-4c8c-8812-1f07670a6652</UserSecretsId>
@@ -9,14 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="EcoWitt.Controller.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Compile Remove="Mqtt\**" />
-      <Compile Remove="old\Discovery\Model\**" />
       <Content Remove="Mqtt\**" />
-      <Content Remove="old\Discovery\Model\**" />
       <EmbeddedResource Remove="Mqtt\**" />
-      <EmbeddedResource Remove="old\Discovery\Model\**" />
       <None Remove="Mqtt\**" />
-      <None Remove="old\Discovery\Model\**" />
     </ItemGroup>
 
     <ItemGroup>

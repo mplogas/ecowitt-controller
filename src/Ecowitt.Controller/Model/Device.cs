@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 namespace Ecowitt.Controller.Model;
 
 public class Device
@@ -23,6 +21,4 @@ public class Device
 
     // sensors
     public List<ISensor> Sensors { get; set; } = new List<ISensor>();
-
-    public ConcurrentBag<ISensor> ConcurrentSensors { get; set; } = new ConcurrentBag<ISensor>();
 }

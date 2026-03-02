@@ -78,7 +78,7 @@ public class SubdeviceMappingTest
         Assert.That(subDevice.Devicename, Is.EqualTo("xTNGzWMorVwEKqvltP30"));
         Assert.That(subDevice.Nickname, Is.EqualTo("AC1100-000029C7"));
         Assert.That(subDevice.Availability, Is.EqualTo(true));
-        Assert.That(subDevice.Sensors, Has.Count.EqualTo(18));
+        Assert.That(subDevice.Sensors, Has.Count.EqualTo(15));
     }
 
     [Test]
@@ -116,6 +116,6 @@ public class SubdeviceMappingTest
         Assert.That(subDevice.Devicename, Is.EqualTo("MJULtW6rvT1I8dEKz3o2"));
         Assert.That(subDevice.Nickname, Is.EqualTo("WFC01-00003456"));
         Assert.That(subDevice.Availability, Is.EqualTo(true));
-        Assert.That(subDevice.Sensors, Has.Count.EqualTo(18));
+        Assert.That(subDevice.Sensors, Has.Count.EqualTo(15));
     }
 }

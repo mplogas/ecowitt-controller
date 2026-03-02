@@ -31,5 +31,4 @@ public class HttpHost
     public string Password { get; set; } = string.Empty;
     public string Protocol { get; set; } = "http"; // or "https"
     public string BaseUrl => $"{Protocol}://{Host}";
-    public string Passkey { get; set; } = string.Empty;
 }
