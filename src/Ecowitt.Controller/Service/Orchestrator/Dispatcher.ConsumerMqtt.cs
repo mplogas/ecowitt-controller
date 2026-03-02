@@ -65,7 +65,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     _logger.LogWarning("HomeAssistant is online");
                     foreach (var gateway in _deviceStore.GetGatewaysShort().Select(kvp => _deviceStore.GetGateway(kvp.Key)).OfType<Device>())
                     {
-                        //await EmitHomeAssistantDiscovery(gateway);
+                        await EmitHomeAssistantDiscovery(gateway);
                         await EmitGatewayFull(gateway);
                         foreach (var subdevice in gateway.Subdevices)
                         {

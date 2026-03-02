@@ -59,6 +59,17 @@ namespace Ecowitt.Controller.Service.Mqtt
             await EmitHomeAssistantDiscovery(message.Device);
         }
 
+        public async Task OnHandle(DiscoveryRemovalEvent message)
+        {
+            foreach (var sensor in message.Sensors)
+            {
+                var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass);
+                var topic = $"homeassistant/{MqttPathBuilder.Sanitize($"{sensorClassTopic}/{message.DeviceName}_{sensor.Name}")}/config";
+                await RemoveDiscoveryMessage(topic);
+                _logger.LogInformation("Removed discovery for {DeviceName}/{SensorName}", message.DeviceName, sensor.Name);
+            }
+        }
+
         public async Task OnHandle(DeviceData message)
         {
             if (_client == null || !_client.IsConnected)

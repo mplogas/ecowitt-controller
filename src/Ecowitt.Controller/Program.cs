@@ -47,7 +47,8 @@ public class Program
         builder.Services.Configure<MqttOptions>(configuration.GetSection("mqtt"));
         builder.Services.Configure<ControllerOptions>(configuration.GetSection("controller"));
 
-        builder.Services.AddHttpClient("ecowitt-client").AddPolicyHandler(GetRetryPolicy(2));
+        var ecowittRetries = configuration.GetSection("ecowitt").GetValue<int>("retries");
+        builder.Services.AddHttpClient("ecowitt-client").AddPolicyHandler(GetRetryPolicy(ecowittRetries > 0 ? ecowittRetries : 2));
 
         builder.Services.AddSerilog((services, lc) => lc
             .ReadFrom.Services(services)
@@ -74,12 +75,14 @@ public class Program
             // statemachine -> mqttservice
             smb.Produce<MqttConfig>(x => x.DefaultTopic("config-mqtt"));
             smb.Produce<HomeAssistantDiscoveryEvent>(x => x.DefaultTopic("home-assistant-discovery"));
+            smb.Produce<DiscoveryRemovalEvent>(x => x.DefaultTopic("discovery-removal"));
             smb.Produce<DeviceData>(x => x.DefaultTopic("device-data"));
             smb.Produce<DeviceDataFull>(x => x.DefaultTopic("device-data-full"));
             smb.Produce<SubdeviceData>(x => x.DefaultTopic("subdevice-data"));
             smb.Produce<SubdeviceDataFull>(x => x.DefaultTopic("subdevice-data-full"));
             smb.Consume<MqttConfig>(x => x.Topic("config-mqtt").WithConsumer<MqttService>());
             smb.Consume<HomeAssistantDiscoveryEvent>(x => x.Topic("home-assistant-discovery").WithConsumer<MqttService>());
+            smb.Consume<DiscoveryRemovalEvent>(x => x.Topic("discovery-removal").WithConsumer<MqttService>());
             smb.Consume<DeviceData>(x => x.Topic("device-data").WithConsumer<MqttService>());
             smb.Consume<DeviceDataFull>(x => x.Topic("device-data-full").WithConsumer<MqttService>());
             smb.Consume<SubdeviceData>(x => x.Topic("subdevice-data").WithConsumer<MqttService>());

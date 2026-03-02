@@ -49,6 +49,12 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         await _messageBus.Publish(discoveryEvent);
     }
 
+    private async Task EmitDiscoveryRemoval(string deviceName, List<ISensor> sensors)
+    {
+        if (sensors.Count == 0) return;
+        await _messageBus.Publish(new DiscoveryRemovalEvent { DeviceName = deviceName, Sensors = sensors });
+    }
+
     private async Task EmitHttpConfig()
     {
         var httpConfig = new HttpConfig
@@ -84,7 +90,6 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
             ReconnectAttempts = _mqttOptions.ReconnectAttempts,
             HomeAssistantDiscovery = _controllerOptions.HomeAssistantDiscovery,
             Precision = _controllerOptions.Precision,
-            PublishingInterval = _controllerOptions.PublishingInterval,
             Units = _controllerOptions.Units
         };
         if (!string.IsNullOrWhiteSpace(_mqttOptions.User))

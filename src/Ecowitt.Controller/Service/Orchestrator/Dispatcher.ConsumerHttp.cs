@@ -104,7 +104,11 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 else _logger.LogInformation("no changes for gateway {StoredGatewayIpAddress} ({StoredGatewayModel})", storedGateway.IpAddress, storedGateway.Model);
 
                 var sensorsToRemove = storedGateway.Sensors.Where(s => updatedGateway.Sensors.All(gs => gs.Name != s.Name)).ToList();
-                if(sensorsToRemove.Count > 0) emitDiscovery = true;
+                if (sensorsToRemove.Count > 0)
+                {
+                    emitDiscovery = true;
+                    await EmitDiscoveryRemoval(storedGateway.Name, sensorsToRemove);
+                }
                 foreach (var sensor in sensorsToRemove)
                 {
                     storedGateway.Sensors.Remove(sensor);
@@ -206,7 +210,11 @@ namespace Ecowitt.Controller.Service.Orchestrator
                         else _logger.LogInformation("no changes for subdevice {DataId} ({DataModel})", data.Id, data.Model);
 
                         var sensorsToRemove = storedSubDevice.Sensors.Where(s => updatedSubDevice.Sensors.All(us => us.Name != s.Name)).ToList();
-                        if (sensorsToRemove.Count > 0) flushData = true;
+                        if (sensorsToRemove.Count > 0)
+                        {
+                            flushData = true;
+                            await EmitDiscoveryRemoval(storedSubDevice.Nickname, sensorsToRemove);
+                        }
                         foreach (var sensor in sensorsToRemove)
                         {
                             storedSubDevice.Sensors.Remove(sensor);

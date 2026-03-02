@@ -15,7 +15,6 @@ public class MqttConfig
     public int ReconnectAttempts { get; set; } = 2;
     public int Precision { get; set; } = 2;
     public Units Units { get; set; } = Units.Metric;
-    public int PublishingInterval { get; set; } = 60; // 0 or lower immediately publish all data
     public bool HomeAssistantDiscovery { get; set; } = true;
     
     public string CmdTopic { get; } = "cmd";

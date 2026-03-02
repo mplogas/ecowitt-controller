@@ -1,6 +1,7 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Discovery;
 using Ecowitt.Controller.Model.Message.Config;
@@ -12,7 +13,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Mqtt;
 
-public partial class MqttService : BackgroundService, IHostedLifecycleService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DeviceData>, IConsumer<DeviceDataFull>, IConsumer<SubdeviceData>, IConsumer<SubdeviceDataFull>
+public partial class MqttService : BackgroundService, IHostedLifecycleService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DiscoveryRemovalEvent>, IConsumer<DeviceData>, IConsumer<DeviceDataFull>, IConsumer<SubdeviceData>, IConsumer<SubdeviceDataFull>
 {
     private readonly ILogger<MqttService> _logger;
     private readonly MqttFactory _factory;
@@ -94,6 +95,8 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
         foreach (var subdevice in gateway.Subdevices)
         {
             await PublishSubdeviceDiscovery(gateway, subdevice);
+            if (subdevice.Model is SubdeviceModel.WFC01 or SubdeviceModel.AC1100 or SubdeviceModel.WFC02)
+                await PublishSubdeviceSwitchDiscovery(gateway, subdevice);
             foreach (var sensor in subdevice.Sensors)
             {
                 await PublishSensorDiscovery(gateway, subdevice, sensor);

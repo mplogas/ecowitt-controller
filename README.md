@@ -70,7 +70,6 @@ Full configuration with all options and their defaults:
   "controller": {
     "precision": 2,
     "unit": "metric",
-    "publishingInterval": 60,
     "homeassistantdiscovery": true
   }
 }
@@ -89,7 +88,6 @@ Full configuration with all options and their defaults:
 | `ecowitt` | `gateways` | `[]` | Manual gateway definitions (name, ip, credentials) |
 | `controller` | `precision` | `2` | Decimal places for floating-point values |
 | `controller` | `unit` | `metric` | `metric` or `imperial` |
-| `controller` | `publishingInterval` | `60` | MQTT publish interval (seconds) |
 | `controller` | `homeassistantdiscovery` | `true` | Publish HA MQTT discovery messages |
 
 ### Run with Docker

@@ -120,8 +120,8 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
 
         if (!string.IsNullOrWhiteSpace(host.User) && !string.IsNullOrWhiteSpace(host.Password))
         {
-            //TODO: authentication header, need to test
-            //client.DefaultRequestHeaders.Add();
+            var credentials = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{host.User}:{host.Password}"));
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
         }
         return client;
     }
