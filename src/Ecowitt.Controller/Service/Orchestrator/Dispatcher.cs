@@ -5,6 +5,7 @@ using Ecowitt.Controller.Model.Configuration;
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
+using Ecowitt.Controller.Service.Http;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
 
@@ -18,10 +19,11 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
     private readonly ControllerOptions _controllerOptions;
     private readonly MqttOptions _mqttOptions;
     private readonly IMessageBus _messageBus;
+    private readonly HttpPublishingService _httpPublishingService;
     private MqttServiceEventType _lastMqttServiceState = MqttServiceEventType.Unknown;
     private HttpServiceEventType _lastHttpServiceState = HttpServiceEventType.Unknown;
 
-    public Dispatcher(ILogger<Dispatcher> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions) 
+    public Dispatcher(ILogger<Dispatcher> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions, HttpPublishingService httpPublishingService)
     {
         _logger = logger;
         _deviceStore = deviceStore;
@@ -29,6 +31,7 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         _ecowittOptions = ecowittOptions.Value;
         _controllerOptions = controllerOptions.Value;
         _messageBus = messageBus;
+        _httpPublishingService = httpPublishingService;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -162,43 +165,5 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
             Timestamp = DateTime.UtcNow
         });
     }
-
-    // public async Task<bool> SendCommand(string ipAddress, string cmd, int id, int model, int val = 0, int valType = 0, int onType = 0, int offType = 0, int alwaysOn = 1, int onTime = 0, int offTime = 0)
-    // {
-    //     var client = _httpClientFactory.CreateClient("ecowitt-client");
-    //     client.BaseAddress = new Uri($"http://{ipAddress}");
-    //
-    //     var username = _ecowittOptions.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Username;
-    //     var password = _ecowittOptions.Gateways.FirstOrDefault(gw => gw.Ip == ipAddress)?.Password;
-    //     if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
-    //     {
-    //         //TODO: authentication header, need to test
-    //         //client.DefaultRequestHeaders.Add();
-    //     }
-    //     
-    //     // [{"on_type":0,"off_type":0,"always_on":0,"on_time":0,"off_time":0,"val_type":1,"val":20,"cmd":"quick_run","id":12345,"model":1}]}    
-    //     dynamic payload;
-    //     switch (cmd)
-    //     {
-    //         case "quick_run":
-    //             payload = new { command = new[] { new { cmd, id, model, val, val_type = valType, on_type = onType, off_type = offType, always_on = alwaysOn, on_time = onTime, off_time = offTime } } };
-    //             break;
-    //         case "quick_stop":
-    //             payload = new { command = new[] { new { cmd, id, model } } };
-    //             break;
-    //         default:
-    //             _logger.LogWarning($"Unsupported command type {cmd}. Not sending command to {ipAddress} for subdevice {id}");
-    //             return false;
-    //     }
-    //     
-    //     var sContent = new StringContent(JsonSerializer.Serialize(payload));
-    //     var response = await client.PostAsync("parse_quick_cmd_iot", sContent);
-    //
-    //     if (response.IsSuccessStatusCode) return true;
-    //     else {
-    //         _logger.LogWarning($"Could not send command to {ipAddress} for subdevice {id}");
-    //         return false;
-    //     }
-    // }
 
 }

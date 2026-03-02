@@ -21,31 +21,27 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 _logger.LogWarning("Gateway not found for subdevice {MessageId}", message.Id);
                 return;
             }
-            // hey compiler, this can't be null!
+
             var subdevice = gw.Subdevices.FirstOrDefault(sd => sd.Id == message.Id);
-
-            if (message.Cmd == Command.Start)
+            if (subdevice == null)
             {
-                //var val = message.Duration ?? 20;
-                //var valType = message.Unit ?? DurationUnit.Minutes;
-                // // the magic "maganiFator" :D
-                //if(valType == DurationUnit.Liters) val *= 10;
-                //var alwaysOn = message.AlwaysOn.HasValue ? 1 : 0;
-                //await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model, val: val, valType: (int)valType, alwaysOn: alwaysOn);
-
-                //default always-on message for now
-                //await SendCommand(gw.IpAddress, "quick_run", message.Id, (int)subdevice!.Model);
-
+                _logger.LogWarning("Subdevice {MessageId} not found in gateway {GwIp}", message.Id, gw.IpAddress);
+                return;
             }
-            else if (message.Cmd == Command.Stop)
-            {
-                //await SendCommand(gw.IpAddress, "quick_stop", message.Id, (int)subdevice!.Model);
-            }
-            else
+
+            if (message.Cmd is not (Command.Start or Command.Stop))
             {
                 _logger.LogWarning("Ignoring unsupported command {MessageCmd} for subdevice {MessageId}", message.Cmd, message.Id);
                 return;
             }
+
+            // HA sends bare ON/OFF without duration — default to always-on
+            if (message.Cmd == Command.Start && !message.Duration.HasValue)
+            {
+                message.AlwaysOn = true;
+            }
+
+            await _httpPublishingService.SendSubdeviceCommand(gw.IpAddress, message, subdevice.Model);
         }
 
         public async Task OnHandle(GatewayApiData message)

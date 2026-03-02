@@ -1,3 +1,4 @@
+using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Message.Config;
 using SlimMessageBus;
@@ -111,6 +112,67 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
         }
 
         return string.Empty;
+    }
+
+    public async Task<bool> SendSubdeviceCommand(string gatewayIp, SubdeviceApiCommand command, SubdeviceModel model)
+    {
+        var host = _config.Hosts.FirstOrDefault(h => h.Host == gatewayIp);
+        if (host == null)
+        {
+            _logger.LogWarning("No host config found for gateway {GatewayIp}", gatewayIp);
+            return false;
+        }
+
+        using var client = CreateHttpClient(host);
+        try
+        {
+            object payload;
+            switch (command.Cmd)
+            {
+                case Command.Start:
+                    var val = command.Duration ?? 0;
+                    var valType = (int)(command.Unit ?? DurationUnit.Minutes);
+                    var alwaysOn = command.AlwaysOn == true || !command.Duration.HasValue ? 1 : 0;
+                    payload = new
+                    {
+                        command = new[]
+                        {
+                            new
+                            {
+                                always_on = alwaysOn, val_type = valType, val,
+                                position = 100, cmd = "quick_run",
+                                id = command.Id, model = (int)model
+                            }
+                        }
+                    };
+                    break;
+                case Command.Stop:
+                    payload = new { command = new[] { new { cmd = "quick_stop", id = command.Id, model = (int)model } } };
+                    break;
+                default:
+                    _logger.LogWarning("Unsupported command {Cmd} for subdevice {Id}", command.Cmd, command.Id);
+                    return false;
+            }
+
+            var json = JsonSerializer.Serialize(payload);
+            _logger.LogDebug("Sending command payload: {Json}", json);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("parse_quick_cmd_iot", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Sent {Cmd} command to subdevice {Id} on {GatewayIp}", command.Cmd, command.Id, gatewayIp);
+                return true;
+            }
+
+            _logger.LogWarning("Failed to send command to subdevice {Id} on {GatewayIp}: {StatusCode}", command.Id, gatewayIp, response.StatusCode);
+            return false;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Exception sending command to subdevice {Id} on {GatewayIp}", command.Id, gatewayIp);
+            return false;
+        }
     }
 
     private HttpClient CreateHttpClient(HttpHost host)

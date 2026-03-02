@@ -110,6 +110,10 @@ public class Program
             smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<Dispatcher>());
             smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<Dispatcher>());
 
+            // mqttservice -> statemachine (subdevice commands)
+            smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-api-command"));
+            smb.Consume<SubdeviceApiCommand>(x => x.Topic("subdevice-api-command").WithConsumer<Dispatcher>());
+
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
