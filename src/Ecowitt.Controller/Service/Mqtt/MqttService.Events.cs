@@ -61,12 +61,16 @@ namespace Ecowitt.Controller.Service.Mqtt
                 try
                 {
                     var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(payload);
+                    if (cmd == null)
+                    {
+                        _logger.LogWarning("Failed to deserialize command from topic {Topic}", topic);
+                        return;
+                    }
                     await _messageBus.Publish(cmd);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    _logger.LogError(e, "Failed to deserialize command from topic {Topic}: {Payload}", topic, payload);
                 }
             }
         }

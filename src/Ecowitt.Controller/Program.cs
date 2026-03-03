@@ -98,7 +98,7 @@ public class Program
 
             // controller -> statemachine
             smb.Produce<GatewayApiData>(x => x.DefaultTopic("gw-api-data"));
-            smb.Consume<GatewayApiData>(x => x.Topic("gw-api-data"));
+            smb.Consume<GatewayApiData>(x => x.Topic("gw-api-data").WithConsumer<Dispatcher>());
 
             // statemachine -> HttpPublishingService
             smb.Produce<HttpConfig>(x => x.DefaultTopic("config-http"));

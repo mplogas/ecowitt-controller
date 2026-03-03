@@ -60,7 +60,7 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
 
     private async Task SubscribeHomeAssistant()
     {
-        if(_client != null && (!_client.IsConnected || _isConnecting))
+        if (_client == null || !_client.IsConnected || _isConnecting)
         {
             _logger.LogWarning("MQTT client is not connected or is currently connecting. Cannot subscribe to Home Assistant state.");
             return;
@@ -73,7 +73,7 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
     
     private async Task UnsubscribeHomeAssistant()
     {
-        if(_client != null && (!_client.IsConnected || _isConnecting))
+        if (_client == null || !_client.IsConnected || _isConnecting)
         {
             _logger.LogWarning("MQTT client is not connected or is currently connecting. Cannot unsubscribe from Home Assistant state.");
             return;

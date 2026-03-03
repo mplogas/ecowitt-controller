@@ -30,5 +30,7 @@ public class HttpHost
     public string User { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string Protocol { get; set; } = "http"; // or "https"
-    public string BaseUrl => $"{Protocol}://{Host}";
+    public string BaseUrl => (Protocol == "http" && Port == 80) || (Protocol == "https" && Port == 443)
+        ? $"{Protocol}://{Host}"
+        : $"{Protocol}://{Host}:{Port}";
 }

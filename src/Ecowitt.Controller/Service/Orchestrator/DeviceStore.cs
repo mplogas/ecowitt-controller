@@ -41,7 +41,7 @@ public class DeviceStore : IDeviceStore
     {
         if (_gateways.TryGetValue(data.IpAddress, out var gateway))
         {
-            _logger.LogInformation("Updateing Gateway {DataIpAddress} ({DataModel})", data.IpAddress, data.Model);
+            _logger.LogInformation("Updating gateway {DataIpAddress} ({DataModel})", data.IpAddress, data.Model);
             return _gateways.TryUpdate(data.IpAddress, data, gateway);
         }
         else
