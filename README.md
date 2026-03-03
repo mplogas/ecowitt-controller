@@ -63,7 +63,8 @@ Full configuration with all options and their defaults:
     "gateways": [
       {
         "name": "weatherstation_01",
-        "ip": "192.168.1.101"
+        "ip": "192.168.1.101",
+        "subdevices": true
       }
     ]
   },
@@ -85,7 +86,8 @@ Full configuration with all options and their defaults:
 | `ecowitt` | `pollingInterval` | `30` | Subdevice polling interval (seconds) |
 | `ecowitt` | `autodiscovery` | `false` | Auto-discover gateways from incoming data |
 | `ecowitt` | `calculateValues` | `true` | Generate calculated sensor values |
-| `ecowitt` | `gateways` | `[]` | Manual gateway definitions (name, ip, credentials) |
+| `ecowitt` | `gateways` | `[]` | Manual gateway definitions (name, ip, credentials, subdevices) |
+| `ecowitt.gateways[]` | `subdevices` | `false` | Enable subdevice polling (only GW1200, GW2000, GW3000) |
 | `controller` | `precision` | `2` | Decimal places for floating-point values |
 | `controller` | `unit` | `metric` | `metric` or `imperial` |
 | `controller` | `homeassistantdiscovery` | `true` | Publish HA MQTT discovery messages |

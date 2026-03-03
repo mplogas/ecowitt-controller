@@ -62,7 +62,7 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
     {
         var httpConfig = new HttpConfig
         {
-            Hosts = _ecowittOptions.Gateways.Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password)).ToList(),
+            Hosts = _ecowittOptions.Gateways.Where(gw => gw.Subdevices).Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password)).ToList(),
             PollingInterval = _ecowittOptions.PollingInterval,
             AutoDiscovery = _ecowittOptions.AutoDiscovery
         };
