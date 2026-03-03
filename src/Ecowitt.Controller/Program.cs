@@ -1,13 +1,15 @@
 using System.Net;
 using System.Reflection;
-using Ecowitt.Controller.Configuration;
-using Ecowitt.Controller.Consumer;
-using Ecowitt.Controller.Discovery;
-using Ecowitt.Controller.Model;
-using Ecowitt.Controller.Mqtt;
-using Ecowitt.Controller.Store;
-using Ecowitt.Controller.Subdevice;
+using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Configuration;
+using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
+using Ecowitt.Controller.Model.Message.Event;
+using Ecowitt.Controller.Service.Http;
+using Ecowitt.Controller.Service.Mqtt;
+using Ecowitt.Controller.Service.Orchestrator;
 using MQTTnet;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -45,7 +47,8 @@ public class Program
         builder.Services.Configure<MqttOptions>(configuration.GetSection("mqtt"));
         builder.Services.Configure<ControllerOptions>(configuration.GetSection("controller"));
 
-        builder.Services.AddHttpClient("ecowitt-client").AddPolicyHandler(GetRetryPolicy(2));
+        var ecowittRetries = configuration.GetSection("ecowitt").GetValue<int>("retries");
+        builder.Services.AddHttpClient("ecowitt-client").AddPolicyHandler(GetRetryPolicy(ecowittRetries > 0 ? ecowittRetries : 2));
 
         builder.Services.AddSerilog((services, lc) => lc
             .ReadFrom.Services(services)
@@ -55,64 +58,84 @@ public class Program
             .MinimumLevel.Warning()
             .ReadFrom.Configuration(builder.Configuration));
 
+
         builder.Services.AddSingleton<IDeviceStore, DeviceStore>();
+        builder.Services.AddSingleton<MqttService>();
+        builder.Services.AddSingleton<HttpPublishingService>();
+        builder.Services.AddSingleton<Dispatcher>();
+
+        var sp = builder.Services.BuildServiceProvider();
 
         builder.Services.AddSlimMessageBus(smb =>
         {
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
-            smb.AddJsonSerializer();
-            smb.Produce<GatewayApiData>(x => x.DefaultTopic("api-data"));
-            smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-data"));
-            smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-command"));
-            smb.Consume<GatewayApiData>(x => x
-                .Topic("api-data")
-                .WithConsumer<DataConsumer>()
-            );
-            smb.Consume<SubdeviceApiAggregate>(x => x
-                .Topic("subdevice-data")
-                .WithConsumer<DataConsumer>()
-            );
-            smb.Consume<SubdeviceApiCommand>(x => x
-                .Topic("subdevice-command")
-                .WithConsumer<CommandConsumer>()
-            );
+            smb.AddJsonSerializer(jsonSerializerSettings: JsonSettings);
+            smb.WithDependencyResolver(sp);
+
+            // statemachine -> mqttservice
+            smb.Produce<MqttConfig>(x => x.DefaultTopic("config-mqtt"));
+            smb.Produce<HomeAssistantDiscoveryEvent>(x => x.DefaultTopic("home-assistant-discovery"));
+            smb.Produce<DiscoveryRemovalEvent>(x => x.DefaultTopic("discovery-removal"));
+            smb.Produce<DeviceData>(x => x.DefaultTopic("device-data"));
+            smb.Produce<DeviceDataFull>(x => x.DefaultTopic("device-data-full"));
+            smb.Produce<SubdeviceData>(x => x.DefaultTopic("subdevice-data"));
+            smb.Produce<SubdeviceDataFull>(x => x.DefaultTopic("subdevice-data-full"));
+            smb.Consume<MqttConfig>(x => x.Topic("config-mqtt").WithConsumer<MqttService>());
+            smb.Consume<HomeAssistantDiscoveryEvent>(x => x.Topic("home-assistant-discovery").WithConsumer<MqttService>());
+            smb.Consume<DiscoveryRemovalEvent>(x => x.Topic("discovery-removal").WithConsumer<MqttService>());
+            smb.Consume<DeviceData>(x => x.Topic("device-data").WithConsumer<MqttService>());
+            smb.Consume<DeviceDataFull>(x => x.Topic("device-data-full").WithConsumer<MqttService>());
+            smb.Consume<SubdeviceData>(x => x.Topic("subdevice-data").WithConsumer<MqttService>());
+            smb.Consume<SubdeviceDataFull>(x => x.Topic("subdevice-data-full").WithConsumer<MqttService>());
+
+            // mqttservice -> statemachine
+            smb.Produce<MqttServiceEvent>(x => x.DefaultTopic("mqtt-service-event"));
+            smb.Produce<MqttConnectionEvent>(x => x.DefaultTopic("mqtt-connection-event"));
+            smb.Produce<HomeAssistantStatusEvent>(x => x.DefaultTopic("home-assistant-status"));
+            smb.Consume<MqttServiceEvent>(x => x.Topic("mqtt-service-event").WithConsumer<Dispatcher>());
+            smb.Consume<MqttConnectionEvent>(x => x.Topic("mqtt-connection-event").WithConsumer<Dispatcher>());
+            smb.Consume<HomeAssistantStatusEvent>(x => x.Topic("home-assistant-status").WithConsumer<Dispatcher>());
+
+            // controller -> statemachine
+            smb.Produce<GatewayApiData>(x => x.DefaultTopic("gw-api-data"));
+            smb.Consume<GatewayApiData>(x => x.Topic("gw-api-data").WithConsumer<Dispatcher>());
+
+            // statemachine -> HttpPublishingService
+            smb.Produce<HttpConfig>(x => x.DefaultTopic("config-http"));
+            smb.Consume<HttpConfig>(x => x.Topic("config-http").WithConsumer<HttpPublishingService>());
+
+            // HttpPublishingService -> statemachine
+            smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-api-data"));
+            smb.Produce<HttpServiceEvent>(x => x.DefaultTopic("http-service-event"));
+            smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<Dispatcher>());
+            smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<Dispatcher>());
+
+            // mqttservice -> statemachine (subdevice commands)
+            smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-api-command"));
+            smb.Consume<SubdeviceApiCommand>(x => x.Topic("subdevice-api-command").WithConsumer<Dispatcher>());
+
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
-        builder.Services.AddTransient<MqttFactory>();
-        builder.Services.AddSingleton<IMqttClient, MqttClient>();
+        builder.Services.AddHostedService(s => s.GetRequiredService<Dispatcher>());
         
-        builder.Services.AddHostedService<MqttService>();
-        builder.Services.AddHostedService<SubdeviceService>();
-        builder.Services.AddHostedService<DataPublishService>();
-        builder.Services.AddHostedService<DiscoveryPublishService>();
+        builder.Services.AddTransient<MqttFactory>();
+        builder.Services.AddHostedService(s => s.GetRequiredService<MqttService>());
+        builder.Services.AddHostedService(s => s.GetRequiredService<HttpPublishingService>());
 
         builder.Services.AddControllers();
-        //builder.Services.AddEndpointsApiExplorer();
-        //builder.Services.AddSwaggerGen();
 
         var app = builder.Build();
         app.UseSerilogRequestLogging(options =>
         {
-            // Customize the message template
             options.MessageTemplate = "Handled {RequestPath}";
-    
-            // Emit debug-level events instead of the defaults
             options.GetLevel = (httpContext, elapsed, ex) => LogEventLevel.Debug;
-    
-            // Attach additional properties to the request completion event
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
                 diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
             };
         });
-        
-        //if (app.Environment.IsDevelopment())
-        //{
-        //    app.UseSwagger();
-        //    app.UseSwaggerUI();
-        //}
         
         app.MapControllers();
         
@@ -126,7 +149,12 @@ public class Program
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             .OrResult(msg => msg.StatusCode == HttpStatusCode.NotFound)
-            //.WaitAndRetryAsync(retries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
             .WaitAndRetryAsync(delay);
     }
+
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        TypeNameHandling = TypeNameHandling.Auto,
+        NullValueHandling = NullValueHandling.Ignore
+    };
 }
