@@ -4,7 +4,6 @@ public class HttpConfig
 {
     public List<HttpHost> Hosts { get; set; } = new List<HttpHost>();
     public int PollingInterval { get; set; } = 5;
-    public bool AutoDiscovery { get; set; }
 }
 
 public class HttpHost

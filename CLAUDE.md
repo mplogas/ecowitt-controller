@@ -66,7 +66,7 @@ Messages are defined in `Model/Message/` (Config, Data, Event subdirs). The bus 
 ### Configuration
 
 Three option classes bound from `appsettings.json` sections in `Model/Configuration/`:
-- `ecowitt` → `EcowittOptions` (gateways, polling interval, autodiscovery)
+- `ecowitt` → `EcowittOptions` (gateways, polling interval)
 - `mqtt` → `MqttOptions` (broker connection)
 - `controller` → `ControllerOptions` (units, precision, publishing interval, HA discovery toggle)
 

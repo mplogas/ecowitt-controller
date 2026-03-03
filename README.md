@@ -57,7 +57,6 @@ Full configuration with all options and their defaults:
   },
   "ecowitt": {
     "pollingInterval": 30,
-    "autodiscovery": true,
     "calculateValues": true,
     "retries": 2,
     "gateways": [
@@ -84,9 +83,8 @@ Full configuration with all options and their defaults:
 | `mqtt` | `reconnect` | `true` | Auto-reconnect on disconnect |
 | `mqtt` | `reconnectAttempts` | `2` | Reconnect retry count |
 | `ecowitt` | `pollingInterval` | `30` | Subdevice polling interval (seconds) |
-| `ecowitt` | `autodiscovery` | `false` | Auto-discover gateways from incoming data |
 | `ecowitt` | `calculateValues` | `true` | Generate calculated sensor values |
-| `ecowitt` | `gateways` | `[]` | Manual gateway definitions (name, ip, credentials, subdevices) |
+| `ecowitt` | `gateways` | `[]` | Gateway definitions (name, ip, credentials, subdevices) |
 | `ecowitt.gateways[]` | `subdevices` | `false` | Enable subdevice polling (only GW1200, GW2000, GW3000) |
 | `controller` | `precision` | `2` | Decimal places for floating-point values |
 | `controller` | `unit` | `metric` | `metric` or `imperial` |
