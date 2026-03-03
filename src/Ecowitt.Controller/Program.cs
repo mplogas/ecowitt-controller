@@ -34,9 +34,12 @@ public class Program
             .WriteTo.Console()
             .CreateBootstrapLogger();
         
+        var myEnv = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
         var configuration = new ConfigurationBuilder()
             .SetBasePath(File.Exists("/config/appsettings.json") ? "/config" : builder.Environment.ContentRootPath)
             .AddJsonFile("appsettings.json", false, true)
+            .AddJsonFile($"appsettings.{myEnv}.json", true, true)
             .AddEnvironmentVariables()
             .AddUserSecrets(Assembly.GetExecutingAssembly(), true)
             .Build();
