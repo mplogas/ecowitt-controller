@@ -127,12 +127,8 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 var storedGateway = _deviceStore.GetGateway(ip);
                 if (storedGateway == null)
                 {
-                    storedGateway = new Device { IpAddress = ip };
-                    storedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == storedGateway.IpAddress)?.Name ?? storedGateway.IpAddress.Replace('.', '-');
-                    storedGateway.TimestampUtc = DateTime.UtcNow;
-                    storedGateway.DiscoveryUpdate = true;
-                    _deviceStore.UpsertGateway(storedGateway);
-                    await EmitHomeAssistantDiscovery(storedGateway);
+                    _logger.LogWarning("Gateway {Ip} not in store yet. Skipping subdevice update until gateway sends data", ip);
+                    continue;
                 }
 
                 var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);
