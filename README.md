@@ -117,6 +117,8 @@ dotnet run --project Ecowitt.Controller/Ecowitt.Controller.csproj -c Release
 
 With `homeassistantdiscovery` enabled (default), devices and sensors appear automatically in HA via MQTT discovery. Make sure your HA instance is connected to the same MQTT broker.
 
+> **Note:** Gateways and their sensors only appear after the first data push from the Ecowitt device. This depends on the **Upload Interval** configured in your gateway's WebUI or the WS View Plus app (step 4 above). Subdevices are picked up on the next polling cycle after their parent gateway has reported in, so expect an additional delay of up to one `pollingInterval`.
+
 ## Documentation
 
 - [HTTP API](docs/api.md) — Inbound weather data endpoint and outbound gateway polling
