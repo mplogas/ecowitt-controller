@@ -28,13 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{02EA681E-C
 		..\docs\mqtt.md = ..\docs\mqtt.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "old_classes", "old_classes", "{F45EBE6B-D610-44B2-B7ED-B96A65472093}"
-	ProjectSection(SolutionItems) = preProject
-		..\old\Store\DataPublishService.cs = ..\old\Store\DataPublishService.cs
-		..\old\Discovery\DiscoveryPublishService.cs = ..\old\Discovery\DiscoveryPublishService.cs
-		..\old\Subdevice\SubdeviceService.cs = ..\old\Subdevice\SubdeviceService.cs
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
