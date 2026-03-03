@@ -1,6 +1,6 @@
 # Ecowitt Controller
 
-A .NET 8 bridge that connects Ecowitt weather stations and IoT subdevices to MQTT, with native Home Assistant auto-discovery.
+A .NET 10 bridge that connects Ecowitt weather stations and IoT subdevices to MQTT, with native Home Assistant auto-discovery.
 
 ## Features
 
