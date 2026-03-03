@@ -3,6 +3,7 @@ name: Docker Image Build and Push to DockerHub
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -22,19 +23,18 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        # list of Docker images to use as base name for tags
         images: |
           ${{ vars.DOCKERHUB_USERNAME }}/ecowitt-controller
-        # Docker tags to generate
         tags: |
-            type=schedule,enable=true,pattern={{date 'YYYYMMDD-hhmmss' tz='Europe/Berlin'}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=raw,enable={{is_default_branch}},value=latest
-            type=sha,enable=true,format=short      
+            type=sha,enable=true,format=short
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
         context: "{{defaultContext}}:src"
-        #dockerfile: ./Dockerfile
-        push: true
+        push: ${{ github.event_name != 'pull_request' }}
         labels: ${{ steps.meta.outputs.labels }}
         tags: ${{ steps.meta.outputs.tags }}
