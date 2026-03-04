@@ -2,6 +2,6 @@
 {
     public class SubdeviceDataFull : SubdeviceData
     {
-        public Subdevice Subdevice { get; set; }
+        public Subdevice Subdevice { get; set; } = default!;
     }
 }

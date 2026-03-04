@@ -11,20 +11,15 @@ namespace Ecowitt.Controller.Service.Orchestrator
             {
                 case MqttServiceEventType.Started:
                     _logger.LogInformation("MQTT Service started");
-                    _lastMqttServiceState = MqttServiceEventType.Started;
-                    //_mqttServiceStarted.TrySetResult(true);
                     break;
                 case MqttServiceEventType.Stopped:
                     _logger.LogWarning("MQTT Service stopped");
-                    _lastMqttServiceState = MqttServiceEventType.Stopped;
                     break;
                 case MqttServiceEventType.Error:
                     _logger.LogError("MQTT Service error: {MessageMessage}", message.Message);
-                    _lastMqttServiceState = MqttServiceEventType.Error;
                     break;
                 case MqttServiceEventType.Heartbeat:
                     _logger.LogDebug("MQTT Service heartbeat received");
-                    _lastMqttServiceState = MqttServiceEventType.Heartbeat;
                     break;
                 case MqttServiceEventType.Unknown:
                 default:

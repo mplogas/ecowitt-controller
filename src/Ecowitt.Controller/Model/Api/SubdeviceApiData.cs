@@ -8,7 +8,7 @@ public class SubdeviceApiData
     public int RfnetState { get; set; }
     public int Battery { get; set; }
     public int Signal { get; set; }
-    public string GwIp { get; set; }
+    public string GwIp { get; set; } = default!;
     public DateTime TimestampUtc { get; set; }
     public string Payload { get; set; } = string.Empty;
 }

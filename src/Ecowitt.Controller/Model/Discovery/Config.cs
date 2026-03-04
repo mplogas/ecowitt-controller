@@ -5,27 +5,27 @@ namespace Ecowitt.Controller.Model.Discovery;
 public class Config
 {
     [JsonPropertyName("device")]
-    public Device Device { get; set; }
+    public Device Device { get; set; } = default!;
     [JsonPropertyName("device_class")]
     public string? DeviceClass { get; set; }
     [JsonPropertyName("origin")]
-    public Origin Origin { get; set; }  
+    public Origin Origin { get; set; } = default!;
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = default!;
     [JsonPropertyName("retain")]
     public bool? Retain { get; set; }
     [JsonPropertyName("qos")]
     public int? Qos { get; set; }
     [JsonPropertyName("availability_topic")]
-    public string AvailabilityTopic { get; set; }
+    public string AvailabilityTopic { get; set; } = default!;
     [JsonPropertyName("state_topic")]
-    public string StateTopic { get; set; }
+    public string StateTopic { get; set; } = default!;
     [JsonPropertyName("command_topic")]
     public string? CommandTopic { get; set; }
     [JsonPropertyName("unique_id")]
-    public string UniqueId { get; set; }
-    [JsonPropertyName("object_id")]
-    public string ObjectId { get; set; }
+    public string UniqueId { get; set; } = default!;
+    [JsonPropertyName("default_entity_id")]
+    public string DefaultEntityId { get; set; } = default!;
     [JsonPropertyName("unit_of_measurement")]
     public string? UnitOfMeasurement { get; set; }
     [JsonPropertyName("icon")]

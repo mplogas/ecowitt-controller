@@ -222,20 +222,16 @@ namespace Ecowitt.Controller.Service.Orchestrator
             {
                 case HttpServiceEventType.Started:
                     _logger.LogInformation("HTTP Service started");
-                    _lastHttpServiceState = HttpServiceEventType.Started;
                     break;
                 case HttpServiceEventType.Stopped:
                     _logger.LogWarning("HTTP Service stopped");
-                    _lastHttpServiceState = HttpServiceEventType.Stopped;
                     break;
                 case HttpServiceEventType.Error:
                     _logger.LogError("HTTP Service error: {MessageMessage}", message.Message);
-                    _lastHttpServiceState = HttpServiceEventType.Error;
                     break;
                 case HttpServiceEventType.Unknown:
                 default:
                     _logger.LogWarning("Unknown HTTP Service event: {HttpServiceEventType}", message.EventType);
-                    _lastHttpServiceState = HttpServiceEventType.Unknown;
                     break;
             }
 

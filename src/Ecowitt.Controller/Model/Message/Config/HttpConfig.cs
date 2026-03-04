@@ -24,7 +24,7 @@ public class HttpHost
         Password = password;
     }
 
-    public string Host { get; set; }
+    public string Host { get; set; } = string.Empty;
     public int Port { get; set; } = 80;
     public string User { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

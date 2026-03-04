@@ -20,8 +20,6 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
     private readonly MqttOptions _mqttOptions;
     private readonly IMessageBus _messageBus;
     private readonly HttpPublishingService _httpPublishingService;
-    private MqttServiceEventType _lastMqttServiceState = MqttServiceEventType.Unknown;
-    private HttpServiceEventType _lastHttpServiceState = HttpServiceEventType.Unknown;
 
     public Dispatcher(ILogger<Dispatcher> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions, HttpPublishingService httpPublishingService)
     {
