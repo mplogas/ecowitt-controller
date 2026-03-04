@@ -60,14 +60,9 @@ namespace Ecowitt.Controller.Service.Orchestrator
                     sensor.DiscoveryUpdate = true;
                 }
 
-                var firstGateway = _deviceStore.GetGatewaysShort().Count == 0;
-                if (_deviceStore.UpsertGateway(updatedGateway)) 
+                if (_deviceStore.UpsertGateway(updatedGateway))
                 {
                     _logger.LogDebug("gateway added: {Serialize})", JsonSerializer.Serialize(storedGateway));
-                    if (_ecowittOptions is { AutoDiscovery: true, Gateways.Count: 0 } && firstGateway)
-                    {
-                        await EmitHttpConfig();
-                    }
                     await EmitHomeAssistantDiscovery(updatedGateway);
                     await EmitGatewayFull(updatedGateway);
                 }
@@ -132,18 +127,8 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 var storedGateway = _deviceStore.GetGateway(ip);
                 if (storedGateway == null)
                 {
-                    if (_ecowittOptions.AutoDiscovery)
-                    {
-                        _logger.LogWarning("Gateway {Ip} not found while in autodiscovery mode. Not updating subdevices. (Try turning off autodiscovery)", ip);
-                        return;
-                    }
-
-                    storedGateway = new Device { IpAddress = ip };
-                    storedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == storedGateway.IpAddress)?.Name ?? storedGateway.IpAddress.Replace('.', '-');
-                    storedGateway.TimestampUtc = DateTime.UtcNow;
-                    storedGateway.DiscoveryUpdate = true;
-                    _deviceStore.UpsertGateway(storedGateway);
-                    await EmitHomeAssistantDiscovery(storedGateway);
+                    _logger.LogWarning("Gateway {Ip} not in store yet. Skipping subdevice update until gateway sends data", ip);
+                    continue;
                 }
 
                 var subdeviceApiData = message.Subdevices.Where(sd => sd.GwIp == ip);

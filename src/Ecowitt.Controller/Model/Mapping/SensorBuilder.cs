@@ -286,7 +286,7 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "wfc02_status":
                     return BuildIntSensor(propertyName, "WFC02 Status", propertyValue, isDiag: true);
                 case "wfc02rssi":
-                    return BuildIntSensor(propertyName, "WFC02 RSSI", propertyValue, "/5", SensorType.SignalStrength, true);
+                    return BuildIntSensor(propertyName, "WFC02 RSSI", propertyValue, type: SensorType.SignalStrength, isDiag: true);
                 case "wfc02batt":
                     return BuildBatterySensor(propertyName, "WFC02 Battery", propertyValue, true);
                 case "capacity":

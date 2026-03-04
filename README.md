@@ -57,13 +57,13 @@ Full configuration with all options and their defaults:
   },
   "ecowitt": {
     "pollingInterval": 30,
-    "autodiscovery": true,
     "calculateValues": true,
     "retries": 2,
     "gateways": [
       {
         "name": "weatherstation_01",
-        "ip": "192.168.1.101"
+        "ip": "192.168.1.101",
+        "subdevices": true
       }
     ]
   },
@@ -83,9 +83,9 @@ Full configuration with all options and their defaults:
 | `mqtt` | `reconnect` | `true` | Auto-reconnect on disconnect |
 | `mqtt` | `reconnectAttempts` | `2` | Reconnect retry count |
 | `ecowitt` | `pollingInterval` | `30` | Subdevice polling interval (seconds) |
-| `ecowitt` | `autodiscovery` | `false` | Auto-discover gateways from incoming data |
 | `ecowitt` | `calculateValues` | `true` | Generate calculated sensor values |
-| `ecowitt` | `gateways` | `[]` | Manual gateway definitions (name, ip, credentials) |
+| `ecowitt` | `gateways` | `[]` | Gateway definitions (name, ip, credentials, subdevices) |
+| `ecowitt.gateways[]` | `subdevices` | `false` | Enable subdevice polling (only GW1200, GW2000, GW3000) |
 | `controller` | `precision` | `2` | Decimal places for floating-point values |
 | `controller` | `unit` | `metric` | `metric` or `imperial` |
 | `controller` | `homeassistantdiscovery` | `true` | Publish HA MQTT discovery messages |
@@ -116,6 +116,8 @@ dotnet run --project Ecowitt.Controller/Ecowitt.Controller.csproj -c Release
 ### Home Assistant
 
 With `homeassistantdiscovery` enabled (default), devices and sensors appear automatically in HA via MQTT discovery. Make sure your HA instance is connected to the same MQTT broker.
+
+> **Note:** Gateways and their sensors only appear after the first data push from the Ecowitt device. This depends on the **Upload Interval** configured in your gateway's WebUI or the WS View Plus app (step 4 above). Subdevices are picked up on the next polling cycle after their parent gateway has reported in, so expect an additional delay of up to one `pollingInterval`.
 
 ## Documentation
 
