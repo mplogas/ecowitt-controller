@@ -4,8 +4,8 @@ on:
   push:
     branches: [ "main" ]
     tags: [ "v*" ]
-  pull_request:
-    branches: [ "main" ]
+    paths:
+      - "src/**"
   workflow_dispatch:
 
 jobs:
@@ -35,6 +35,6 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: "{{defaultContext}}:src"
-        push: ${{ github.event_name != 'pull_request' }}
+        push: true
         labels: ${{ steps.meta.outputs.labels }}
         tags: ${{ steps.meta.outputs.tags }}
