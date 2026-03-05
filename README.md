@@ -146,6 +146,7 @@ With `homeassistantdiscovery` enabled (default), devices and sensors appear auto
 
 ## Documentation
 
+- [Architecture](docs/architecture.md) — System design, data flow, and message bus topology
 - [HTTP API](docs/api.md) — Inbound weather data endpoint and outbound gateway polling
 - [MQTT Topics](docs/mqtt.md) — Topic structure, payloads, and Home Assistant discovery
 
