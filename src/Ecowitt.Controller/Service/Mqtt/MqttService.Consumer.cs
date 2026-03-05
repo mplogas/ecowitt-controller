@@ -2,13 +2,14 @@
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
-using MQTTnet.Client;
+using MQTTnet;
+using MQTTnet.Formatter;
 
 namespace Ecowitt.Controller.Service.Mqtt
 {
     public partial class MqttService
     {
-        public async Task OnHandle(MqttConfig message)
+        public async Task OnHandle(MqttConfig message, CancellationToken cancellationToken)
         {
             if (_client != null)
             {
@@ -44,7 +45,8 @@ namespace Ecowitt.Controller.Service.Mqtt
             var optionsBuilder = new MqttClientOptionsBuilder()
                 .WithTcpServer(_mqttConfig.Host, _mqttConfig.Port)
                 .WithClientId(_mqttConfig.ClientId)
-                .WithCleanSession();
+                .WithCleanSession()
+                .WithProtocolVersion(_mqttConfig.UseMqtt311 ? MqttProtocolVersion.V311 : MqttProtocolVersion.V500);
             if (!string.IsNullOrWhiteSpace(_mqttConfig.User))
                 optionsBuilder.WithCredentials(_mqttConfig.User, _mqttConfig.Password);
 
@@ -54,12 +56,12 @@ namespace Ecowitt.Controller.Service.Mqtt
             if (_mqttConfig.HomeAssistantDiscovery) await SubscribeHomeAssistant();
         }
 
-        public async Task OnHandle(HomeAssistantDiscoveryEvent message)
+        public async Task OnHandle(HomeAssistantDiscoveryEvent message, CancellationToken cancellationToken)
         {
             await EmitHomeAssistantDiscovery(message.Device);
         }
 
-        public async Task OnHandle(DiscoveryRemovalEvent message)
+        public async Task OnHandle(DiscoveryRemovalEvent message, CancellationToken cancellationToken)
         {
             foreach (var sensor in message.Sensors)
             {
@@ -70,7 +72,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             }
         }
 
-        public async Task OnHandle(DeviceData message)
+        public async Task OnHandle(DeviceData message, CancellationToken cancellationToken)
         {
             if (_client == null || !_client.IsConnected)
             {
@@ -88,7 +90,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(message.GatewayName), message.Timestamp);
         }
 
-        public async Task OnHandle(DeviceDataFull message)
+        public async Task OnHandle(DeviceDataFull message, CancellationToken cancellationToken)
         {
             if (_client == null || !_client.IsConnected)
             {
@@ -107,7 +109,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttGatewayTopic(gateway.Name), message.Timestamp);
         }
 
-        public async Task OnHandle(SubdeviceData message)
+        public async Task OnHandle(SubdeviceData message, CancellationToken cancellationToken)
         {
             if (_client == null || !_client.IsConnected)
             {
@@ -125,7 +127,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             await PublishAvailabilityMessage(MqttPathBuilder.BuildMqttSubdeviceTopic(message.GatewayName, message.SubdeviceId.ToString()), DateTime.UtcNow);
         }
 
-        public async Task OnHandle(SubdeviceDataFull message)
+        public async Task OnHandle(SubdeviceDataFull message, CancellationToken cancellationToken)
         {
             if (_client == null || !_client.IsConnected)
             {

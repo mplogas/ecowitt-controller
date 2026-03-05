@@ -119,7 +119,7 @@ public class Program
 
         builder.Services.AddHostedService(s => s.GetRequiredService<Dispatcher>());
         
-        builder.Services.AddTransient<MqttFactory>();
+        builder.Services.AddTransient<MqttClientFactory>();
         builder.Services.AddHostedService(s => s.GetRequiredService<MqttService>());
         builder.Services.AddHostedService(s => s.GetRequiredService<HttpPublishingService>());
 

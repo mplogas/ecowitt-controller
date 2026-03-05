@@ -5,7 +5,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
 {
     public partial class Dispatcher
     {
-        public Task OnHandle(MqttServiceEvent message)
+        public Task OnHandle(MqttServiceEvent message, CancellationToken cancellationToken)
         {
             switch (message.EventType)
             {
@@ -30,7 +30,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             return Task.CompletedTask;
         }
 
-        public Task OnHandle(MqttConnectionEvent message)
+        public Task OnHandle(MqttConnectionEvent message, CancellationToken cancellationToken)
         {
             switch (message.EventType)
             {
@@ -52,7 +52,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             return Task.CompletedTask;
         }
 
-        public async Task OnHandle(HomeAssistantStatusEvent message)
+        public async Task OnHandle(HomeAssistantStatusEvent message, CancellationToken cancellationToken)
         {
             switch (message.Status)
             {

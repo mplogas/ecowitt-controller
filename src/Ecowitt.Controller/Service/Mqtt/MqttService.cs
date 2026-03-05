@@ -8,7 +8,6 @@ using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
 using MQTTnet;
-using MQTTnet.Client;
 using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Mqtt;
@@ -16,7 +15,7 @@ namespace Ecowitt.Controller.Service.Mqtt;
 public partial class MqttService : BackgroundService, IHostedLifecycleService, IConsumer<MqttConfig>, IConsumer<HomeAssistantDiscoveryEvent>, IConsumer<DiscoveryRemovalEvent>, IConsumer<DeviceData>, IConsumer<DeviceDataFull>, IConsumer<SubdeviceData>, IConsumer<SubdeviceDataFull>
 {
     private readonly ILogger<MqttService> _logger;
-    private readonly MqttFactory _factory;
+    private readonly MqttClientFactory _factory;
     private readonly IMessageBus _messageBus;
     private IMqttClient? _client;
     private bool _isConnecting;
@@ -25,7 +24,7 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
     private const string HaStatusTopic = "homeassistant/status";
 
 
-    public MqttService(ILogger<MqttService> logger, MqttFactory factory, IMessageBus messageBus)
+    public MqttService(ILogger<MqttService> logger, MqttClientFactory factory, IMessageBus messageBus)
     {
         _logger = logger;
         _factory = factory;

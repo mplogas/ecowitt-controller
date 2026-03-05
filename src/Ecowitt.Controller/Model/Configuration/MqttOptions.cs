@@ -10,5 +10,6 @@ public class MqttOptions
     public string ClientId { get; set; } = "ecowitt-controller";
     public bool Reconnect { get; set; } = true;
     public int ReconnectAttempts { get; set; } = 2;
+    public bool UseMqtt311 { get; set; }
     
 }

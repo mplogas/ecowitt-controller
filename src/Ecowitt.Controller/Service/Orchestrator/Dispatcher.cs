@@ -87,6 +87,7 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
             ClientId = _mqttOptions.ClientId,
             BaseTopic = _mqttOptions.BaseTopic,
             ReconnectAttempts = _mqttOptions.ReconnectAttempts,
+            UseMqtt311 = _mqttOptions.UseMqtt311,
             HomeAssistantDiscovery = _controllerOptions.HomeAssistantDiscovery,
             Precision = _controllerOptions.Precision,
             Units = _controllerOptions.Units
