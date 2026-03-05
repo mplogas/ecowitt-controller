@@ -53,7 +53,8 @@ Full configuration with all options and their defaults:
     "basetopic": "ecowitt",
     "clientId": "ecowitt-controller",
     "reconnect": true,
-    "reconnectAttempts": 2
+    "reconnectAttempts": 2,
+    "useMqtt311": false
   },
   "ecowitt": {
     "pollingInterval": 30,
@@ -82,6 +83,7 @@ Full configuration with all options and their defaults:
 | `mqtt` | `basetopic` | `ecowitt` | Root MQTT topic prefix |
 | `mqtt` | `reconnect` | `true` | Auto-reconnect on disconnect |
 | `mqtt` | `reconnectAttempts` | `2` | Reconnect retry count |
+| `mqtt` | `useMqtt311` | `false` | Use MQTT 3.1.1 instead of MQTT 5.0 |
 | `ecowitt` | `pollingInterval` | `30` | Subdevice polling interval (seconds) |
 | `ecowitt` | `calculateValues` | `true` | Generate calculated sensor values |
 | `ecowitt` | `gateways` | `[]` | Gateway definitions (name, ip, credentials, subdevices) |
@@ -92,12 +94,35 @@ Full configuration with all options and their defaults:
 
 ### Run with Docker
 
+Docker images are available on [Docker Hub](https://hub.docker.com/r/mplogas/ecowitt-controller/tags). The container expects its configuration at `/config/appsettings.json`.
+
 ```bash
 docker run -d --name ecowitt-controller \
-  -v /path/to/appsettings.json:/config/appsettings.json:ro \
+  -v /path/to/config:/config \
   -p 8080:8080 \
+  --restart always \
   mplogas/ecowitt-controller:latest
 ```
+
+Place your `appsettings.json` in the host directory you bind-mount to `/config`.
+
+#### Docker Compose
+
+```yaml
+services:
+  ecowitt-controller:
+    image: mplogas/ecowitt-controller:latest
+    container_name: ecowitt-controller
+    restart: always
+    volumes:
+      - type: bind
+        source: /path/to/config
+        target: /config
+    ports:
+      - "8080:8080"
+```
+
+Port `8080` must be reachable by your Ecowitt gateway for weather data uploads. If your gateway is on a specific VLAN or subnet, bind to the appropriate interface IP (e.g. `192.168.1.10:8080:8080`).
 
 ### Run from Source
 
