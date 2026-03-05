@@ -67,13 +67,10 @@ public class Program
         builder.Services.AddSingleton<HttpPublishingService>();
         builder.Services.AddSingleton<Dispatcher>();
 
-        var sp = builder.Services.BuildServiceProvider();
-
         builder.Services.AddSlimMessageBus(smb =>
         {
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer(jsonSerializerSettings: JsonSettings);
-            smb.WithDependencyResolver(sp);
 
             // statemachine -> mqttservice
             smb.Produce<MqttConfig>(x => x.DefaultTopic("config-mqtt"));
@@ -122,7 +119,7 @@ public class Program
 
         builder.Services.AddHostedService(s => s.GetRequiredService<Dispatcher>());
         
-        builder.Services.AddTransient<MqttFactory>();
+        builder.Services.AddTransient<MqttClientFactory>();
         builder.Services.AddHostedService(s => s.GetRequiredService<MqttService>());
         builder.Services.AddHostedService(s => s.GetRequiredService<HttpPublishingService>());
 

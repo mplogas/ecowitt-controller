@@ -5,26 +5,21 @@ namespace Ecowitt.Controller.Service.Orchestrator
 {
     public partial class Dispatcher
     {
-        public Task OnHandle(MqttServiceEvent message)
+        public Task OnHandle(MqttServiceEvent message, CancellationToken cancellationToken)
         {
             switch (message.EventType)
             {
                 case MqttServiceEventType.Started:
                     _logger.LogInformation("MQTT Service started");
-                    _lastMqttServiceState = MqttServiceEventType.Started;
-                    //_mqttServiceStarted.TrySetResult(true);
                     break;
                 case MqttServiceEventType.Stopped:
                     _logger.LogWarning("MQTT Service stopped");
-                    _lastMqttServiceState = MqttServiceEventType.Stopped;
                     break;
                 case MqttServiceEventType.Error:
                     _logger.LogError("MQTT Service error: {MessageMessage}", message.Message);
-                    _lastMqttServiceState = MqttServiceEventType.Error;
                     break;
                 case MqttServiceEventType.Heartbeat:
                     _logger.LogDebug("MQTT Service heartbeat received");
-                    _lastMqttServiceState = MqttServiceEventType.Heartbeat;
                     break;
                 case MqttServiceEventType.Unknown:
                 default:
@@ -35,7 +30,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             return Task.CompletedTask;
         }
 
-        public Task OnHandle(MqttConnectionEvent message)
+        public Task OnHandle(MqttConnectionEvent message, CancellationToken cancellationToken)
         {
             switch (message.EventType)
             {
@@ -57,7 +52,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             return Task.CompletedTask;
         }
 
-        public async Task OnHandle(HomeAssistantStatusEvent message)
+        public async Task OnHandle(HomeAssistantStatusEvent message, CancellationToken cancellationToken)
         {
             switch (message.Status)
             {

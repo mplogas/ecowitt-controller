@@ -11,7 +11,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
 {
     public partial class Dispatcher : IConsumer<HttpServiceEvent>
     {
-        public async Task OnHandle(SubdeviceApiCommand message)
+        public async Task OnHandle(SubdeviceApiCommand message, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Received SubdeviceCommand: {MessageCmd} for device {MessageId}", message.Cmd, message.Id);
 
@@ -44,7 +44,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             await _httpPublishingService.SendSubdeviceCommand(gw.IpAddress, message, subdevice.Model);
         }
 
-        public async Task OnHandle(GatewayApiData message)
+        public async Task OnHandle(GatewayApiData message, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Received ApiData: {MessageModel} ({MessagePasskey}) \n {MessagePayload}", message.Model, message.PASSKEY, message.Payload);
             var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
@@ -119,7 +119,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
             //LogStorageState();
         }
 
-        public async Task OnHandle(SubdeviceApiAggregate message)
+        public async Task OnHandle(SubdeviceApiAggregate message, CancellationToken cancellationToken)
         {
             var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);
             foreach (var ip in ips)
@@ -216,26 +216,22 @@ namespace Ecowitt.Controller.Service.Orchestrator
         }
 
 
-        public Task OnHandle(HttpServiceEvent message)
+        public Task OnHandle(HttpServiceEvent message, CancellationToken cancellationToken)
         {
             switch (message.EventType)
             {
                 case HttpServiceEventType.Started:
                     _logger.LogInformation("HTTP Service started");
-                    _lastHttpServiceState = HttpServiceEventType.Started;
                     break;
                 case HttpServiceEventType.Stopped:
                     _logger.LogWarning("HTTP Service stopped");
-                    _lastHttpServiceState = HttpServiceEventType.Stopped;
                     break;
                 case HttpServiceEventType.Error:
                     _logger.LogError("HTTP Service error: {MessageMessage}", message.Message);
-                    _lastHttpServiceState = HttpServiceEventType.Error;
                     break;
                 case HttpServiceEventType.Unknown:
                 default:
                     _logger.LogWarning("Unknown HTTP Service event: {HttpServiceEventType}", message.EventType);
-                    _lastHttpServiceState = HttpServiceEventType.Unknown;
                     break;
             }
 

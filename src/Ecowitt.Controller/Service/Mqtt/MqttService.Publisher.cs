@@ -46,7 +46,7 @@ namespace Ecowitt.Controller.Service.Mqtt
         private async Task PublishMessage(string topic, dynamic payload)
         {
             if (!await Publish($"{_mqttConfig?.BaseTopic}/{topic}",
-                    JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping })))
+                    JsonSerializer.Serialize(payload, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }), retain: true))
                 _logger.LogWarning("Failed to publish message to topic {MqttConfigBaseTopic}/{Topic}. Is the client connected?", _mqttConfig?.BaseTopic, topic);
         }
 
@@ -54,7 +54,7 @@ namespace Ecowitt.Controller.Service.Mqtt
         {
             var available = DateTime.UtcNow.Subtract(timestamp) < TimeSpan.FromSeconds(300) ? "online" : "offline";
 
-            if (!await Publish($"{_mqttConfig?.BaseTopic}/{topic}/availability", available))
+            if (!await Publish($"{_mqttConfig?.BaseTopic}/{topic}/availability", available, retain: true))
                 _logger.LogWarning("Failed to publish message to topic {MqttConfigBaseTopic}/{Topic}. Is the client connected?", _mqttConfig?.BaseTopic, topic);
         }
 

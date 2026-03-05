@@ -3,8 +3,8 @@ namespace Ecowitt.Controller.Model;
 public class Device
 {
     // important properties
-    public string IpAddress { get; set; }
-    public string Name { get; set; }
+    public string IpAddress { get; set; } = default!;
+    public string Name { get; set; } = default!;
     public DateTime TimestampUtc { get; set; } //= DateTime.UtcNow;
     public List<Subdevice> Subdevices { get; set; } = new();
     public bool DiscoveryUpdate { get; set; }

@@ -2,10 +2,7 @@ name: Docker Image Build and Push to DockerHub
 
 on:
   push:
-    branches: [ "main" ]
     tags: [ "v*" ]
-    paths:
-      - "src/**"
   workflow_dispatch:
 
 jobs:
@@ -29,8 +26,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,enable={{is_default_branch}},value=latest
-            type=sha,enable=true,format=short
+            type=raw,value=latest
     - name: Build and push
       uses: docker/build-push-action@v5
       with:

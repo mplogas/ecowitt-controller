@@ -2,6 +2,6 @@
 {
     public class DeviceDataFull : DeviceData
     {
-        public Device Device { get; set; }
+        public Device Device { get; set; } = default!;
     }
 }

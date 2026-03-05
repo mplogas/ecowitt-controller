@@ -57,7 +57,7 @@
             if (winddirection != null)
             {
                 var compass = BuildStringSensor("winddir-comp", "Wind Direction (Compass)", CalculateWindDirection(winddirection.AsInt()));
-                device.Sensors.Add(compass);
+                if (compass != null) device.Sensors.Add(compass);
             }
 
             var sensorsToAdd = new List<ISensor>();
@@ -66,16 +66,16 @@
             {
                 var s = sensor as Sensor;
                 return BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm25Aqi24h(s?.AsDouble() ?? 0));
-            }));
+            }).OfType<ISensor>());
 
             var pm10 = device.Sensors.Where(s => s.Name.StartsWith("pm10_avg_24h") || s.Name.StartsWith("pm10_24h"));
             sensorsToAdd.AddRange(pm10.Select(sensor =>
             {
                 var s = sensor as Sensor;
                 return BuildStringSensor($"{sensor.Name}-aqi", $"{sensor.Alias} AQI", CalculatePm10Aqi24h(s?.AsDouble() ?? 0));
-            }));
+            }).OfType<ISensor>());
 
-            device.Sensors.AddRange(sensorsToAdd.Where(s => s != null));
+            device.Sensors.AddRange(sensorsToAdd);
         }
 
         // shout out to wikipedia for the formulas! <3

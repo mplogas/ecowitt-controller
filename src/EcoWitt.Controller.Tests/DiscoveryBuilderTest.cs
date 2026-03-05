@@ -72,7 +72,7 @@ public class DiscoveryBuilderTest
 
         Assert.That(config.Name, Is.EqualTo("Availability"));
         Assert.That(config.UniqueId, Is.EqualTo("ec_gw1_availability"));
-        Assert.That(config.ObjectId, Is.EqualTo("ec_gw1_availability"));
+        Assert.That(config.DefaultEntityId, Is.EqualTo("ec_gw1_availability"));
         Assert.That(config.StateTopic, Is.EqualTo("ecowitt/gw1/availability"));
         Assert.That(config.Qos, Is.EqualTo(1));
         Assert.That(config.Retain, Is.False);
