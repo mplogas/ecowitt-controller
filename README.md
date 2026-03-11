@@ -94,7 +94,7 @@ Full configuration with all options and their defaults:
 
 ### Run with Docker
 
-Docker images are available on [Docker Hub](https://hub.docker.com/r/mplogas/ecowitt-controller/tags). The container expects its configuration at `/config/appsettings.json`.
+Multi-architecture images (amd64, arm64) are available on [Docker Hub](https://hub.docker.com/r/mplogas/ecowitt-controller/tags). The container expects its configuration at `/config/appsettings.json`.
 
 ```bash
 docker run -d --name ecowitt-controller \
@@ -124,6 +124,17 @@ services:
 
 Port `8080` must be reachable by your Ecowitt gateway for weather data uploads. If your gateway is on a specific VLAN or subnet, bind to the appropriate interface IP (e.g. `192.168.1.10:8080:8080`).
 
+### Home Assistant Add-on
+
+For Home Assistant OS / Supervised installations, Ecowitt Controller is available as a native add-on. This handles configuration, networking, and MQTT broker discovery automatically.
+
+1. Add the add-on repository to your HA instance: `https://github.com/mplogas/ha-addon-ecowitt-controller`
+2. Install **Ecowitt Controller** from the add-on store
+3. Configure your gateways in the add-on settings
+4. Start the add-on
+
+The add-on runs on the host network and auto-discovers the Mosquitto broker if the official Mosquitto add-on is installed. See the [add-on repository](https://github.com/mplogas/ha-addon-ecowitt-controller) for full documentation.
+
 ### Run from Source
 
 ```bash
@@ -138,9 +149,11 @@ dotnet run --project Ecowitt.Controller/Ecowitt.Controller.csproj -c Release
 3. Set protocol to **Ecowitt**, enter the controller's IP, path `/data/report`, port `8080`
 4. Set the posting interval (e.g. 30 seconds)
 
-### Home Assistant
+### Home Assistant Integration
 
 With `homeassistantdiscovery` enabled (default), devices and sensors appear automatically in HA via MQTT discovery. Make sure your HA instance is connected to the same MQTT broker.
+
+> **Tip:** Running Home Assistant OS or Supervised? Use the [HA add-on](#home-assistant-add-on) instead for a simpler setup.
 
 > **Note:** Gateways and their sensors only appear after the first data push from the Ecowitt device. This depends on the **Upload Interval** configured in your gateway's WebUI or the WS View Plus app (step 4 above). Subdevices are picked up on the next polling cycle after their parent gateway has reported in, so expect an additional delay of up to one `pollingInterval`.
 
