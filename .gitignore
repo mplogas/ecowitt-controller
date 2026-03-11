@@ -402,3 +402,4 @@ FodyWeavers.xsd
 /.continue/mcpServers
 /.vscode
 CLAUDE.md
+src/Ecowitt.Controller/appsettings.Development.json
