@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{B3
 		..\diagrams.drawio = ..\diagrams.drawio
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
+		..\.github\workflows\main.yml = ..\.github\workflows\main.yml
+		..\CONTRIBUTING.md = ..\CONTRIBUTING.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{C746A790-DCB6-46A6-A74E-DF1A4FD6994F}"
@@ -26,6 +28,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{02EA681E-C
 	ProjectSection(SolutionItems) = preProject
 		..\docs\api.md = ..\docs\api.md
 		..\docs\mqtt.md = ..\docs\mqtt.md
+		..\docs\architecture.md = ..\docs\architecture.md
 	EndProjectSection
 EndProject
 Global
