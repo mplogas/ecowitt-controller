@@ -69,6 +69,7 @@ public class Program
 
         builder.Services.AddSlimMessageBus(smb =>
         {
+            smb.PerMessageScopeEnabled(true);
             smb.WithProviderMemory(cfg => { cfg.EnableMessageSerialization = true; });
             smb.AddJsonSerializer(jsonSerializerSettings: JsonSettings);
 
