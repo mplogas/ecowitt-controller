@@ -28,3 +28,16 @@ services:
         source: /etc/localtime
         target: /etc/localtime
         read_only: true
+
+#  ecowitt-controller-dev:
+#    container_name: ecowitt-controller-dev
+#    restart: unless-stopped
+#    image: "mplogas/ecowitt-controller:dev-latest"
+#    depends_on:
+#      - mosquitto-dev
+#    ports:
+#      - 5656:8080
+#    volumes:
+#      - type: bind
+#        source: ~/docker/config/ecowitt-controller
+#        target: /config

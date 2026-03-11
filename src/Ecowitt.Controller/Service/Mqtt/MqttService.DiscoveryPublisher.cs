@@ -21,7 +21,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-            await PublishDiscoveryMessage(MqttPathBuilder.Sanitize($"sensor/{gw.Name}"), config);
+            await PublishDiscoveryMessage("sensor", MqttPathBuilder.Sanitize($"sensor/{gw.Name}"), config);
         }
 
         private async Task PublishSubdeviceDiscovery(Device gw, Ecowitt.Controller.Model.Subdevice subdevice)
@@ -33,7 +33,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-            await PublishDiscoveryMessage(MqttPathBuilder.Sanitize($"sensor/{subdevice.Nickname}"), config);
+            await PublishDiscoveryMessage("sensor", MqttPathBuilder.Sanitize($"sensor/{subdevice.Nickname}"), config);
         }
 
         private async Task PublishSubdeviceSwitchDiscovery(Device gw, Ecowitt.Controller.Model.Subdevice subdevice)
@@ -47,7 +47,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             var config =
                 DiscoveryBuilder.BuildSwitchConfig(device, _origin, "switch", id, statetopic, cmdTopic, valueTemplate: valueTemplate);
 
-            await PublishDiscoveryMessage(MqttPathBuilder.Sanitize($"switch/{subdevice.Nickname}"), config);
+            await PublishDiscoveryMessage("switch", MqttPathBuilder.Sanitize($"switch/{subdevice.Nickname}"), config);
         }
 
         private async Task PublishSensorDiscovery(Device gw, ISensor sensor)
@@ -83,13 +83,14 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass);
 
-            await PublishDiscoveryMessage(MqttPathBuilder.Sanitize($"{sensorClassTopic}/{device.Name}_{sensor.Name}"), config);
+            await PublishDiscoveryMessage(sensorClassTopic, MqttPathBuilder.Sanitize($"{sensorClassTopic}/{device.Name}_{sensor.Name}"), config);
         }
 
-        private async Task PublishDiscoveryMessage(string topic, Config config)
+        private async Task PublishDiscoveryMessage(string domain, string topic, Config config)
         {
             if (_client is { IsConnected: true })
             {
+                config.DefaultEntityId = $"{domain}.{config.DefaultEntityId}";
                 topic = $"homeassistant/{topic}/config";
 
                 if (config.DeviceClass != null &&
