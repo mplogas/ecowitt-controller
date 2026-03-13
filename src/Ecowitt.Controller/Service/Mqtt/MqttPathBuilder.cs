@@ -4,57 +4,66 @@ public static class MqttPathBuilder
 {
     public static string BuildMqttGatewayTopic(string gwName)
     {
-        return Sanitize(gwName);
+        return SanitizeSegment(gwName);
     }
 
     public static string BuildMqttGatewaySensorTopic(string gwName, string sensorName)
     {
-        return Sanitize($"{gwName}/sensors/{sensorName}");
+        return $"{SanitizeSegment(gwName)}/sensors/{SanitizeSegment(sensorName)}";
     }
 
     public static string BuildMqttGatewayDiagnosticTopic(string gwName, string sensorName)
     {
-        return Sanitize($"{gwName}/diag/{sensorName}");
+        return $"{SanitizeSegment(gwName)}/diag/{SanitizeSegment(sensorName)}";
     }
 
     public static string BuildMqttSubdeviceTopic(string gwName, string subdeviceName)
     {
-        return Sanitize($"{gwName}/subdevices/{subdeviceName}");
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}";
     }
 
     public static string BuildMqttSubdeviceSensorTopic(string gwName, string subdeviceName, string sensorName)
     {
-        return Sanitize($"{gwName}/subdevices/{subdeviceName}/sensors/{sensorName}");
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/sensors/{SanitizeSegment(sensorName)}";
     }
-
 
     public static string BuildMqttSubdeviceDiagnosticTopic(string gwName, string subdeviceName, string sensorName)
     {
-        return Sanitize($"{gwName}/subdevices/{subdeviceName}/diag/{sensorName}");
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/diag/{SanitizeSegment(sensorName)}";
     }
 
     public static string BuildMqttSubdeviceCommandTopic(string gwName, string subdeviceName)
     {
-        return Sanitize($"{gwName}/subdevices/{subdeviceName}/cmd");
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/cmd";
     }
 
     public static string BuildMqttSubdeviceCommandTopic()
     {
-        return Sanitize($"+/subdevices/+/cmd");
+        return "+/subdevices/+/cmd";
     }
 
     public static string BuildMqttSubdeviceHACommandTopic(string gwName, string subdeviceName)
     {
-        return Sanitize($"{gwName}/subdevices/{subdeviceName}/cmd/homeassistant");
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/cmd/homeassistant";
     }
 
     public static string BuildMqttSubdeviceHACommandTopic()
     {
-        return Sanitize($"+/subdevices/+/cmd/homeassistant");
+        return "+/subdevices/+/cmd/homeassistant";
     }
 
     public static string Sanitize(string input)
     {
         return input.Replace(' ', '-').ToLowerInvariant();
+    }
+
+    public static string SanitizeSegment(string input)
+    {
+        return input
+            .Replace(' ', '-')
+            .Replace('/', '-')
+            .Replace('#', '-')
+            .Replace('+', '-')
+            .ToLowerInvariant();
     }
 }

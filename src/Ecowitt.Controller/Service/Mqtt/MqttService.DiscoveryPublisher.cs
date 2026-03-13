@@ -21,7 +21,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-            await PublishDiscoveryMessage("sensor", MqttPathBuilder.Sanitize($"sensor/{gw.Name}"), config);
+            await PublishDiscoveryMessage("sensor", $"sensor/{MqttPathBuilder.SanitizeSegment(gw.Name)}", config);
         }
 
         private async Task PublishSubdeviceDiscovery(Device gw, Ecowitt.Controller.Model.Subdevice subdevice)
@@ -33,7 +33,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var config = DiscoveryBuilder.BuildGatewayConfig(device, _origin, "Availability", id, availabilityTopic, availabilityTopic);
 
-            await PublishDiscoveryMessage("sensor", MqttPathBuilder.Sanitize($"sensor/{subdevice.Nickname}"), config);
+            await PublishDiscoveryMessage("sensor", $"sensor/{MqttPathBuilder.SanitizeSegment(subdevice.Nickname)}", config);
         }
 
         private async Task PublishSubdeviceSwitchDiscovery(Device gw, Ecowitt.Controller.Model.Subdevice subdevice)
@@ -47,7 +47,7 @@ namespace Ecowitt.Controller.Service.Mqtt
             var config =
                 DiscoveryBuilder.BuildSwitchConfig(device, _origin, "switch", id, statetopic, cmdTopic, valueTemplate: valueTemplate);
 
-            await PublishDiscoveryMessage("switch", MqttPathBuilder.Sanitize($"switch/{subdevice.Nickname}"), config);
+            await PublishDiscoveryMessage("switch", $"switch/{MqttPathBuilder.SanitizeSegment(subdevice.Nickname)}", config);
         }
 
         private async Task PublishSensorDiscovery(Device gw, ISensor sensor)
@@ -83,7 +83,7 @@ namespace Ecowitt.Controller.Service.Mqtt
 
             var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass);
 
-            await PublishDiscoveryMessage(sensorClassTopic, MqttPathBuilder.Sanitize($"{sensorClassTopic}/{device.Name}_{sensor.Name}"), config);
+            await PublishDiscoveryMessage(sensorClassTopic, $"{sensorClassTopic}/{MqttPathBuilder.SanitizeSegment($"{device.Name}_{sensor.Name}")}", config);
         }
 
         private async Task PublishDiscoveryMessage(string domain, string topic, Config config)

@@ -44,7 +44,8 @@ namespace Ecowitt.Controller.Service.Mqtt
             else if (topic.EndsWith("cmd/homeassistant"))
             {
                 // commands coming from home assistant
-                if (int.TryParse(topic.Split('/')[3], out var result))
+                var parts = topic.Split('/');
+                if (parts.Length > 3 && int.TryParse(parts[3], out var result))
                 {
                     var cmd = payload.Equals("ON", StringComparison.InvariantCultureIgnoreCase) ? Command.Start : Command.Stop; //I know, everything that's not "ON" is "OFF"
                     await _messageBus.Publish(new SubdeviceApiCommand() { Cmd = cmd, Id = result });

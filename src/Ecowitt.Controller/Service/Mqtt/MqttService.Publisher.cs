@@ -76,9 +76,9 @@ namespace Ecowitt.Controller.Service.Mqtt
                     _logger.LogDebug("Message {message} ", message);
                     return true;
                 }
-                else _logger.LogWarning("Failed to publish message {Message} to topic {Topic}. Reason: {MqttClientPublishReasonCode}", message, topic, result.ReasonCode);
+                else _logger.LogWarning("Failed to publish message to topic {Topic}. Reason: {MqttClientPublishReasonCode}", topic, result.ReasonCode);
             }
-            else _logger.LogWarning("Can't publish message {Message} to topic {Topic}. Client not connected.", message, topic);
+            else _logger.LogWarning("Can't publish message to topic {Topic}. Client not connected.", topic);
             return false;
         }
     }
