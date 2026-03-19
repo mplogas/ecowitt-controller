@@ -52,11 +52,6 @@ public static class MqttPathBuilder
         return "+/subdevices/+/cmd/homeassistant";
     }
 
-    public static string Sanitize(string input)
-    {
-        return input.Replace(' ', '-').ToLowerInvariant();
-    }
-
     public static string SanitizeSegment(string input)
     {
         return input

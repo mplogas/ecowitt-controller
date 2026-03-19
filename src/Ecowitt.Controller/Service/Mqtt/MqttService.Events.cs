@@ -44,8 +44,11 @@ namespace Ecowitt.Controller.Service.Mqtt
             else if (topic.EndsWith("cmd/homeassistant"))
             {
                 // commands coming from home assistant
+                // find the subdevice id relative to the "subdevices" segment, not a fixed index,
+                // so multi-segment base topics (e.g. "home/ecowitt") don't break parsing
                 var parts = topic.Split('/');
-                if (parts.Length > 3 && int.TryParse(parts[3], out var result))
+                var subdevicesIndex = Array.IndexOf(parts, "subdevices");
+                if (subdevicesIndex >= 0 && subdevicesIndex + 1 < parts.Length && int.TryParse(parts[subdevicesIndex + 1], out var result))
                 {
                     var cmd = payload.Equals("ON", StringComparison.InvariantCultureIgnoreCase) ? Command.Start : Command.Stop; //I know, everything that's not "ON" is "OFF"
                     await _messageBus.Publish(new SubdeviceApiCommand() { Cmd = cmd, Id = result });
