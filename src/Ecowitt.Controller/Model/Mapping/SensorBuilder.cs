@@ -113,8 +113,9 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "soilad14":
                 case "soilad15":
                 case "soilad16":
+                    // soilad is a unitless raw probe ADC reading used to derive soilmoisture, not user-facing data.
                     number = GetNumber(propertyName);
-                    return BuildIntSensor(propertyName, $"Soil Admittance {number}", propertyValue, "mS");
+                    return BuildIntSensor(propertyName, $"Soil Admittance {number}", propertyValue, isDiag: true);
                 case "pm25_ch1":
                 case "pm25_ch2":
                 case "pm25_ch3":

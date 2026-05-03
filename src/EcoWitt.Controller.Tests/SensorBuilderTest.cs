@@ -189,7 +189,8 @@ public class SensorBuilderTest
         var sensor = SensorBuilder.BuildSensor("soilad2", "123");
         Assert.That(sensor, Is.Not.Null);
         Assert.That(sensor!.Alias, Is.EqualTo("Soil Admittance 2"));
-        Assert.That(sensor.UnitOfMeasurement, Is.EqualTo("mS"));
+        Assert.That(sensor.UnitOfMeasurement, Is.Empty);
+        Assert.That(sensor.SensorCategory, Is.EqualTo(SensorCategory.Diagnostic));
     }
 
     [Test]
@@ -207,6 +208,7 @@ public class SensorBuilderTest
         var sensor = SensorBuilder.BuildSensor("soilad16", "180");
         Assert.That(sensor, Is.Not.Null);
         Assert.That(sensor!.Alias, Is.EqualTo("Soil Admittance 16"));
+        Assert.That(sensor.SensorCategory, Is.EqualTo(SensorCategory.Diagnostic));
     }
 
     [Test]
