@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{B3
 		..\diagrams.drawio = ..\diagrams.drawio
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
-		..\.github\workflows\main.yml = ..\.github\workflows\main.yml
 		..\CONTRIBUTING.md = ..\CONTRIBUTING.md
 	EndProjectSection
 EndProject
@@ -29,6 +28,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{02EA681E-C
 		..\docs\api.md = ..\docs\api.md
 		..\docs\mqtt.md = ..\docs\mqtt.md
 		..\docs\architecture.md = ..\docs\architecture.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Github", "Github", "{BEB106CA-DDE3-4277-934E-A7E2910187D7}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\dev.yml = ..\.github\workflows\dev.yml
+		..\.github\workflows\main.yml = ..\.github\workflows\main.yml
 	EndProjectSection
 EndProject
 Global

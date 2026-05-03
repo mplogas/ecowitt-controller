@@ -74,20 +74,38 @@ public class MqttPathBuilderTest
     }
 
     [Test]
-    public void Sanitize_SpacesToHyphens()
+    public void SanitizeSegment_SpacesToHyphens()
     {
-        Assert.That(MqttPathBuilder.Sanitize("My Gateway Name"), Is.EqualTo("my-gateway-name"));
+        Assert.That(MqttPathBuilder.SanitizeSegment("My Gateway Name"), Is.EqualTo("my-gateway-name"));
     }
 
     [Test]
-    public void Sanitize_ToLowercase()
+    public void SanitizeSegment_ToLowercase()
     {
-        Assert.That(MqttPathBuilder.Sanitize("GW2000A"), Is.EqualTo("gw2000a"));
+        Assert.That(MqttPathBuilder.SanitizeSegment("GW2000A"), Is.EqualTo("gw2000a"));
     }
 
     [Test]
-    public void Sanitize_AlreadyClean()
+    public void SanitizeSegment_StripsSlash()
     {
-        Assert.That(MqttPathBuilder.Sanitize("gw1/sensors/tempf"), Is.EqualTo("gw1/sensors/tempf"));
+        Assert.That(MqttPathBuilder.SanitizeSegment("valve/test"), Is.EqualTo("valve-test"));
+    }
+
+    [Test]
+    public void SanitizeSegment_StripsHash()
+    {
+        Assert.That(MqttPathBuilder.SanitizeSegment("sensor#1"), Is.EqualTo("sensor-1"));
+    }
+
+    [Test]
+    public void SanitizeSegment_StripsPlus()
+    {
+        Assert.That(MqttPathBuilder.SanitizeSegment("temp+humidity"), Is.EqualTo("temp-humidity"));
+    }
+
+    [Test]
+    public void SanitizeSegment_StripsAllWildcards()
+    {
+        Assert.That(MqttPathBuilder.SanitizeSegment("a/b+c#d E"), Is.EqualTo("a-b-c-d-e"));
     }
 }
