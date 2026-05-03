@@ -233,8 +233,8 @@ namespace Ecowitt.Controller.Model.Mapping
 
         private static int GetNumber(string propertyName)
         {
-            const string pattern = @"^[a-zA-Z_0-9]*(\d+)$";
-            var m = Regex.Match(propertyName, pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            const string pattern = @"(\d+)$";
+            var m = Regex.Match(propertyName, pattern, RegexOptions.Compiled);
             return m.Success ? int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture) : -1;
         }
 

@@ -112,6 +112,26 @@ public class DiscoveryBuilderTest
     }
 
     [Test]
+    public void BuildSensorConfig_WithDisplayPrecision_SetsField()
+    {
+        var device = DiscoveryBuilder.BuildDevice("gw1");
+        var origin = DiscoveryBuilder.BuildOrigin();
+        var config = DiscoveryBuilder.BuildSensorConfig(device, origin, "Soil Battery 1", "ec_gw1_soilbatt1_voltage", "voltage", "ecowitt/gw1/diag/soil-battery-1", unitOfMeasurement: "V", displayPrecision: 2);
+
+        Assert.That(config.SuggestedDisplayPrecision, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void BuildSensorConfig_WithoutDisplayPrecision_FieldIsNull()
+    {
+        var device = DiscoveryBuilder.BuildDevice("gw1");
+        var origin = DiscoveryBuilder.BuildOrigin();
+        var config = DiscoveryBuilder.BuildSensorConfig(device, origin, "Indoor Temperature", "ec_gw1_tempinf_temperature", "temperature", "ecowitt/gw1/sensors/indoor-temperature", unitOfMeasurement: "°C");
+
+        Assert.That(config.SuggestedDisplayPrecision, Is.Null);
+    }
+
+    [Test]
     public void BuildSwitchConfig()
     {
         var device = DiscoveryBuilder.BuildDevice("valve1");

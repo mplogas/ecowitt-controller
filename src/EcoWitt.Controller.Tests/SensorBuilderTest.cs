@@ -189,7 +189,35 @@ public class SensorBuilderTest
         var sensor = SensorBuilder.BuildSensor("soilad2", "123");
         Assert.That(sensor, Is.Not.Null);
         Assert.That(sensor!.Alias, Is.EqualTo("Soil Admittance 2"));
-        Assert.That(sensor.UnitOfMeasurement, Is.EqualTo("mS"));
+        Assert.That(sensor.UnitOfMeasurement, Is.Empty);
+        Assert.That(sensor.SensorCategory, Is.EqualTo(SensorCategory.Diagnostic));
+    }
+
+    [Test]
+    public void BuildSensor_SoilMoisture_Channel16()
+    {
+        var sensor = SensorBuilder.BuildSensor("soilmoisture16", "42.0");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.Alias, Is.EqualTo("Soil Moisture 16"));
+        Assert.That(sensor.SensorType, Is.EqualTo(SensorType.Moisture));
+    }
+
+    [Test]
+    public void BuildSensor_SoilAdmittance_Channel16()
+    {
+        var sensor = SensorBuilder.BuildSensor("soilad16", "180");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.Alias, Is.EqualTo("Soil Admittance 16"));
+        Assert.That(sensor.SensorCategory, Is.EqualTo(SensorCategory.Diagnostic));
+    }
+
+    [Test]
+    public void BuildSensor_SoilBattery_Channel16()
+    {
+        var sensor = SensorBuilder.BuildSensor("soilbatt16", "1.5");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.Alias, Is.EqualTo("Soil Battery 16"));
+        Assert.That(sensor.SensorType, Is.EqualTo(SensorType.Voltage));
     }
 
     [Test]

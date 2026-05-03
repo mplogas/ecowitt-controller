@@ -87,6 +87,14 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "soilmoisture6":
                 case "soilmoisture7":
                 case "soilmoisture8":
+                case "soilmoisture9":
+                case "soilmoisture10":
+                case "soilmoisture11":
+                case "soilmoisture12":
+                case "soilmoisture13":
+                case "soilmoisture14":
+                case "soilmoisture15":
+                case "soilmoisture16":
                     number = GetNumber(propertyName);
                     return BuildDoubleSensor(propertyName, $"Soil Moisture {number}", propertyValue, "%", SensorType.Moisture);
                 case "soilad1":
@@ -97,8 +105,17 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "soilad6":
                 case "soilad7":
                 case "soilad8":
+                case "soilad9":
+                case "soilad10":
+                case "soilad11":
+                case "soilad12":
+                case "soilad13":
+                case "soilad14":
+                case "soilad15":
+                case "soilad16":
+                    // soilad is a unitless raw probe ADC reading used to derive soilmoisture, not user-facing data.
                     number = GetNumber(propertyName);
-                    return BuildIntSensor(propertyName, $"Soil Admittance {number}", propertyValue, "mS");
+                    return BuildIntSensor(propertyName, $"Soil Admittance {number}", propertyValue, isDiag: true);
                 case "pm25_ch1":
                 case "pm25_ch2":
                 case "pm25_ch3":
@@ -193,6 +210,14 @@ namespace Ecowitt.Controller.Model.Mapping
                 case "soilbatt6":
                 case "soilbatt7":
                 case "soilbatt8":
+                case "soilbatt9":
+                case "soilbatt10":
+                case "soilbatt11":
+                case "soilbatt12":
+                case "soilbatt13":
+                case "soilbatt14":
+                case "soilbatt15":
+                case "soilbatt16":
                     number = GetNumber(propertyName);
                     return BuildVoltageSensor(propertyName, $"Soil Battery {number}", propertyValue, true);
                 case "pm25batt1":
