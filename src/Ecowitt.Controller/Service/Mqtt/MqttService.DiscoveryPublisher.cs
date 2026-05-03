@@ -77,9 +77,13 @@ namespace Ecowitt.Controller.Service.Mqtt
                 : "{{ value_json.value }}";
             //var valueTemplate = "{{ value_json.value }}";
 
+            // HA voltage/temperature/etc default to integer display unless told otherwise; mirror the
+            // publish-side rounding precision so e.g. soilbatt 1.4V isn't rendered as "1 V".
+            int? displayPrecision = sensor.DataType == SensorDataType.Double ? (_mqttConfig?.Precision ?? 2) : null;
+
             var config = sensor.SensorCategory == SensorCategory.Diagnostic
-                ? DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, valueTemplate: valueTemplate, unitOfMeasurement: sensor.UnitOfMeasurement, sensorCategory: sensor.SensorCategory.ToString().ToLower(), isBinarySensor: sensor.SensorClass == SensorClass.BinarySensor)
-                : DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, valueTemplate: valueTemplate, unitOfMeasurement: sensor.UnitOfMeasurement, isBinarySensor: sensor.SensorClass == SensorClass.BinarySensor);
+                ? DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, valueTemplate: valueTemplate, unitOfMeasurement: sensor.UnitOfMeasurement, sensorCategory: sensor.SensorCategory.ToString().ToLower(), isBinarySensor: sensor.SensorClass == SensorClass.BinarySensor, displayPrecision: displayPrecision)
+                : DiscoveryBuilder.BuildSensorConfig(device, _origin, sensor.Alias, id, category, statetopic, valueTemplate: valueTemplate, unitOfMeasurement: sensor.UnitOfMeasurement, isBinarySensor: sensor.SensorClass == SensorClass.BinarySensor, displayPrecision: displayPrecision);
 
             var sensorClassTopic = BuildSensorClassTopic(sensor.SensorClass);
 

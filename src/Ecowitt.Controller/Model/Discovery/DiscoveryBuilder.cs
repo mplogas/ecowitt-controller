@@ -165,7 +165,7 @@ public static class DiscoveryBuilder
     /// <param name="retain"></param>
     /// <param name="qos"></param>
     /// <returns></returns>
-    public static Config BuildSensorConfig(Device device, Origin origin, string name, string uniqueId, string sensor_category, string stateTopic, string valueTemplate = "{{ value_json.value }}", string? unitOfMeasurement = "", string? icon = "", string? sensorCategory = "", bool isBinarySensor = false, bool? retain = false, int? qos = 1)
+    public static Config BuildSensorConfig(Device device, Origin origin, string name, string uniqueId, string sensor_category, string stateTopic, string valueTemplate = "{{ value_json.value }}", string? unitOfMeasurement = "", string? icon = "", string? sensorCategory = "", bool isBinarySensor = false, int? displayPrecision = null, bool? retain = false, int? qos = 1)
     {
         var result = new Config
         {
@@ -184,7 +184,8 @@ public static class DiscoveryBuilder
         if (!string.IsNullOrWhiteSpace(unitOfMeasurement)) result.UnitOfMeasurement = unitOfMeasurement;
         if (!string.IsNullOrWhiteSpace(icon)) result.Icon = icon;
         if (!string.IsNullOrWhiteSpace(sensorCategory)) result.SensorCategory = sensorCategory;
-        
+        if (displayPrecision.HasValue) result.SuggestedDisplayPrecision = displayPrecision;
+
         return result;
     }
 

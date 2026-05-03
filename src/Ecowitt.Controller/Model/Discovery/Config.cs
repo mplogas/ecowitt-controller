@@ -36,8 +36,10 @@ public class Config
     public AvailabilityMode? AvailabilityMode { get; set; }
     [JsonPropertyName("value_template")]
     public string? ValueTemplate { get; set; }
-    [JsonPropertyName("entity_category")] 
+    [JsonPropertyName("entity_category")]
     public string? SensorCategory { get; set; }
+    [JsonPropertyName("suggested_display_precision")]
+    public int? SuggestedDisplayPrecision { get; set; }
 
     [JsonPropertyName("payload_on")]
     public string? PayloadOn { get; set; }
