@@ -193,6 +193,32 @@ public class SensorBuilderTest
     }
 
     [Test]
+    public void BuildSensor_SoilMoisture_Channel16()
+    {
+        var sensor = SensorBuilder.BuildSensor("soilmoisture16", "42.0");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.Alias, Is.EqualTo("Soil Moisture 16"));
+        Assert.That(sensor.SensorType, Is.EqualTo(SensorType.Moisture));
+    }
+
+    [Test]
+    public void BuildSensor_SoilAdmittance_Channel16()
+    {
+        var sensor = SensorBuilder.BuildSensor("soilad16", "180");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.Alias, Is.EqualTo("Soil Admittance 16"));
+    }
+
+    [Test]
+    public void BuildSensor_SoilBattery_Channel16()
+    {
+        var sensor = SensorBuilder.BuildSensor("soilbatt16", "1.5");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.Alias, Is.EqualTo("Soil Battery 16"));
+        Assert.That(sensor.SensorType, Is.EqualTo(SensorType.Voltage));
+    }
+
+    [Test]
     public void BuildSensor_PM25Channel()
     {
         var sensor = SensorBuilder.BuildSensor("pm25_ch1", "12.5", isMetric: true);
