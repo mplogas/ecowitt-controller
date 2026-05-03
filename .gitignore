@@ -3,6 +3,22 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# custom stuff
+src/Ecowitt.Controller/appsettings.Development.json
+
+# AI
+CLAUDE.md
+.claude/
+.entire/
+
+
+# JetBrains Rider
+*.sln.iml
+.idea/
+/.$diagrams.drawio.bkp
+/.continue/mcpServers
+/.vscode
+
 # User-specific files
 *.rsuser
 *.suo
@@ -395,11 +411,5 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# JetBrains Rider
-*.sln.iml
-.idea/
-/.$diagrams.drawio.bkp
-/.continue/mcpServers
-/.vscode
-CLAUDE.md
-src/Ecowitt.Controller/appsettings.Development.json
+
+

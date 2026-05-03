@@ -11,12 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{B3
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\CONTRIBUTING.md = ..\CONTRIBUTING.md
+		..\.gitignore = ..\.gitignore
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker", "Docker", "{C746A790-DCB6-46A6-A74E-DF1A4FD6994F}"
 	ProjectSection(SolutionItems) = preProject
 		.dockerignore = .dockerignore
-		..\.gitignore = ..\.gitignore
 		docker-compose.yml = docker-compose.yml
 		Dockerfile = Dockerfile
 	EndProjectSection
