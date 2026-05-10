@@ -6,6 +6,7 @@
 # custom stuff
 src/Ecowitt.Controller/appsettings.Development.json
 ROADMAP.md
+docs/plans/
 
 # AI
 CLAUDE.md
