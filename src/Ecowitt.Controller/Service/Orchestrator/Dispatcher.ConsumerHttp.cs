@@ -41,7 +41,12 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 message.AlwaysOn = true;
             }
 
-            await _httpPublishingService.SendSubdeviceCommand(gw.IpAddress, message, subdevice.Model);
+            await _messageBus.Publish(new SubdeviceCommandDispatch
+            {
+                GatewayIp = gw.IpAddress,
+                Command = message,
+                Model = subdevice.Model
+            });
         }
 
         public async Task OnHandle(GatewayApiData message, CancellationToken cancellationToken)

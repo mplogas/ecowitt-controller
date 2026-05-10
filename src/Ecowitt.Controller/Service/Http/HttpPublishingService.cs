@@ -1,12 +1,13 @@
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
 using SlimMessageBus;
 using System.Text.Json;
 
 namespace Ecowitt.Controller.Service.Http;
 
-public partial class HttpPublishingService : BackgroundService, IHostedLifecycleService, IConsumer<HttpConfig>
+public partial class HttpPublishingService : BackgroundService, IHostedLifecycleService, IConsumer<HttpConfig>, IConsumer<SubdeviceCommandDispatch>
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger _logger;
@@ -114,7 +115,7 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
         return string.Empty;
     }
 
-    public async Task<bool> SendSubdeviceCommand(string gatewayIp, SubdeviceApiCommand command, SubdeviceModel model)
+    private async Task<bool> SendSubdeviceCommand(string gatewayIp, SubdeviceApiCommand command, SubdeviceModel model, CancellationToken cancellationToken)
     {
         var host = _config.Hosts.FirstOrDefault(h => h.Host == gatewayIp);
         if (host == null)
@@ -157,7 +158,7 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             var json = JsonSerializer.Serialize(payload);
             _logger.LogDebug("Sending command payload: {Json}", json);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("parse_quick_cmd_iot", content);
+            var response = await client.PostAsync("parse_quick_cmd_iot", content, cancellationToken);
 
             if (response.IsSuccessStatusCode)
             {
