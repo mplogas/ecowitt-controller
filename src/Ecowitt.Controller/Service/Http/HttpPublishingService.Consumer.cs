@@ -1,4 +1,5 @@
 ﻿using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
 
 namespace Ecowitt.Controller.Service.Http
 {
@@ -11,5 +12,8 @@ namespace Ecowitt.Controller.Service.Http
 
             return Task.CompletedTask;
         }
+
+        public Task OnHandle(SubdeviceCommandDispatch message, CancellationToken cancellationToken)
+            => SendSubdeviceCommand(message.GatewayIp, message.Command, message.Model);
     }
 }

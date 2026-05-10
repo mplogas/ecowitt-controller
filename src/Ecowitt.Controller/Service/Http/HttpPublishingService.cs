@@ -1,12 +1,13 @@
 using Ecowitt.Controller.Model;
 using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Message.Config;
+using Ecowitt.Controller.Model.Message.Data;
 using SlimMessageBus;
 using System.Text.Json;
 
 namespace Ecowitt.Controller.Service.Http;
 
-public partial class HttpPublishingService : BackgroundService, IHostedLifecycleService, IConsumer<HttpConfig>
+public partial class HttpPublishingService : BackgroundService, IHostedLifecycleService, IConsumer<HttpConfig>, IConsumer<SubdeviceCommandDispatch>
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger _logger;
