@@ -5,7 +5,6 @@ using Ecowitt.Controller.Model.Configuration;
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
-using Ecowitt.Controller.Service.Http;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
 
@@ -19,9 +18,8 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
     private readonly ControllerOptions _controllerOptions;
     private readonly MqttOptions _mqttOptions;
     private readonly IMessageBus _messageBus;
-    private readonly HttpPublishingService _httpPublishingService;
 
-    public Dispatcher(ILogger<Dispatcher> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions, HttpPublishingService httpPublishingService)
+    public Dispatcher(ILogger<Dispatcher> logger, IDeviceStore deviceStore, IMessageBus messageBus, IOptions<MqttOptions> mqttOptions, IOptions<EcowittOptions> ecowittOptions, IOptions<ControllerOptions> controllerOptions)
     {
         _logger = logger;
         _deviceStore = deviceStore;
@@ -29,7 +27,6 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         _ecowittOptions = ecowittOptions.Value;
         _controllerOptions = controllerOptions.Value;
         _messageBus = messageBus;
-        _httpPublishingService = httpPublishingService;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
