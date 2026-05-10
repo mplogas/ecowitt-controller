@@ -14,6 +14,6 @@ namespace Ecowitt.Controller.Service.Http
         }
 
         public Task OnHandle(SubdeviceCommandDispatch message, CancellationToken cancellationToken)
-            => SendSubdeviceCommand(message.GatewayIp, message.Command, message.Model);
+            => SendSubdeviceCommand(message.GatewayIp, message.Command, message.Model, cancellationToken);
     }
 }
