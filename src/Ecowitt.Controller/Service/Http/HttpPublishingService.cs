@@ -3,6 +3,7 @@ using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Message.Config;
 using Ecowitt.Controller.Model.Message.Data;
 using SlimMessageBus;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace Ecowitt.Controller.Service.Http;
@@ -13,6 +14,8 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
     private readonly ILogger _logger;
     private readonly IMessageBus _messageBus;
     private HttpConfig _config = new HttpConfig();
+    // Concurrency lock per gateway. Distinct from the 350ms Task.Delay below, which is rate limiting.
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _gatewaySemaphores = new();
 
     public HttpPublishingService(ILogger<HttpPublishingService> logger, IMessageBus messageBus, IHttpClientFactory httpClientFactory)
     {
@@ -48,10 +51,13 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
     private async Task<List<SubdeviceApiData>> GetSubdevicesOverview(HttpHost host, CancellationToken cancellationToken)
     {
         var subdevices = new List<SubdeviceApiData>();
-        using var client = CreateHttpClient(host);
-
+        var sem = _gatewaySemaphores.GetOrAdd(host.Host, static _ => new SemaphoreSlim(1, 1));
+        var acquired = false;
         try
         {
+            await sem.WaitAsync(cancellationToken);
+            acquired = true;
+            using var client = CreateHttpClient(host);
             var response = await client.GetAsync("get_iot_device_list", cancellationToken);
             if (response.IsSuccessStatusCode)
             {
@@ -81,20 +87,27 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
                 _logger.LogWarning("Failed to get subdevices from {HostHost}", host.Host);
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
             _logger.LogError(e, "Exception while trying to get subdevices from {HostHost}", host.Host);
         }
-
+        finally
+        {
+            if (acquired) sem.Release();
+        }
 
         return subdevices;
     }
 
     private async Task<string> GetSubDeviceApiPayload(HttpHost host, int subdeviceId, int model, CancellationToken cancellationToken)
     {
-        using var client = CreateHttpClient(host);
+        var sem = _gatewaySemaphores.GetOrAdd(host.Host, static _ => new SemaphoreSlim(1, 1));
+        var acquired = false;
         try
         {
+            await sem.WaitAsync(cancellationToken);
+            acquired = true;
+            using var client = CreateHttpClient(host);
             var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model } } };
             var sContent = new StringContent(JsonSerializer.Serialize(payload));
             var response = await client.PostAsync("parse_quick_cmd_iot", sContent, cancellationToken);
@@ -107,9 +120,13 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
                 _logger.LogWarning("Could not get payload from {HostHost} for subdevice {SubdeviceId}", host.Host, subdeviceId);
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
             _logger.LogError(e, "Exception while trying to get payload from {HostHost} for subdevice {SubdeviceId}", host.Host, subdeviceId);
+        }
+        finally
+        {
+            if (acquired) sem.Release();
         }
 
         return string.Empty;
@@ -124,9 +141,13 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             return false;
         }
 
-        using var client = CreateHttpClient(host);
+        var sem = _gatewaySemaphores.GetOrAdd(host.Host, static _ => new SemaphoreSlim(1, 1));
+        var acquired = false;
         try
         {
+            await sem.WaitAsync(cancellationToken);
+            acquired = true;
+            using var client = CreateHttpClient(host);
             object payload;
             switch (command.Cmd)
             {
@@ -169,10 +190,14 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             _logger.LogWarning("Failed to send command to subdevice {Id} on {GatewayIp}: {StatusCode}", command.Id, gatewayIp, response.StatusCode);
             return false;
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
             _logger.LogError(e, "Exception sending command to subdevice {Id} on {GatewayIp}", command.Id, gatewayIp);
             return false;
+        }
+        finally
+        {
+            if (acquired) sem.Release();
         }
     }
 
