@@ -115,7 +115,7 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
         return string.Empty;
     }
 
-    public async Task<bool> SendSubdeviceCommand(string gatewayIp, SubdeviceApiCommand command, SubdeviceModel model)
+    private async Task<bool> SendSubdeviceCommand(string gatewayIp, SubdeviceApiCommand command, SubdeviceModel model)
     {
         var host = _config.Hosts.FirstOrDefault(h => h.Host == gatewayIp);
         if (host == null)
