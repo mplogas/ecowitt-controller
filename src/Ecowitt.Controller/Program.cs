@@ -104,6 +104,8 @@ public class Program
             // statemachine -> HttpPublishingService
             smb.Produce<HttpConfig>(x => x.DefaultTopic("config-http"));
             smb.Consume<HttpConfig>(x => x.Topic("config-http").WithConsumer<HttpPublishingService>());
+            smb.Produce<SubdeviceCommandDispatch>(x => x.DefaultTopic("subdevice-command-dispatch"));
+            smb.Consume<SubdeviceCommandDispatch>(x => x.Topic("subdevice-command-dispatch").WithConsumer<HttpPublishingService>());
 
             // HttpPublishingService -> statemachine
             smb.Produce<SubdeviceApiAggregate>(x => x.DefaultTopic("subdevice-api-data"));
