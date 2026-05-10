@@ -60,5 +60,15 @@ namespace Ecowitt.Controller.Service.Http
         {
             return Task.CompletedTask;
         }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            foreach (var sem in _gatewaySemaphores.Values)
+            {
+                sem.Dispose();
+            }
+            _gatewaySemaphores.Clear();
+        }
     }
 }

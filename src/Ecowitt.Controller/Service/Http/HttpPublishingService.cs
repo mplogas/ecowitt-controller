@@ -51,10 +51,12 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
     private async Task<List<SubdeviceApiData>> GetSubdevicesOverview(HttpHost host, CancellationToken cancellationToken)
     {
         var subdevices = new List<SubdeviceApiData>();
-        var sem = _gatewaySemaphores.GetOrAdd(host.Host, _ => new SemaphoreSlim(1, 1));
-        await sem.WaitAsync(cancellationToken);
+        var sem = _gatewaySemaphores.GetOrAdd(host.Host, static _ => new SemaphoreSlim(1, 1));
+        var acquired = false;
         try
         {
+            await sem.WaitAsync(cancellationToken);
+            acquired = true;
             using var client = CreateHttpClient(host);
             var response = await client.GetAsync("get_iot_device_list", cancellationToken);
             if (response.IsSuccessStatusCode)
@@ -85,13 +87,13 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
                 _logger.LogWarning("Failed to get subdevices from {HostHost}", host.Host);
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
             _logger.LogError(e, "Exception while trying to get subdevices from {HostHost}", host.Host);
         }
         finally
         {
-            sem.Release();
+            if (acquired) sem.Release();
         }
 
         return subdevices;
@@ -99,10 +101,12 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
 
     private async Task<string> GetSubDeviceApiPayload(HttpHost host, int subdeviceId, int model, CancellationToken cancellationToken)
     {
-        var sem = _gatewaySemaphores.GetOrAdd(host.Host, _ => new SemaphoreSlim(1, 1));
-        await sem.WaitAsync(cancellationToken);
+        var sem = _gatewaySemaphores.GetOrAdd(host.Host, static _ => new SemaphoreSlim(1, 1));
+        var acquired = false;
         try
         {
+            await sem.WaitAsync(cancellationToken);
+            acquired = true;
             using var client = CreateHttpClient(host);
             var payload = new { command = new[] { new { cmd = "read_device", id = subdeviceId, model } } };
             var sContent = new StringContent(JsonSerializer.Serialize(payload));
@@ -116,13 +120,13 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
                 _logger.LogWarning("Could not get payload from {HostHost} for subdevice {SubdeviceId}", host.Host, subdeviceId);
             }
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
             _logger.LogError(e, "Exception while trying to get payload from {HostHost} for subdevice {SubdeviceId}", host.Host, subdeviceId);
         }
         finally
         {
-            sem.Release();
+            if (acquired) sem.Release();
         }
 
         return string.Empty;
@@ -137,10 +141,12 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             return false;
         }
 
-        var sem = _gatewaySemaphores.GetOrAdd(host.Host, _ => new SemaphoreSlim(1, 1));
-        await sem.WaitAsync(cancellationToken);
+        var sem = _gatewaySemaphores.GetOrAdd(host.Host, static _ => new SemaphoreSlim(1, 1));
+        var acquired = false;
         try
         {
+            await sem.WaitAsync(cancellationToken);
+            acquired = true;
             using var client = CreateHttpClient(host);
             object payload;
             switch (command.Cmd)
@@ -184,14 +190,14 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             _logger.LogWarning("Failed to send command to subdevice {Id} on {GatewayIp}: {StatusCode}", command.Id, gatewayIp, response.StatusCode);
             return false;
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not OperationCanceledException)
         {
             _logger.LogError(e, "Exception sending command to subdevice {Id} on {GatewayIp}", command.Id, gatewayIp);
             return false;
         }
         finally
         {
-            sem.Release();
+            if (acquired) sem.Release();
         }
     }
 
