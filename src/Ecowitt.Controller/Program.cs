@@ -112,6 +112,8 @@ public class Program
             smb.Produce<HttpServiceEvent>(x => x.DefaultTopic("http-service-event"));
             smb.Consume<SubdeviceApiAggregate>(x => x.Topic("subdevice-api-data").WithConsumer<Dispatcher>());
             smb.Consume<HttpServiceEvent>(x => x.Topic("http-service-event").WithConsumer<Dispatcher>());
+            smb.Produce<GatewayLiveData>(x => x.DefaultTopic("gw-livedata"));
+            smb.Consume<GatewayLiveData>(x => x.Topic("gw-livedata").WithConsumer<Dispatcher>());
 
             // mqttservice -> statemachine (subdevice commands)
             smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-api-command"));

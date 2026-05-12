@@ -132,6 +132,81 @@ namespace Ecowitt.Controller.Service.Orchestrator
             //LogStorageState();
         }
 
+        public async Task OnHandle(GatewayLiveData message, CancellationToken cancellationToken)
+        {
+            _logger.LogDebug("Received GatewayLiveData from {Ip}", message.IpAddress);
+            var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
+            updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == message.IpAddress)?.Name ?? message.IpAddress.Replace('.', '-');
+
+            var storedGateway = _deviceStore.GetGateway(updatedGateway.IpAddress);
+            if (storedGateway == null)
+            {
+               updatedGateway.DiscoveryUpdate = true;
+
+                foreach (var sensor in updatedGateway.Sensors)
+                {
+                    sensor.DiscoveryUpdate = true;
+                }
+
+                if (_deviceStore.UpsertGateway(updatedGateway))
+                {
+                    _logger.LogDebug("gateway added: {Serialize})", JsonSerializer.Serialize(storedGateway));
+                    await EmitHomeAssistantDiscovery(updatedGateway);
+                    await EmitGatewayFull(updatedGateway);
+                }
+                else _logger.LogWarning("failed to add gateway {UpdatedGatewayIpAddress} ({UpdatedGatewayModel}) to the store", updatedGateway.IpAddress, updatedGateway.Model);
+            }
+            else
+            {
+                // no other property should update besides sensors - it seems fw isn't reported by the GW
+                storedGateway.TimestampUtc = updatedGateway.TimestampUtc;
+                var changedSensors = new List<ISensor>();
+                var emitDiscovery = false;
+                foreach (var sensor in updatedGateway.Sensors)
+                {
+                    var storedSensor = storedGateway.Sensors.FirstOrDefault(s => s.Name == sensor.Name);
+                    if (storedSensor == null)
+                    {
+                        sensor.DiscoveryUpdate = true;
+                        storedGateway.Sensors.Add(sensor);
+                        changedSensors.Add(sensor);
+                        emitDiscovery = true;
+                    }
+                    else if (DeNoiserHelper.HasSignificantChange(storedSensor, sensor.Value))
+                    {
+                        storedSensor.Value = sensor.Value;
+                        changedSensors.Add(storedSensor);
+                    }
+                }
+
+                if(changedSensors.Count > 0) await EmitGatewayChanged(changedSensors, storedGateway.IpAddress, storedGateway.Name);
+                else _logger.LogInformation("no changes for gateway {StoredGatewayIpAddress} ({StoredGatewayModel})", storedGateway.IpAddress, storedGateway.Model);
+
+                var sensorsToRemove = storedGateway.Sensors.Where(s => updatedGateway.Sensors.All(gs => gs.Name != s.Name)).ToList();
+                if (sensorsToRemove.Count > 0)
+                {
+                    emitDiscovery = true;
+                    await EmitDiscoveryRemoval(storedGateway.Name, sensorsToRemove);
+                }
+                foreach (var sensor in sensorsToRemove)
+                {
+                    storedGateway.Sensors.Remove(sensor);
+                }
+
+                if (!_deviceStore.UpsertGateway(storedGateway))
+                {
+                    _logger.LogWarning("failed to update {StoredGatewayIpAddress} ({StoredGatewayModel}) in the store", storedGateway.IpAddress, storedGateway.Model);
+                }
+                else
+                {
+                    if(emitDiscovery) await EmitHomeAssistantDiscovery(storedGateway);
+                    _logger.LogDebug("gateway updated: {Serialize})", JsonSerializer.Serialize(storedGateway));
+                }
+            }
+
+            //LogStorageState();
+        }
+
         public async Task OnHandle(SubdeviceApiAggregate message, CancellationToken cancellationToken)
         {
             var ips = message.Subdevices.DistinctBy(sd => sd.GwIp).Select(sd => sd.GwIp);

@@ -10,7 +10,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Orchestrator;
 
-public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
+public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<GatewayLiveData>, IConsumer<SubdeviceApiAggregate>
 {
     private readonly ILogger<Dispatcher> _logger;
     private readonly IDeviceStore _deviceStore;
