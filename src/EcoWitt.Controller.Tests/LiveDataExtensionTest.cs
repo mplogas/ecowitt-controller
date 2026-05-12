@@ -190,4 +190,53 @@ public class LiveDataExtensionTest
         Assert.That(capVolt, Is.Not.Null, "WS90 capacitor voltage missing");
         Assert.That((double)capVolt!.Value!, Is.EqualTo(2.3).Within(0.01));
     }
+
+    [Test]
+    public void Map_CommonList_ProducesOutdoorWeatherSensors()
+    {
+        var data = LoadFixture("livedata-gw3000-prod.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var outdoorTemp = device.Sensors.FirstOrDefault(s => s.Name == "tempf");
+        Assert.That(outdoorTemp, Is.Not.Null, "outdoor temperature missing (0x02)");
+        Assert.That((double)outdoorTemp!.Value!, Is.EqualTo(12.9).Within(0.01));
+
+        var outdoorHumi = device.Sensors.FirstOrDefault(s => s.Name == "humidity");
+        Assert.That(outdoorHumi, Is.Not.Null, "outdoor humidity missing (0x07)");
+
+        var windDir = device.Sensors.FirstOrDefault(s => s.Name == "winddir");
+        Assert.That(windDir, Is.Not.Null, "wind direction missing (0x0A)");
+
+        var windSpeed = device.Sensors.FirstOrDefault(s => s.Name == "windspeedmph");
+        Assert.That(windSpeed, Is.Not.Null, "wind speed missing (0x0B)");
+
+        var windGust = device.Sensors.FirstOrDefault(s => s.Name == "windgustmph");
+        Assert.That(windGust, Is.Not.Null, "wind gust missing (0x0C)");
+
+        var solar = device.Sensors.FirstOrDefault(s => s.Name == "solarradiation");
+        Assert.That(solar, Is.Not.Null, "solar radiation missing (0x15)");
+
+        var uv = device.Sensors.FirstOrDefault(s => s.Name == "uv");
+        Assert.That(uv, Is.Not.Null, "UV missing (0x17)");
+    }
+
+    [Test]
+    public void Map_CommonList_UnknownIdsAreIgnored()
+    {
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            CommonList = new List<CommonListItem>
+            {
+                new() { Id = "0xFF", Val = "42", Unit = "C" },
+                new() { Id = "999", Val = "ignored" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        Assert.That(device.Sensors.Count, Is.EqualTo(0), "unknown IDs should produce no sensors");
+    }
 }

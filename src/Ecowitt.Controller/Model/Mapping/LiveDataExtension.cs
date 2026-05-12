@@ -20,6 +20,7 @@ public static class LiveDataExtension
         if (data.Lightning != null) MapLightning(data.Lightning, device.Sensors, isMetric);
         if (data.Co2 != null) MapCo2(data.Co2, device.Sensors, isMetric);
         if (data.PiezoRain != null) MapPiezoRain(data.PiezoRain, device.Sensors, isMetric);
+        if (data.CommonList != null) MapCommonList(data.CommonList, device.Sensors, isMetric);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
@@ -166,6 +167,58 @@ public static class LiveDataExtension
             var cap = SensorBuilder.BuildVoltageSensor("ws90cap_volt", "WS90 Capacitor Voltage", StripUnit(last.Ws90CapVolt), isDiag: true);
             if (cap != null) sensors.Add(cap);
         }
+    }
+
+    private static readonly Dictionary<string, string> CommonListIdMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "0x02", "tempf" },           // outdoor temperature
+        { "0x03", "dewpoint" },        // dew point
+        { "0x07", "humidity" },        // outdoor humidity
+        { "0x0A", "winddir" },         // wind direction
+        { "0x0B", "windspeedmph" },    // wind speed
+        { "0x0C", "windgustmph" },     // wind gust
+        { "0x19", "maxdailygust" },    // max daily gust
+        { "0x15", "solarradiation" },  // solar radiation
+        { "0x17", "uv" },              // UV
+        { "0x6D", "windrun" },         // wind run
+        { "4",    "feelslike" },       // feels-like (decimal id)
+        { "5",    "vpd" }              // VPD (decimal id)
+    };
+
+    private static void MapCommonList(List<CommonListItem> readings, List<ISensor> sensors, bool isMetric)
+    {
+        foreach (var r in readings)
+        {
+            if (!CommonListIdMap.TryGetValue(r.Id, out var propertyName))
+            {
+                Serilog.Log.Debug("livedata common_list: unrecognised sensor id {Id} (val={Val} unit={Unit})", r.Id, r.Val, r.Unit ?? "<none>");
+                continue;
+            }
+
+            var rawValue = StripUnit(r.Val);
+            var sensor = BuildCommonListSensor(propertyName, rawValue, isMetric);
+            if (sensor != null) sensors.Add(sensor);
+        }
+    }
+
+    private static ISensor? BuildCommonListSensor(string propertyName, string rawValue, bool isMetric)
+    {
+        return propertyName switch
+        {
+            "tempf"          => SensorBuilder.BuildTemperatureSensor("tempf",          "Outdoor Temperature",    rawValue, isMetric, startMetric: true),
+            "dewpoint"       => SensorBuilder.BuildTemperatureSensor("dewpoint",       "Dew Point",              rawValue, isMetric, startMetric: true),
+            "feelslike"      => SensorBuilder.BuildTemperatureSensor("feelslike",      "Feels Like",             rawValue, isMetric, startMetric: true),
+            "humidity"       => SensorBuilder.BuildHumiditySensor   ("humidity",       "Outdoor Humidity",       rawValue),
+            "winddir"        => SensorBuilder.BuildIntSensor        ("winddir",        "Wind Direction",         rawValue, unit: "°"),
+            "windspeedmph"   => SensorBuilder.BuildWindSpeedSensor  ("windspeedmph",   "Wind Speed",             rawValue, isMetric, sourceUnit: SensorBuilder.WindSpeedSourceUnit.MetersPerSecond),
+            "windgustmph"    => SensorBuilder.BuildWindSpeedSensor  ("windgustmph",    "Wind Gust",              rawValue, isMetric, sourceUnit: SensorBuilder.WindSpeedSourceUnit.MetersPerSecond),
+            "maxdailygust"   => SensorBuilder.BuildWindSpeedSensor  ("maxdailygust",   "Max Daily Gust",         rawValue, isMetric, sourceUnit: SensorBuilder.WindSpeedSourceUnit.MetersPerSecond),
+            "solarradiation" => SensorBuilder.BuildDoubleSensor     ("solarradiation", "Solar Radiation",        rawValue, unit: "W/m²", type: SensorType.Irradiance),
+            "uv"             => SensorBuilder.BuildIntSensor        ("uv",             "UV Index",               rawValue),
+            "windrun"        => SensorBuilder.BuildDistanceSensor   ("windrun",        "Wind Run",               rawValue, isMetric),
+            "vpd"            => SensorBuilder.BuildDoubleSensor     ("vpd",            "Vapor Pressure Deficit", rawValue, unit: "kPa", type: SensorType.Pressure),
+            _                => null
+        };
     }
 
     private static string RainAliasFor(string propertyName) => propertyName switch
