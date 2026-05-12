@@ -17,6 +17,7 @@ public static class LiveDataExtension
         if (data.Wh25 != null) MapWh25(data.Wh25, device.Sensors, isMetric);
         if (data.ChSoil != null) MapChSoil(data.ChSoil, device.Sensors, isMetric);
         if (data.ChTemp != null) MapChTemp(data.ChTemp, device.Sensors, isMetric);
+        if (data.Lightning != null) MapLightning(data.Lightning, device.Sensors, isMetric);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
@@ -79,6 +80,21 @@ public static class LiveDataExtension
 
             var voltage = SensorBuilder.BuildVoltageSensor($"battvolt{ch}", $"Channel {ch} Battery Voltage", StripUnit(r.Voltage), isDiag: true);
             if (voltage != null) sensors.Add(voltage);
+        }
+    }
+
+    private static void MapLightning(List<LightningReading> readings, List<ISensor> sensors, bool isMetric)
+    {
+        foreach (var r in readings)
+        {
+            var distance = SensorBuilder.BuildDistanceSensor("lightning", "Lightning Distance", StripUnit(r.Distance), isMetric);
+            if (distance != null) sensors.Add(distance);
+
+            var count = SensorBuilder.BuildIntSensor("lightning_num", "Lightning Count", StripUnit(r.Count));
+            if (count != null) sensors.Add(count);
+
+            var battery = SensorBuilder.BuildBatterySensor("wh57batt", "Lightning Battery", StripUnit(r.Battery));
+            if (battery != null) sensors.Add(battery);
         }
     }
 

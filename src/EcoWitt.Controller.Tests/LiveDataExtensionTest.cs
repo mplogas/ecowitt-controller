@@ -98,4 +98,22 @@ public class LiveDataExtensionTest
         Assert.That(ch1Volt, Is.Not.Null, "channel 1 battery voltage missing");
         Assert.That((double)ch1Volt!.Value!, Is.EqualTo(1.46).Within(0.01));
     }
+
+    [Test]
+    public void Map_Lightning_ProducesDistanceCountBatterySensors()
+    {
+        var data = LoadFixture("livedata-gw3000-prod.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var distance = device.Sensors.FirstOrDefault(s => s.Name == "lightning");
+        Assert.That(distance, Is.Not.Null);
+        Assert.That((double)distance!.Value!, Is.EqualTo(8.0).Within(0.01));
+
+        var count = device.Sensors.FirstOrDefault(s => s.Name == "lightning_num");
+        Assert.That(count, Is.Not.Null);
+
+        var battery = device.Sensors.FirstOrDefault(s => s.Name == "wh57batt");
+        Assert.That(battery, Is.Not.Null);
+    }
 }
