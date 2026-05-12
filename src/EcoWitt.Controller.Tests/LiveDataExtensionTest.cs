@@ -159,4 +159,35 @@ public class LiveDataExtensionTest
         var pm4_24h = device.Sensors.FirstOrDefault(s => s.Name == "pm4_24h_co2");
         Assert.That(pm4_24h, Is.Null);
     }
+
+    [Test]
+    public void Map_PiezoRain_ProducesRainSensorsAndWs90BatteryFromLastElement()
+    {
+        var data = LoadFixture("livedata-gw3000-prod.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        // rain rate from 0x0E (0.0 mm/Hr)
+        var rainRate = device.Sensors.FirstOrDefault(s => s.Name == "rrain_piezo");
+        Assert.That(rainRate, Is.Not.Null, "rain rate sensor missing");
+
+        // monthly rain from 0x12 (22.3 mm)
+        var monthlyRain = device.Sensors.FirstOrDefault(s => s.Name == "mrain_piezo");
+        Assert.That(monthlyRain, Is.Not.Null, "monthly rain sensor missing");
+        Assert.That((double)monthlyRain!.Value!, Is.EqualTo(22.3).Within(0.1));
+
+        // yearly rain from 0x13 (120.3 mm)
+        var yearlyRain = device.Sensors.FirstOrDefault(s => s.Name == "yrain_piezo");
+        Assert.That(yearlyRain, Is.Not.Null, "yearly rain sensor missing");
+        Assert.That((double)yearlyRain!.Value!, Is.EqualTo(120.3).Within(0.1));
+
+        // WS90 battery from the LAST piezoRain element (level 3)
+        var ws90Batt = device.Sensors.FirstOrDefault(s => s.Name == "ws90batt");
+        Assert.That(ws90Batt, Is.Not.Null, "WS90 battery missing (should source from last piezoRain element)");
+
+        // WS90 capacitor voltage (2.3V)
+        var capVolt = device.Sensors.FirstOrDefault(s => s.Name == "ws90cap_volt");
+        Assert.That(capVolt, Is.Not.Null, "WS90 capacitor voltage missing");
+        Assert.That((double)capVolt!.Value!, Is.EqualTo(2.3).Within(0.01));
+    }
 }

@@ -19,6 +19,7 @@ public static class LiveDataExtension
         if (data.ChTemp != null) MapChTemp(data.ChTemp, device.Sensors, isMetric);
         if (data.Lightning != null) MapLightning(data.Lightning, device.Sensors, isMetric);
         if (data.Co2 != null) MapCo2(data.Co2, device.Sensors, isMetric);
+        if (data.PiezoRain != null) MapPiezoRain(data.PiezoRain, device.Sensors, isMetric);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
@@ -120,6 +121,64 @@ public static class LiveDataExtension
             AddIfBuilt(sensors, "co2_batt", StripUnit(r.Battery), isMetric);
         }
     }
+
+    // Map from livedata piezoRain ids to push-payload property names.
+    private static readonly Dictionary<string, string> PiezoRainIdMap = new()
+    {
+        { "0x0D", "erain_piezo" },   // event
+        { "0x0E", "rrain_piezo" },   // rate
+        { "0x7C", "drain_piezo" },   // daily
+        { "0x10", "hrain_piezo" },   // hourly
+        { "0x11", "wrain_piezo" },   // weekly
+        { "0x12", "mrain_piezo" },   // monthly
+        { "0x13", "yrain_piezo" }    // yearly
+    };
+
+    private static void MapPiezoRain(List<PiezoRainItem> readings, List<ISensor> sensors, bool isMetric)
+    {
+        foreach (var r in readings)
+        {
+            if (!PiezoRainIdMap.TryGetValue(r.Id, out var propertyName)) continue;
+
+            ISensor? sensor = propertyName == "rrain_piezo"
+                ? SensorBuilder.BuildRainRateSensor(propertyName, RainAliasFor(propertyName), StripUnit(r.Val), isMetric, startMetric: true)
+                : SensorBuilder.BuildRainSensor(propertyName, RainAliasFor(propertyName), StripUnit(r.Val), isMetric, startMetric: true);
+
+            if (sensor != null) sensors.Add(sensor);
+        }
+
+        // WS90 telemetry on the LAST array element — Ecowitt firmware quirk.
+        var last = readings.LastOrDefault();
+        if (last == null) return;
+
+        if (!string.IsNullOrEmpty(last.Battery))
+        {
+            var batt = SensorBuilder.BuildBatterySensor("ws90batt", "WS90 Battery", StripUnit(last.Battery));
+            if (batt != null) sensors.Add(batt);
+        }
+        if (!string.IsNullOrEmpty(last.Voltage))
+        {
+            var volt = SensorBuilder.BuildVoltageSensor("ws90battvolt", "WS90 Battery Voltage", StripUnit(last.Voltage), isDiag: true);
+            if (volt != null) sensors.Add(volt);
+        }
+        if (!string.IsNullOrEmpty(last.Ws90CapVolt))
+        {
+            var cap = SensorBuilder.BuildVoltageSensor("ws90cap_volt", "WS90 Capacitor Voltage", StripUnit(last.Ws90CapVolt), isDiag: true);
+            if (cap != null) sensors.Add(cap);
+        }
+    }
+
+    private static string RainAliasFor(string propertyName) => propertyName switch
+    {
+        "erain_piezo" => "Event Rain",
+        "rrain_piezo" => "Rain Rate",
+        "drain_piezo" => "Daily Rain",
+        "hrain_piezo" => "Hourly Rain",
+        "wrain_piezo" => "Weekly Rain",
+        "mrain_piezo" => "Monthly Rain",
+        "yrain_piezo" => "Yearly Rain",
+        _ => propertyName
+    };
 
     private static void AddIfBuilt(List<ISensor> sensors, string propertyName, string value, bool isMetric)
     {

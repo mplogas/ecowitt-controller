@@ -151,25 +151,34 @@ namespace Ecowitt.Controller.Model.Mapping
                 : null;
         }
 
-        internal static Sensor? BuildRainRateSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal static Sensor? BuildRainRateSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
         {
-            return TryParseDouble(propertyValue, out var value, propertyName)
-                ? new Sensor(propertyName, alias, isMetric ? I2M(value) : value, SensorDataType.Double, isMetric ? "mm/h" : "in/h", SensorType.PrecipitationIntensity)
-                : null;
+            if (!TryParseDouble(propertyValue, out var value, propertyName)) return null;
+            if (startMetric != isMetric) value = startMetric ? M2I(value) : I2M(value);
+            return new Sensor(propertyName, alias, value, SensorDataType.Double, isMetric ? "mm/h" : "in/h", SensorType.PrecipitationIntensity);
         }
 
-        internal static Sensor? BuildRainSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal static Sensor? BuildRainSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
         {
-            return TryParseDouble(propertyValue, out var value, propertyName)
-                ? new Sensor(propertyName, alias, isMetric ? I2M(value) : value, SensorDataType.Double, isMetric ? "mm" : "in", SensorType.Precipitation)
-                : null;
+            if (!TryParseDouble(propertyValue, out var value, propertyName)) return null;
+            if (startMetric != isMetric) value = startMetric ? M2I(value) : I2M(value);
+            return new Sensor(propertyName, alias, value, SensorDataType.Double, isMetric ? "mm" : "in", SensorType.Precipitation);
         }
 
-        internal static Sensor? BuildWindSpeedSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal enum WindSpeedSourceUnit { Mph, MetersPerSecond }
+
+        internal static Sensor? BuildWindSpeedSensor(string propertyName, string alias, string propertyValue, bool isMetric, WindSpeedSourceUnit sourceUnit = WindSpeedSourceUnit.Mph)
         {
-            return TryParseDouble(propertyValue, out var value, propertyName)
-                ? new Sensor(propertyName, alias, isMetric ? M2K(value) : value, SensorDataType.Double, isMetric ? "km/h" : "mph", SensorType.WindSpeed)
-                : null;
+            if (!TryParseDouble(propertyValue, out var value, propertyName)) return null;
+            double output = sourceUnit switch
+            {
+                WindSpeedSourceUnit.MetersPerSecond when isMetric => MS2K(value),
+                WindSpeedSourceUnit.MetersPerSecond when !isMetric => MS2P(value),
+                WindSpeedSourceUnit.Mph when isMetric => M2K(value),
+                WindSpeedSourceUnit.Mph when !isMetric => value,
+                _ => value
+            };
+            return new Sensor(propertyName, alias, output, SensorDataType.Double, isMetric ? "km/h" : "mph", SensorType.WindSpeed);
         }
 
         internal static Sensor? BuildPressureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
@@ -249,6 +258,9 @@ namespace Ecowitt.Controller.Model.Mapping
         private static double C2F(double celsius) => celsius * 9 / 5 + 32;
         private static double M2K(double mph) => mph * 1.60934;
         private static double I2M(double inches) => inches * 25.4;
+        private static double M2I(double mm) => mm / 25.4;
+        private static double MS2K(double ms) => ms * 3.6;
+        private static double MS2P(double ms) => ms * 2.23694;
         private static double L2G(double liters) => liters * 0.264172;
     }
 }
