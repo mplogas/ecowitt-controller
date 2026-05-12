@@ -1,4 +1,3 @@
-using System.Globalization;
 using Ecowitt.Controller.Model.Message.Data;
 
 namespace Ecowitt.Controller.Model.Mapping;
@@ -16,6 +15,8 @@ public static class LiveDataExtension
 
         if (data.Wh25 != null) MapWh25(data.Wh25, device.Sensors, isMetric);
 
+        if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
+
         return device;
     }
 
@@ -23,38 +24,18 @@ public static class LiveDataExtension
     {
         foreach (var r in readings)
         {
-            // Indoor temperature — livedata source is metric °C; construct directly to avoid double-conversion.
-            var temp = BuildTemperatureFromCelsius("tempinf", "Indoor Temperature", StripUnit(r.Intemp), isMetric);
+            var temp = SensorBuilder.BuildTemperatureSensor("tempinf", "Indoor Temperature", StripUnit(r.Intemp), isMetric, startMetric: true);
             if (temp != null) sensors.Add(temp);
 
-            // Indoor humidity — % is unit-agnostic; delegate to SensorBuilder after stripping suffix.
-            var humi = SensorBuilder.BuildSensor("humidityin", StripUnit(r.Inhumi), isMetric);
+            var humi = SensorBuilder.BuildHumiditySensor("humidityin", "Indoor Humidity", StripUnit(r.Inhumi));
             if (humi != null) sensors.Add(humi);
 
-            // Absolute pressure — livedata source is metric hPa; construct directly to avoid double-conversion.
-            var abs = BuildPressureFromHectopascals("baromabsin", "Absolute Pressure", StripUnit(r.Abs), isMetric);
+            var abs = SensorBuilder.BuildPressureSensor("baromabsin", "Absolute Pressure", StripUnit(r.Abs), isMetric, startMetric: true);
             if (abs != null) sensors.Add(abs);
 
-            // Relative pressure — livedata source is metric hPa; construct directly to avoid double-conversion.
-            var rel = BuildPressureFromHectopascals("baromrelin", "Relative Pressure", StripUnit(r.Rel), isMetric);
+            var rel = SensorBuilder.BuildPressureSensor("baromrelin", "Relative Pressure", StripUnit(r.Rel), isMetric, startMetric: true);
             if (rel != null) sensors.Add(rel);
         }
-    }
-
-    private static ISensor? BuildTemperatureFromCelsius(string propertyName, string alias, string celsiusStr, bool isMetric)
-    {
-        if (!double.TryParse(celsiusStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var celsius)) return null;
-        var value = isMetric ? celsius : celsius * 9.0 / 5.0 + 32.0;
-        var unit = isMetric ? "°C" : "F";
-        return new Sensor(propertyName, alias, value, SensorDataType.Double, unit, SensorType.Temperature);
-    }
-
-    private static ISensor? BuildPressureFromHectopascals(string propertyName, string alias, string hpaStr, bool isMetric)
-    {
-        if (!double.TryParse(hpaStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var hpa)) return null;
-        var value = isMetric ? hpa : hpa * 0.029530;  // hPa -> inHg
-        var unit = isMetric ? "hPa" : "inHg";
-        return new Sensor(propertyName, alias, value, SensorDataType.Double, unit, SensorType.Pressure);
     }
 
     private static string StripUnit(string raw)

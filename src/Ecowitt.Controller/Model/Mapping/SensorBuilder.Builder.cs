@@ -87,7 +87,7 @@ namespace Ecowitt.Controller.Model.Mapping
                 : null;
         }
 
-        private static Sensor? BuildDistanceSensor(string propertyName, string alias, string propertyValue,
+        internal static Sensor? BuildDistanceSensor(string propertyName, string alias, string propertyValue,
             bool isMetric = true)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
@@ -118,7 +118,7 @@ namespace Ecowitt.Controller.Model.Mapping
             return new Sensor(propertyName, alias, value, SensorDataType.Boolean, sensorType: SensorType.None, sensorClass: SensorClass.BinarySensor, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config);
         }
 
-        private static Sensor? BuildBatterySensor(string propertyName, string alias, string propertyValue, bool withMultiplier = false )
+        internal static Sensor? BuildBatterySensor(string propertyName, string alias, string propertyValue, bool withMultiplier = false )
         {
             if (!TryParseInt(propertyValue, out var value, propertyName)) return null;
             if (withMultiplier)
@@ -130,63 +130,67 @@ namespace Ecowitt.Controller.Model.Mapping
             return new Sensor(propertyName, alias, value, SensorDataType.Integer, "%", SensorType.Battery, sensorCategory: SensorCategory.Diagnostic);
         }
 
-        private static Sensor? BuildPPMSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isTotal = false)
+        internal static Sensor? BuildPPMSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isTotal = false)
         {
             return TryParseInt(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, value, SensorDataType.Integer, "ppm", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
                 : null;
         }
 
-        private static Sensor? BuildParticleSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isMetric = true, bool isTotal = false)
+        internal static Sensor? BuildParticleSensor(string propertyName, string alias, string propertyValue, SensorType sensorType, bool isMetric = true, bool isTotal = false)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, value, SensorDataType.Double, "µg/m³", sensorType, isTotal ? SensorState.Total : SensorState.Measurement)
                 : null;
         }
 
-        private static Sensor? BuildVoltageSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
+        internal static Sensor? BuildVoltageSensor(string propertyName, string alias, string propertyValue, bool isDiag = false)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, value, SensorDataType.Double, "V", SensorType.Voltage, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
                 : null;
         }
 
-        private static Sensor? BuildRainRateSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal static Sensor? BuildRainRateSensor(string propertyName, string alias, string propertyValue, bool isMetric)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, isMetric ? I2M(value) : value, SensorDataType.Double, isMetric ? "mm/h" : "in/h", SensorType.PrecipitationIntensity)
                 : null;
         }
 
-        private static Sensor? BuildRainSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal static Sensor? BuildRainSensor(string propertyName, string alias, string propertyValue, bool isMetric)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, isMetric ? I2M(value) : value, SensorDataType.Double, isMetric ? "mm" : "in", SensorType.Precipitation)
                 : null;
         }
 
-        private static Sensor? BuildWindSpeedSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal static Sensor? BuildWindSpeedSensor(string propertyName, string alias, string propertyValue, bool isMetric)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, isMetric ? M2K(value) : value, SensorDataType.Double, isMetric ? "km/h" : "mph", SensorType.WindSpeed)
                 : null;
         }
 
-        private static Sensor? BuildPressureSensor(string propertyName, string alias, string propertyValue, bool isMetric)
+        internal static Sensor? BuildPressureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
         {
-            return TryParseDouble(propertyValue, out var value, propertyName)
-                ? new Sensor(propertyName, alias, isMetric ? IM2HP(value) : value, SensorDataType.Double, isMetric ? "hPa" : "inHg", SensorType.Pressure)
-                : null;
+            if (!TryParseDouble(propertyValue, out var value, propertyName)) return null;
+            var unit = isMetric ? "hPa" : "inHg";
+            if (startMetric != isMetric)
+            {
+                value = startMetric ? HP2IM(value) : IM2HP(value);
+            }
+            return new Sensor(propertyName, alias, value, SensorDataType.Double, unit, SensorType.Pressure);
         }
 
-        private static Sensor? BuildHumiditySensor(string propertyName, string alias, string propertyValue)
+        internal static Sensor? BuildHumiditySensor(string propertyName, string alias, string propertyValue)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, value, SensorDataType.Double, "%", SensorType.Humidity)
                 : null;
         }
 
-        private static Sensor? BuildTemperatureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
+        internal static Sensor? BuildTemperatureSensor(string propertyName, string alias, string propertyValue, bool isMetric, bool startMetric = false)
         {
             if (!TryParseDouble(propertyValue, out var value, propertyName)) return null;
             var unit = isMetric ? "°C" : "F";
@@ -197,7 +201,7 @@ namespace Ecowitt.Controller.Model.Mapping
             return new Sensor(propertyName, alias, value, SensorDataType.Double, unit, SensorType.Temperature);
         }
 
-        private static Sensor? BuildDoubleSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
+        internal static Sensor? BuildDoubleSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
         {
             return TryParseDouble(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, value, SensorDataType.Double, unit, type, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
@@ -218,7 +222,7 @@ namespace Ecowitt.Controller.Model.Mapping
             return null;
         }
 
-        private static Sensor? BuildIntSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
+        internal static Sensor? BuildIntSensor(string propertyName, string alias, string propertyValue, string unit = "", SensorType type = SensorType.None, bool isDiag = false)
         {
             return TryParseInt(propertyValue, out var value, propertyName)
                 ? new Sensor(propertyName, alias, value, SensorDataType.Integer, unit, type, sensorCategory: isDiag ? SensorCategory.Diagnostic : SensorCategory.Config)
@@ -240,6 +244,7 @@ namespace Ecowitt.Controller.Model.Mapping
 
         private static double K2M(double result) => result * 0.621371;
         private static double IM2HP(double im) => im * 33.86388;
+        private static double HP2IM(double hpa) => hpa / 33.86388;
         private static double F2C(double fahrenheit) => (fahrenheit - 32) * 5 / 9;
         private static double C2F(double celsius) => celsius * 9 / 5 + 32;
         private static double M2K(double mph) => mph * 1.60934;
