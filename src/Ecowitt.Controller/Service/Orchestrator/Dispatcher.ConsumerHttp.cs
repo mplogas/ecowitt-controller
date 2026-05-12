@@ -51,6 +51,14 @@ namespace Ecowitt.Controller.Service.Orchestrator
 
         public async Task OnHandle(GatewayApiData message, CancellationToken cancellationToken)
         {
+            // Drop push payloads from Poll-mode gateways — they get their data via livedata poll instead.
+            var configuredGateway = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == message.IpAddress);
+            if (configuredGateway?.IngestMode == IngestMode.Poll)
+            {
+                _logger.LogDebug("Dropping push payload from Poll-mode gateway {GatewayIp}", message.IpAddress);
+                return;
+            }
+
             _logger.LogDebug("Received ApiData: {MessageModel} ({MessagePasskey}) \n {MessagePayload}", message.Model, message.PASSKEY, message.Payload);
             var updatedGateway = message.Map(_controllerOptions.Units == Units.Metric, _ecowittOptions.CalculateValues);
             updatedGateway.Name = _ecowittOptions.Gateways.FirstOrDefault(g => g.Ip == updatedGateway.IpAddress)?.Name ?? updatedGateway.IpAddress.Replace('.', '-');

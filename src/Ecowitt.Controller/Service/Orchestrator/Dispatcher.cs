@@ -55,10 +55,22 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
 
     private async Task EmitHttpConfig()
     {
+        var subdeviceHosts = _ecowittOptions.Gateways
+            .Where(gw => gw.Subdevices)
+            .Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password))
+            .ToList();
+
+        var liveDataHosts = _ecowittOptions.Gateways
+            .Where(gw => gw.IngestMode == IngestMode.Poll)
+            .Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password))
+            .ToList();
+
         var httpConfig = new HttpConfig
         {
-            Hosts = _ecowittOptions.Gateways.Where(gw => gw.Subdevices).Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password)).ToList(),
-            PollingInterval = _ecowittOptions.PollingInterval
+            Hosts = subdeviceHosts,
+            PollingInterval = _ecowittOptions.PollingInterval,
+            LiveDataHosts = liveDataHosts,
+            LiveDataInterval = _ecowittOptions.LiveDataInterval
         };
 
         await _messageBus.Publish(httpConfig);
@@ -69,7 +81,8 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         var httpConfig = new HttpConfig
         {
             Hosts = hosts,
-            PollingInterval = _ecowittOptions.PollingInterval
+            PollingInterval = _ecowittOptions.PollingInterval,
+            LiveDataInterval = _ecowittOptions.LiveDataInterval
         };
 
         await _messageBus.Publish(httpConfig);
