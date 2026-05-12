@@ -1,0 +1,43 @@
+{
+  "common_list": [],
+  "wh25": [
+    {
+      "intemp": "23.5",
+      "unit": "C",
+      "inhumi": "49%",
+      "abs": "1004.0 hPa",
+      "rel": "1004.0 hPa"
+    }
+  ],
+  "co2": [
+    {
+      "temp": "23.9",
+      "unit": "C",
+      "humidity": "52%",
+      "PM25": "4.0",
+      "PM25_RealAQI": "17",
+      "PM25_24HAQI": "15",
+      "PM25_24H": "3.5",
+      "PM10": "4.4",
+      "PM10_RealAQI": "4",
+      "PM10_24HAQI": "3",
+      "PM10_24H": "3.8",
+      "PM1_24H": "--.-",
+      "PM4_24H": "--.-",
+      "CO2": "974",
+      "CO2_24H": "689",
+      "battery": "6"
+    }
+  ],
+  "ch_soil": [
+    { "channel": "3", "name": "", "battery": "5", "voltage": "1.60", "humidity": "--" },
+    { "channel": "8", "name": "", "battery": "5", "voltage": "1.60", "humidity": "57%" },
+    { "channel": "9", "name": "", "battery": "5", "voltage": "1.60", "humidity": "56%" }
+  ],
+  "ch_temp": [
+    { "channel": "1", "name": "", "temp": "14.0", "unit": "C", "battery": "5", "voltage": "1.46" }
+  ],
+  "debug": [
+    { "heap": "120488", "runtime": "12129", "usr_interval": "10", "is_cnip": false }
+  ]
+}

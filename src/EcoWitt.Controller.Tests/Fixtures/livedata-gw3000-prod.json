@@ -1,0 +1,56 @@
+{
+  "common_list": [
+    { "id": "0x02", "val": "12.9", "unit": "C" },
+    { "id": "0x07", "val": "71%" },
+    { "id": "4", "val": "11.9", "unit": "C" },
+    { "id": "5", "val": "0.431 kPa" },
+    { "id": "0x03", "val": "7.8", "unit": "C" },
+    { "id": "0x0B", "val": "0.6 m/s" },
+    { "id": "0x0C", "val": "0.7 m/s" },
+    { "id": "0x19", "val": "3.0 m/s" },
+    { "id": "0x15", "val": "0.00 W/m2" },
+    { "id": "0x17", "val": "0" },
+    { "id": "0x0A", "val": "68" },
+    { "id": "0x6D", "val": "81" }
+  ],
+  "piezoRain": [
+    { "id": "srain_piezo", "val": "0" },
+    { "id": "0x0D", "val": "0.0 mm" },
+    { "id": "0x0E", "val": "0.0 mm/Hr" },
+    { "id": "0x7C", "val": "0.0 mm" },
+    { "id": "0x10", "val": "0.0 mm" },
+    { "id": "0x11", "val": "22.3 mm" },
+    { "id": "0x12", "val": "22.3 mm" },
+    { "id": "0x13", "val": "120.3 mm", "battery": "3", "voltage": "2.72", "ws90cap_volt": "2.3", "ws90_ver": "147" }
+  ],
+  "wh25": [
+    { "intemp": "16.6", "unit": "C", "inhumi": "67%", "abs": "1002.7 hPa", "rel": "1002.7 hPa" }
+  ],
+  "lightning": [
+    { "distance": "8 km", "date": "2026-01-08T20:47:51", "timestamp": "01/08/2026 20:47:51", "count": "0", "battery": "5" }
+  ],
+  "ch_soil": [
+    { "channel": "1", "name": "CH1 Soil", "battery": "5", "voltage": "1.60", "humidity": "54%" },
+    { "channel": "2", "name": "CH2 Soil", "battery": "5", "voltage": "1.60", "humidity": "57%" },
+    { "channel": "3", "name": "CH3 Soil", "battery": "5", "voltage": "1.60", "humidity": "59%" },
+    { "channel": "4", "name": "CH4 Soil", "battery": "5", "voltage": "1.50", "humidity": "47%" },
+    { "channel": "5", "name": "CH5 Soil", "battery": "5", "voltage": "1.60", "humidity": "48%" },
+    { "channel": "6", "name": "CH6 Soil", "battery": "5", "voltage": "1.60", "humidity": "55%" },
+    { "channel": "7", "name": "CH7 Soil", "battery": "5", "voltage": "1.60", "humidity": "50%" },
+    { "channel": "8", "name": "CH8 Soil", "battery": "5", "voltage": "1.60", "humidity": "63%" },
+    { "channel": "9", "name": "", "battery": "5", "voltage": "1.60", "humidity": "77%" },
+    { "channel": "10", "name": "", "battery": "5", "voltage": "1.60", "humidity": "64%" },
+    { "channel": "11", "name": "", "battery": "5", "voltage": "1.60", "humidity": "57%" },
+    { "channel": "12", "name": "", "battery": "5", "voltage": "1.60", "humidity": "65%" },
+    { "channel": "13", "name": "", "battery": "5", "voltage": "1.60", "humidity": "57%" },
+    { "channel": "14", "name": "", "battery": "5", "voltage": "1.60", "humidity": "43%" },
+    { "channel": "15", "name": "", "battery": "5", "voltage": "1.60", "humidity": "55%" },
+    { "channel": "16", "name": "", "battery": "5", "voltage": "1.60", "humidity": "43%" }
+  ],
+  "ch_temp": [
+    { "channel": "1", "name": "", "temp": "14.0", "unit": "C", "battery": "5", "voltage": "1.46" }
+  ],
+  "debug": [
+    { "heap": "129388", "runtime": "633205", "usr_interval": "10", "is_cnip": false }
+  ]
+}
