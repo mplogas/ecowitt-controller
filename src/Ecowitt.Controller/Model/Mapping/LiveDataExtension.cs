@@ -96,7 +96,7 @@ public static class LiveDataExtension
             var count = SensorBuilder.BuildIntSensor("lightning_num", "Lightning Count", StripUnit(r.Count));
             if (count != null) sensors.Add(count);
 
-            var battery = SensorBuilder.BuildBatterySensor("wh57batt", "Lightning Battery", StripUnit(r.Battery));
+            var battery = SensorBuilder.BuildBatterySensor("wh57batt", "Lightning Battery", StripUnit(r.Battery), withMultiplier: true);
             if (battery != null) sensors.Add(battery);
         }
     }

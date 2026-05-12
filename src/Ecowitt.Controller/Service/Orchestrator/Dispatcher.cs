@@ -76,18 +76,6 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
         await _messageBus.Publish(httpConfig);
     }
 
-    private async Task EmitHttpConfig(List<HttpHost> hosts)
-    {
-        var httpConfig = new HttpConfig
-        {
-            Hosts = hosts,
-            PollingInterval = _ecowittOptions.PollingInterval,
-            LiveDataInterval = _ecowittOptions.LiveDataInterval
-        };
-
-        await _messageBus.Publish(httpConfig);
-    }
-
     private async Task EmitMqttConfig()
     {
         var mqttConfig = new MqttConfig
