@@ -16,6 +16,7 @@ public static class LiveDataExtension
 
         if (data.Wh25 != null) MapWh25(data.Wh25, device.Sensors, isMetric);
         if (data.ChSoil != null) MapChSoil(data.ChSoil, device.Sensors, isMetric);
+        if (data.ChTemp != null) MapChTemp(data.ChTemp, device.Sensors, isMetric);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
@@ -60,6 +61,23 @@ public static class LiveDataExtension
 
             // soilbattvolt — new diagnostic voltage sensor
             var voltage = SensorBuilder.BuildVoltageSensor($"soilbattvolt{ch}", $"Soil Battery Voltage {ch}", StripUnit(r.Voltage), isDiag: true);
+            if (voltage != null) sensors.Add(voltage);
+        }
+    }
+
+    private static void MapChTemp(List<ChannelTempReading> readings, List<ISensor> sensors, bool isMetric)
+    {
+        foreach (var r in readings)
+        {
+            if (!int.TryParse(r.Channel, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ch)) continue;
+
+            var temp = SensorBuilder.BuildTemperatureSensor($"temp{ch}f", $"Channel {ch} Temperature", StripUnit(r.Temp), isMetric, startMetric: true);
+            if (temp != null) sensors.Add(temp);
+
+            var batt = SensorBuilder.BuildBatterySensor($"batt{ch}", $"Channel {ch} Battery", StripUnit(r.Battery));
+            if (batt != null) sensors.Add(batt);
+
+            var voltage = SensorBuilder.BuildVoltageSensor($"battvolt{ch}", $"Channel {ch} Battery Voltage", StripUnit(r.Voltage), isDiag: true);
             if (voltage != null) sensors.Add(voltage);
         }
     }

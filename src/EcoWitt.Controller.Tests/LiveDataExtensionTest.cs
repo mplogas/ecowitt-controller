@@ -79,4 +79,23 @@ public class LiveDataExtensionTest
         Assert.That(ch8Moisture, Is.Not.Null);
         Assert.That((double)ch8Moisture!.Value!, Is.EqualTo(57.0).Within(0.01));
     }
+
+    [Test]
+    public void Map_ChTemp_ProducesTempBatteryVoltagePerChannel()
+    {
+        var data = LoadFixture("livedata-gw3000-prod.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var ch1Temp = device.Sensors.FirstOrDefault(s => s.Name == "temp1f");
+        Assert.That(ch1Temp, Is.Not.Null, "channel 1 temp sensor missing");
+        Assert.That((double)ch1Temp!.Value!, Is.EqualTo(14.0).Within(0.01));
+
+        var ch1Batt = device.Sensors.FirstOrDefault(s => s.Name == "batt1");
+        Assert.That(ch1Batt, Is.Not.Null, "channel 1 battery sensor missing");
+
+        var ch1Volt = device.Sensors.FirstOrDefault(s => s.Name == "battvolt1");
+        Assert.That(ch1Volt, Is.Not.Null, "channel 1 battery voltage missing");
+        Assert.That((double)ch1Volt!.Value!, Is.EqualTo(1.46).Within(0.01));
+    }
 }
