@@ -18,6 +18,7 @@ public static class LiveDataExtension
         if (data.ChSoil != null) MapChSoil(data.ChSoil, device.Sensors, isMetric);
         if (data.ChTemp != null) MapChTemp(data.ChTemp, device.Sensors, isMetric);
         if (data.Lightning != null) MapLightning(data.Lightning, device.Sensors, isMetric);
+        if (data.Co2 != null) MapCo2(data.Co2, device.Sensors, isMetric);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
@@ -96,6 +97,34 @@ public static class LiveDataExtension
             var battery = SensorBuilder.BuildBatterySensor("wh57batt", "Lightning Battery", StripUnit(r.Battery));
             if (battery != null) sensors.Add(battery);
         }
+    }
+
+    private static void MapCo2(List<Co2Reading> readings, List<ISensor> sensors, bool isMetric)
+    {
+        foreach (var r in readings)
+        {
+            // Temp: source is metric °C, but push convention via SensorBuilder switch assumes F. Direct call with startMetric:true.
+            var temp = SensorBuilder.BuildTemperatureSensor("tf_co2", "CO2 Temperature", StripUnit(r.Temp), isMetric, startMetric: true);
+            if (temp != null) sensors.Add(temp);
+
+            // Remaining are unit-agnostic; route through public BuildSensor (uses existing AQIN switch arms).
+            AddIfBuilt(sensors, "humi_co2", StripUnit(r.Humidity), isMetric);
+            AddIfBuilt(sensors, "pm25_co2", StripUnit(r.Pm25), isMetric);
+            AddIfBuilt(sensors, "pm25_24h_co2", StripUnit(r.Pm25_24H), isMetric);
+            AddIfBuilt(sensors, "pm10_co2", StripUnit(r.Pm10), isMetric);
+            AddIfBuilt(sensors, "pm10_24h_co2", StripUnit(r.Pm10_24H), isMetric);
+            AddIfBuilt(sensors, "pm1_24h_co2", StripUnit(r.Pm1_24H), isMetric);
+            AddIfBuilt(sensors, "pm4_24h_co2", StripUnit(r.Pm4_24H), isMetric);
+            AddIfBuilt(sensors, "co2", StripUnit(r.Co2), isMetric);
+            AddIfBuilt(sensors, "co2_24h", StripUnit(r.Co2_24H), isMetric);
+            AddIfBuilt(sensors, "co2_batt", StripUnit(r.Battery), isMetric);
+        }
+    }
+
+    private static void AddIfBuilt(List<ISensor> sensors, string propertyName, string value, bool isMetric)
+    {
+        var sensor = SensorBuilder.BuildSensor(propertyName, value, isMetric);
+        if (sensor != null) sensors.Add(sensor);
     }
 
     private static string StripUnit(string raw)

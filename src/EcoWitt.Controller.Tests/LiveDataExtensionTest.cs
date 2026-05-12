@@ -116,4 +116,47 @@ public class LiveDataExtensionTest
         var battery = device.Sensors.FirstOrDefault(s => s.Name == "wh57batt");
         Assert.That(battery, Is.Not.Null);
     }
+
+    [Test]
+    public void Map_Co2_ProducesAqinSensors()
+    {
+        var data = LoadFixture("livedata-gw3000-test.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var co2 = device.Sensors.FirstOrDefault(s => s.Name == "co2");
+        Assert.That(co2, Is.Not.Null);
+
+        var pm25 = device.Sensors.FirstOrDefault(s => s.Name == "pm25_co2");
+        Assert.That(pm25, Is.Not.Null);
+        Assert.That((double)pm25!.Value!, Is.EqualTo(4.0).Within(0.01));
+
+        var pm10 = device.Sensors.FirstOrDefault(s => s.Name == "pm10_co2");
+        Assert.That(pm10, Is.Not.Null);
+        Assert.That((double)pm10!.Value!, Is.EqualTo(4.4).Within(0.01));
+
+        var temp = device.Sensors.FirstOrDefault(s => s.Name == "tf_co2");
+        Assert.That(temp, Is.Not.Null);
+        Assert.That((double)temp!.Value!, Is.EqualTo(23.9).Within(0.01));
+
+        var humi = device.Sensors.FirstOrDefault(s => s.Name == "humi_co2");
+        Assert.That(humi, Is.Not.Null);
+
+        var batt = device.Sensors.FirstOrDefault(s => s.Name == "co2_batt");
+        Assert.That(batt, Is.Not.Null);
+    }
+
+    [Test]
+    public void Map_Co2_SkipsDoubleDashSentinel()
+    {
+        var data = LoadFixture("livedata-gw3000-test.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        // PM1_24H and PM4_24H are "--.-" in the fixture — should produce no sensor
+        var pm1_24h = device.Sensors.FirstOrDefault(s => s.Name == "pm1_24h_co2");
+        Assert.That(pm1_24h, Is.Null);
+        var pm4_24h = device.Sensors.FirstOrDefault(s => s.Name == "pm4_24h_co2");
+        Assert.That(pm4_24h, Is.Null);
+    }
 }
