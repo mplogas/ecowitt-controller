@@ -43,4 +43,40 @@ public class LiveDataExtensionTest
         Assert.That(pressureRel, Is.Not.Null, "relative pressure sensor missing");
         Assert.That((double)pressureRel!.Value!, Is.EqualTo(1004.0).Within(0.1));
     }
+
+    [Test]
+    public void Map_ChSoil_ProducesSoilMoistureVoltageBatteryPerChannel()
+    {
+        var data = LoadFixture("livedata-gw3000-prod.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        // 16 channels, each producing moisture + battery + voltage = 48 soil sensors
+        var soilSensors = device.Sensors.Where(s => s.Name.StartsWith("soil")).ToList();
+        Assert.That(soilSensors.Count, Is.EqualTo(48), "expected 48 soil sensors (16 channels x 3 fields)");
+
+        var ch16Moisture = device.Sensors.FirstOrDefault(s => s.Name == "soilmoisture16");
+        Assert.That(ch16Moisture, Is.Not.Null);
+        Assert.That((double)ch16Moisture!.Value!, Is.EqualTo(43.0).Within(0.01));
+
+        var ch16Voltage = device.Sensors.FirstOrDefault(s => s.Name == "soilbattvolt16");
+        Assert.That(ch16Voltage, Is.Not.Null);
+        Assert.That((double)ch16Voltage!.Value!, Is.EqualTo(1.60).Within(0.01));
+    }
+
+    [Test]
+    public void Map_ChSoil_SkipsChannelWithDoubleDashHumidity()
+    {
+        var data = LoadFixture("livedata-gw3000-test.json");
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        // gw3000-test channel 3 has humidity "--" sentinel — should be skipped
+        var ch3Moisture = device.Sensors.FirstOrDefault(s => s.Name == "soilmoisture3");
+        Assert.That(ch3Moisture, Is.Null, "channel 3 has '--' humidity; should be skipped");
+
+        var ch8Moisture = device.Sensors.FirstOrDefault(s => s.Name == "soilmoisture8");
+        Assert.That(ch8Moisture, Is.Not.Null);
+        Assert.That((double)ch8Moisture!.Value!, Is.EqualTo(57.0).Within(0.01));
+    }
 }

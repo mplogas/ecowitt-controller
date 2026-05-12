@@ -1,3 +1,4 @@
+using System.Globalization;
 using Ecowitt.Controller.Model.Message.Data;
 
 namespace Ecowitt.Controller.Model.Mapping;
@@ -14,6 +15,7 @@ public static class LiveDataExtension
         };
 
         if (data.Wh25 != null) MapWh25(data.Wh25, device.Sensors, isMetric);
+        if (data.ChSoil != null) MapChSoil(data.ChSoil, device.Sensors, isMetric);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
@@ -35,6 +37,30 @@ public static class LiveDataExtension
 
             var rel = SensorBuilder.BuildPressureSensor("baromrelin", "Relative Pressure", StripUnit(r.Rel), isMetric, startMetric: true);
             if (rel != null) sensors.Add(rel);
+        }
+    }
+
+    private static void MapChSoil(List<ChannelSoilReading> readings, List<ISensor> sensors, bool isMetric)
+    {
+        foreach (var r in readings)
+        {
+            if (!int.TryParse(r.Channel, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ch)) continue;
+
+            // soilmoisture — skip the "--" sentinel
+            var rawHumi = StripUnit(r.Humidity);
+            if (!string.IsNullOrEmpty(rawHumi) && rawHumi != "--")
+            {
+                var moisture = SensorBuilder.BuildHumiditySensor($"soilmoisture{ch}", $"Soil Moisture {ch}", rawHumi);
+                if (moisture != null) sensors.Add(moisture);
+            }
+
+            // soilbatt — battery level 0-5
+            var batt = SensorBuilder.BuildBatterySensor($"soilbatt{ch}", $"Soil Battery {ch}", StripUnit(r.Battery));
+            if (batt != null) sensors.Add(batt);
+
+            // soilbattvolt — new diagnostic voltage sensor
+            var voltage = SensorBuilder.BuildVoltageSensor($"soilbattvolt{ch}", $"Soil Battery Voltage {ch}", StripUnit(r.Voltage), isDiag: true);
+            if (voltage != null) sensors.Add(voltage);
         }
     }
 
