@@ -5,10 +5,11 @@ A .NET 10 bridge that connects Ecowitt weather stations and IoT subdevices to MQ
 ## Features
 
 - Multi-gateway, multi-subdevice support
+- Two ingestion modes per gateway: **Push** (legacy `/data/report`, works with any Ecowitt-protocol station) or **Poll** (`get_livedata_info` API, for IoT-capable gateways)
 - Automatic discovery of new sensors and subdevices
 - Bidirectional communication with subdevices (AC1100, WFC01, WFC02)
 - Home Assistant MQTT discovery (devices, sensors, switches)
-- Metric/imperial unit conversion
+- Metric/imperial unit conversion (Push mode) — Poll mode passes the gateway's configured display unit through to HA verbatim
 - Change-detection filtering to reduce MQTT noise
 
 ## Supported Devices
@@ -146,10 +147,36 @@ dotnet run --project Ecowitt.Controller/Ecowitt.Controller.csproj -c Release
 
 ### Configure Your Weather Station
 
+The controller supports two ingestion modes per gateway. Pick one based on your hardware and preference. Both produce the same MQTT topics and Home Assistant entities downstream.
+
+#### Push mode (default)
+
+Works with **any** Ecowitt-protocol gateway, including older non-IoT models (GW1100, GW1000, WN1980, WS3800, WS39x0). The gateway uploads weather data to the controller on its configured posting interval.
+
 1. Open your gateway's WebUI or the WS View Plus app
 2. Go to weather services and enable the **Customized** upload
 3. Set protocol to **Ecowitt**, enter the controller's IP, path `/data/report`, port `8080`
 4. Set the posting interval (e.g. 30 seconds)
+
+Push mode is the default — no controller-side config change required.
+
+#### Poll mode (IoT-capable gateways only)
+
+Works with **GW1200, GW2000, GW3000**. The controller polls the gateway's `get_livedata_info` API on its own schedule (`ecowitt.liveDataInterval`, default 5 seconds), giving controller-owned timing and explicit failure detection.
+
+1. Set `ingestMode` to `Poll` for the gateway entry in `appsettings.json`:
+   ```jsonc
+   "gateways": [
+     {
+       "name": "weatherstation_01",
+       "ip": "192.168.1.101",
+       "subdevices": true,
+       "ingestMode": "Poll"
+     }
+   ]
+   ```
+2. No WSView configuration changes needed. The custom-upload setting in WSView can stay enabled — push payloads from `Poll`-mode gateway IPs are silently discarded.
+3. **Set your gateway's display units in WSView to whatever you want HA to show.** Poll mode is unit-passthrough: the sensor unit in HA matches what the gateway is configured to display (e.g. set wind to `m/s` in WSView → HA shows `m/s`). The `controller.unit` setting governs Push-mode conversion only and has no effect on Poll-mode sensors.
 
 ### Home Assistant Integration
 
