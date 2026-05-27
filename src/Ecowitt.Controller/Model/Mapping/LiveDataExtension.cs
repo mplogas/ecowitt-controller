@@ -5,6 +5,8 @@ namespace Ecowitt.Controller.Model.Mapping;
 
 public static class LiveDataExtension
 {
+    // isMetric is kept for API parity with ApiDataExtension.Map. Under unit-passthrough, livedata
+    // sensors carry whatever unit the gateway returned, so isMetric has no effect inside Map itself.
     public static Device Map(this GatewayLiveData data, bool isMetric = true, bool calculateValues = true)
     {
         var device = new Device
@@ -14,38 +16,41 @@ public static class LiveDataExtension
             Sensors = new List<ISensor>()
         };
 
-        if (data.Wh25 != null) MapWh25(data.Wh25, device.Sensors, isMetric);
-        if (data.ChSoil != null) MapChSoil(data.ChSoil, device.Sensors, isMetric);
-        if (data.ChTemp != null) MapChTemp(data.ChTemp, device.Sensors, isMetric);
-        if (data.Lightning != null) MapLightning(data.Lightning, device.Sensors, isMetric);
-        if (data.Co2 != null) MapCo2(data.Co2, device.Sensors, isMetric);
-        if (data.PiezoRain != null) MapPiezoRain(data.PiezoRain, device.Sensors, isMetric);
-        if (data.CommonList != null) MapCommonList(data.CommonList, device.Sensors, isMetric);
+        if (data.Wh25 != null) MapWh25(data.Wh25, device.Sensors);
+        if (data.ChSoil != null) MapChSoil(data.ChSoil, device.Sensors);
+        if (data.ChTemp != null) MapChTemp(data.ChTemp, device.Sensors);
+        if (data.Lightning != null) MapLightning(data.Lightning, device.Sensors);
+        if (data.Co2 != null) MapCo2(data.Co2, device.Sensors);
+        if (data.PiezoRain != null) MapPiezoRain(data.PiezoRain, device.Sensors);
+        if (data.CommonList != null) MapCommonList(data.CommonList, device.Sensors);
 
         if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
         return device;
     }
 
-    private static void MapWh25(List<Wh25Reading> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapWh25(List<Wh25Reading> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
-            var temp = SensorBuilder.BuildTemperatureSensor("tempinf", "Indoor Temperature", StripUnit(r.Intemp), isMetric, startMetric: true);
+            var tempUnit = NormalizeTemperatureUnit(r.Unit);
+            var temp = SensorBuilder.BuildDoubleSensor("tempinf", "Indoor Temperature", r.Intemp, tempUnit, SensorType.Temperature);
             if (temp != null) sensors.Add(temp);
 
-            var humi = SensorBuilder.BuildHumiditySensor("humidityin", "Indoor Humidity", StripUnit(r.Inhumi));
+            var humi = SensorBuilder.BuildDoubleSensor("humidityin", "Indoor Humidity", StripUnit(r.Inhumi), "%", SensorType.Humidity);
             if (humi != null) sensors.Add(humi);
 
-            var abs = SensorBuilder.BuildPressureSensor("baromabsin", "Absolute Pressure", StripUnit(r.Abs), isMetric, startMetric: true);
+            var (absVal, absUnit) = SplitValueAndUnit(r.Abs);
+            var abs = SensorBuilder.BuildDoubleSensor("baromabsin", "Absolute Pressure", absVal, absUnit, SensorType.Pressure);
             if (abs != null) sensors.Add(abs);
 
-            var rel = SensorBuilder.BuildPressureSensor("baromrelin", "Relative Pressure", StripUnit(r.Rel), isMetric, startMetric: true);
+            var (relVal, relUnit) = SplitValueAndUnit(r.Rel);
+            var rel = SensorBuilder.BuildDoubleSensor("baromrelin", "Relative Pressure", relVal, relUnit, SensorType.Pressure);
             if (rel != null) sensors.Add(rel);
         }
     }
 
-    private static void MapChSoil(List<ChannelSoilReading> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapChSoil(List<ChannelSoilReading> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
@@ -63,19 +68,20 @@ public static class LiveDataExtension
             var batt = SensorBuilder.BuildBatterySensor($"soilbatt{ch}", $"Soil Battery {ch}", StripUnit(r.Battery));
             if (batt != null) sensors.Add(batt);
 
-            // soilbattvolt — new diagnostic voltage sensor
+            // soilbattvolt — diagnostic voltage sensor
             var voltage = SensorBuilder.BuildVoltageSensor($"soilbattvolt{ch}", $"Soil Battery Voltage {ch}", StripUnit(r.Voltage), isDiag: true);
             if (voltage != null) sensors.Add(voltage);
         }
     }
 
-    private static void MapChTemp(List<ChannelTempReading> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapChTemp(List<ChannelTempReading> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
             if (!int.TryParse(r.Channel, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ch)) continue;
 
-            var temp = SensorBuilder.BuildTemperatureSensor($"temp{ch}f", $"Channel {ch} Temperature", StripUnit(r.Temp), isMetric, startMetric: true);
+            var tempUnit = NormalizeTemperatureUnit(r.Unit);
+            var temp = SensorBuilder.BuildDoubleSensor($"temp{ch}f", $"Channel {ch} Temperature", r.Temp, tempUnit, SensorType.Temperature);
             if (temp != null) sensors.Add(temp);
 
             var batt = SensorBuilder.BuildBatterySensor($"batt{ch}", $"Channel {ch} Battery", StripUnit(r.Battery));
@@ -86,11 +92,12 @@ public static class LiveDataExtension
         }
     }
 
-    private static void MapLightning(List<LightningReading> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapLightning(List<LightningReading> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
-            var distance = SensorBuilder.BuildDistanceSensor("lightning", "Lightning Distance", StripUnit(r.Distance), isMetric);
+            var (distVal, distUnit) = SplitValueAndUnit(r.Distance);
+            var distance = SensorBuilder.BuildDoubleSensor("lightning", "Lightning Distance", distVal, distUnit, SensorType.Distance);
             if (distance != null) sensors.Add(distance);
 
             var count = SensorBuilder.BuildIntSensor("lightning_num", "Lightning Count", StripUnit(r.Count));
@@ -101,25 +108,26 @@ public static class LiveDataExtension
         }
     }
 
-    private static void MapCo2(List<Co2Reading> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapCo2(List<Co2Reading> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
-            // Temp: source is metric °C, but push convention via SensorBuilder switch assumes F. Direct call with startMetric:true.
-            var temp = SensorBuilder.BuildTemperatureSensor("tf_co2", "CO2 Temperature", StripUnit(r.Temp), isMetric, startMetric: true);
+            var tempUnit = NormalizeTemperatureUnit(r.Unit);
+            var temp = SensorBuilder.BuildDoubleSensor("tf_co2", "CO2 Temperature", r.Temp, tempUnit, SensorType.Temperature);
             if (temp != null) sensors.Add(temp);
 
-            // Remaining are unit-agnostic; route through public BuildSensor (uses existing AQIN switch arms).
-            AddIfBuilt(sensors, "humi_co2", StripUnit(r.Humidity), isMetric);
-            AddIfBuilt(sensors, "pm25_co2", StripUnit(r.Pm25), isMetric);
-            AddIfBuilt(sensors, "pm25_24h_co2", StripUnit(r.Pm25_24H), isMetric);
-            AddIfBuilt(sensors, "pm10_co2", StripUnit(r.Pm10), isMetric);
-            AddIfBuilt(sensors, "pm10_24h_co2", StripUnit(r.Pm10_24H), isMetric);
-            AddIfBuilt(sensors, "pm1_24h_co2", StripUnit(r.Pm1_24H), isMetric);
-            AddIfBuilt(sensors, "pm4_24h_co2", StripUnit(r.Pm4_24H), isMetric);
-            AddIfBuilt(sensors, "co2", StripUnit(r.Co2), isMetric);
-            AddIfBuilt(sensors, "co2_24h", StripUnit(r.Co2_24H), isMetric);
-            AddIfBuilt(sensors, "co2_batt", StripUnit(r.Battery), isMetric);
+            AddDoubleIfValid(sensors, "humi_co2",       "CO2 Humidity",    StripUnit(r.Humidity),  "%",      SensorType.Humidity);
+            AddDoubleIfValid(sensors, "pm25_co2",       "PM2.5 (CO2)",     StripUnit(r.Pm25),      "µg/m³", SensorType.Pm25);
+            AddDoubleIfValid(sensors, "pm25_24h_co2",   "PM2.5 24h (CO2)", StripUnit(r.Pm25_24H),  "µg/m³", SensorType.Pm25);
+            AddDoubleIfValid(sensors, "pm10_co2",       "PM10 (CO2)",      StripUnit(r.Pm10),      "µg/m³", SensorType.Pm10);
+            AddDoubleIfValid(sensors, "pm10_24h_co2",   "PM10 24h (CO2)",  StripUnit(r.Pm10_24H),  "µg/m³", SensorType.Pm10);
+            AddDoubleIfValid(sensors, "pm1_24h_co2",    "PM1 24h (CO2)",   StripUnit(r.Pm1_24H),   "µg/m³", SensorType.Pm1);
+            AddDoubleIfValid(sensors, "pm4_24h_co2",    "PM4 24h (CO2)",   StripUnit(r.Pm4_24H),   "µg/m³", SensorType.None);
+            AddDoubleIfValid(sensors, "co2",            "CO2",             StripUnit(r.Co2),       "ppm",   SensorType.CarbonDioxide);
+            AddDoubleIfValid(sensors, "co2_24h",        "CO2 24h",         StripUnit(r.Co2_24H),   "ppm",   SensorType.CarbonDioxide);
+
+            var batt = SensorBuilder.BuildBatterySensor("co2_batt", "CO2 Battery", StripUnit(r.Battery));
+            if (batt != null) sensors.Add(batt);
         }
     }
 
@@ -135,16 +143,15 @@ public static class LiveDataExtension
         { "0x13", "yrain_piezo" }    // yearly
     };
 
-    private static void MapPiezoRain(List<PiezoRainItem> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapPiezoRain(List<PiezoRainItem> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
             if (!PiezoRainIdMap.TryGetValue(r.Id, out var propertyName)) continue;
 
-            ISensor? sensor = propertyName == "rrain_piezo"
-                ? SensorBuilder.BuildRainRateSensor(propertyName, RainAliasFor(propertyName), StripUnit(r.Val), isMetric, startMetric: true)
-                : SensorBuilder.BuildRainSensor(propertyName, RainAliasFor(propertyName), StripUnit(r.Val), isMetric, startMetric: true);
-
+            var (val, unit) = SplitValueAndUnit(r.Val);
+            var type = propertyName == "rrain_piezo" ? SensorType.PrecipitationIntensity : SensorType.Precipitation;
+            var sensor = SensorBuilder.BuildDoubleSensor(propertyName, RainAliasFor(propertyName), val, unit, type);
             if (sensor != null) sensors.Add(sensor);
         }
 
@@ -185,7 +192,7 @@ public static class LiveDataExtension
         { "5",    "vpd" }              // VPD (decimal id)
     };
 
-    private static void MapCommonList(List<CommonListItem> readings, List<ISensor> sensors, bool isMetric)
+    private static void MapCommonList(List<CommonListItem> readings, List<ISensor> sensors)
     {
         foreach (var r in readings)
         {
@@ -195,28 +202,32 @@ public static class LiveDataExtension
                 continue;
             }
 
-            var rawValue = StripUnit(r.Val);
-            var sensor = BuildCommonListSensor(propertyName, rawValue, isMetric);
+            // Temperature entries carry value as bare number and unit in the separate `unit` field.
+            // All other entries embed the unit suffix in the `val` string (e.g. "0.6 m/s", "0.431 kPa").
+            var (rawValue, embeddedUnit) = SplitValueAndUnit(r.Val);
+            var unit = string.IsNullOrEmpty(embeddedUnit) && r.Unit != null ? r.Unit : embeddedUnit;
+
+            var sensor = BuildCommonListSensor(propertyName, rawValue, unit);
             if (sensor != null) sensors.Add(sensor);
         }
     }
 
-    private static ISensor? BuildCommonListSensor(string propertyName, string rawValue, bool isMetric)
+    private static ISensor? BuildCommonListSensor(string propertyName, string rawValue, string unit)
     {
         return propertyName switch
         {
-            "tempf"          => SensorBuilder.BuildTemperatureSensor("tempf",          "Outdoor Temperature",    rawValue, isMetric, startMetric: true),
-            "dewpoint"       => SensorBuilder.BuildTemperatureSensor("dewpoint",       "Dew Point",              rawValue, isMetric, startMetric: true),
-            "feelslike"      => SensorBuilder.BuildTemperatureSensor("feelslike",      "Feels Like",             rawValue, isMetric, startMetric: true),
-            "humidity"       => SensorBuilder.BuildHumiditySensor   ("humidity",       "Outdoor Humidity",       rawValue),
-            "winddir"        => SensorBuilder.BuildIntSensor        ("winddir",        "Wind Direction",         rawValue, unit: "°"),
-            "windspeedmph"   => SensorBuilder.BuildWindSpeedSensor  ("windspeedmph",   "Wind Speed",             rawValue, isMetric, sourceUnit: SensorBuilder.WindSpeedSourceUnit.MetersPerSecond),
-            "windgustmph"    => SensorBuilder.BuildWindSpeedSensor  ("windgustmph",    "Wind Gust",              rawValue, isMetric, sourceUnit: SensorBuilder.WindSpeedSourceUnit.MetersPerSecond),
-            "maxdailygust"   => SensorBuilder.BuildWindSpeedSensor  ("maxdailygust",   "Max Daily Gust",         rawValue, isMetric, sourceUnit: SensorBuilder.WindSpeedSourceUnit.MetersPerSecond),
-            "solarradiation" => SensorBuilder.BuildDoubleSensor     ("solarradiation", "Solar Radiation",        rawValue, unit: "W/m²", type: SensorType.Irradiance),
-            "uv"             => SensorBuilder.BuildIntSensor        ("uv",             "UV Index",               rawValue),
-            "windrun"        => SensorBuilder.BuildDistanceSensor   ("windrun",        "Wind Run",               rawValue, isMetric),
-            "vpd"            => SensorBuilder.BuildDoubleSensor     ("vpd",            "Vapor Pressure Deficit", rawValue, unit: "kPa", type: SensorType.Pressure),
+            "tempf"          => SensorBuilder.BuildDoubleSensor("tempf",          "Outdoor Temperature",    rawValue, NormalizeTemperatureUnit(unit), SensorType.Temperature),
+            "dewpoint"       => SensorBuilder.BuildDoubleSensor("dewpoint",       "Dew Point",              rawValue, NormalizeTemperatureUnit(unit), SensorType.Temperature),
+            "feelslike"      => SensorBuilder.BuildDoubleSensor("feelslike",      "Feels Like",             rawValue, NormalizeTemperatureUnit(unit), SensorType.Temperature),
+            "humidity"       => SensorBuilder.BuildDoubleSensor("humidity",       "Outdoor Humidity",       rawValue, "%", SensorType.Humidity),
+            "winddir"        => SensorBuilder.BuildIntSensor   ("winddir",        "Wind Direction",         rawValue, "°"),
+            "windspeedmph"   => SensorBuilder.BuildDoubleSensor("windspeedmph",   "Wind Speed",             rawValue, unit, SensorType.WindSpeed),
+            "windgustmph"    => SensorBuilder.BuildDoubleSensor("windgustmph",    "Wind Gust",              rawValue, unit, SensorType.WindSpeed),
+            "maxdailygust"   => SensorBuilder.BuildDoubleSensor("maxdailygust",   "Max Daily Gust",         rawValue, unit, SensorType.WindSpeed),
+            "solarradiation" => SensorBuilder.BuildDoubleSensor("solarradiation", "Solar Radiation",        rawValue, "W/m²", SensorType.Irradiance),
+            "uv"             => SensorBuilder.BuildIntSensor   ("uv",             "UV Index",               rawValue),
+            "windrun"        => SensorBuilder.BuildDoubleSensor("windrun",        "Wind Run",               rawValue, unit, SensorType.Distance),
+            "vpd"            => SensorBuilder.BuildDoubleSensor("vpd",            "Vapor Pressure Deficit", rawValue, unit, SensorType.Pressure),
             _                => null
         };
     }
@@ -233,21 +244,34 @@ public static class LiveDataExtension
         _ => propertyName
     };
 
-    private static void AddIfBuilt(List<ISensor> sensors, string propertyName, string value, bool isMetric)
+    // Splits a livedata value-with-unit string like "21.60 km/h" or "49%" into (value, unit).
+    private static (string Value, string Unit) SplitValueAndUnit(string raw)
     {
-        var sensor = SensorBuilder.BuildSensor(propertyName, value, isMetric);
-        if (sensor != null) sensors.Add(sensor);
+        if (string.IsNullOrWhiteSpace(raw)) return (string.Empty, string.Empty);
+        var trimmed = raw.Trim();
+        var space = trimmed.IndexOf(' ');
+        if (space > 0) return (trimmed.Substring(0, space), trimmed.Substring(space + 1).Trim());
+        if (trimmed.EndsWith("%")) return (trimmed[..^1], "%");
+        return (trimmed, string.Empty);
     }
 
-    private static string StripUnit(string raw)
+    private static string StripUnit(string raw) => SplitValueAndUnit(raw).Value;
+
+    // HA's device_class:temperature requires "°C"/"°F"/"K". The Ecowitt gateway sends bare "C" or "F"
+    // in the separate `unit` field. Prepend the degree symbol; passthrough anything else.
+    private static string NormalizeTemperatureUnit(string unit) => unit switch
     {
-        if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
-        var trimmed = raw.Trim();
-        // Strip trailing unit like " hPa", " mm", " m/s", etc.
-        var space = trimmed.IndexOf(' ');
-        if (space > 0) trimmed = trimmed.Substring(0, space);
-        // Strip trailing percent sign
-        if (trimmed.EndsWith("%")) trimmed = trimmed[..^1];
-        return trimmed;
+        "C" => "°C",
+        "F" => "°F",
+        _ => unit
+    };
+
+    private static void AddDoubleIfValid(List<ISensor> sensors, string propertyName, string alias, string value, string unit, SensorType type)
+    {
+        if (string.IsNullOrEmpty(value)) return;
+        // skip the "--.-" / "--" sentinels Ecowitt uses for "no reading"
+        if (value.Replace(".", "").Replace("-", "").Length == 0) return;
+        var sensor = SensorBuilder.BuildDoubleSensor(propertyName, alias, value, unit, type);
+        if (sensor != null) sensors.Add(sensor);
     }
 }

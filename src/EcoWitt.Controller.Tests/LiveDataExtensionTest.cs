@@ -239,4 +239,135 @@ public class LiveDataExtensionTest
 
         Assert.That(device.Sensors.Count, Is.EqualTo(0), "unknown IDs should produce no sensors");
     }
+
+    [Test]
+    public void Map_CommonList_WindInKmH_PassesThrough()
+    {
+        // Regression: gateway configured to display wind in km/h returned "21.60 km/h".
+        // Earlier code applied m/s->km/h conversion (×3.6) yielding 77.76; passthrough must return 21.6.
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            CommonList = new List<CommonListItem>
+            {
+                new() { Id = "0x19", Val = "21.60 km/h" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var gust = device.Sensors.FirstOrDefault(s => s.Name == "maxdailygust");
+        Assert.That(gust, Is.Not.Null);
+        Assert.That((double)gust!.Value!, Is.EqualTo(21.6).Within(0.01));
+        Assert.That(gust.UnitOfMeasurement, Is.EqualTo("km/h"));
+    }
+
+    [Test]
+    public void Map_Wh25_NormalizesBareCelsiusUnit()
+    {
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            Wh25 = new List<Wh25Reading>
+            {
+                new() { Intemp = "23.5", Unit = "C", Inhumi = "49%", Abs = "1004.0 hPa", Rel = "1004.0 hPa" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var temp = device.Sensors.FirstOrDefault(s => s.Name == "tempinf");
+        Assert.That(temp, Is.Not.Null);
+        Assert.That(temp!.UnitOfMeasurement, Is.EqualTo("°C"));
+        Assert.That((double)temp.Value!, Is.EqualTo(23.5).Within(0.01));
+    }
+
+    [Test]
+    public void Map_CommonList_TemperatureInCelsius_NormalizesUnit()
+    {
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            CommonList = new List<CommonListItem>
+            {
+                new() { Id = "0x02", Val = "12.9", Unit = "C" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var temp = device.Sensors.FirstOrDefault(s => s.Name == "tempf");
+        Assert.That(temp, Is.Not.Null);
+        Assert.That((double)temp!.Value!, Is.EqualTo(12.9).Within(0.01));
+        Assert.That(temp.UnitOfMeasurement, Is.EqualTo("°C"));
+    }
+
+    [Test]
+    public void Map_CommonList_WindInMps_PassesThrough()
+    {
+        // Wind value embedded as "0.6 m/s" — passthrough yields 0.6 with unit "m/s".
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            CommonList = new List<CommonListItem>
+            {
+                new() { Id = "0x0B", Val = "0.6 m/s" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var windSpeed = device.Sensors.FirstOrDefault(s => s.Name == "windspeedmph");
+        Assert.That(windSpeed, Is.Not.Null);
+        Assert.That((double)windSpeed!.Value!, Is.EqualTo(0.6).Within(0.001));
+        Assert.That(windSpeed.UnitOfMeasurement, Is.EqualTo("m/s"));
+    }
+
+    [Test]
+    public void Map_PiezoRain_RainValuesPassThrough()
+    {
+        // Rain values embedded as "22.3 mm" — passthrough yields 22.3 with unit "mm".
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            PiezoRain = new List<PiezoRainItem>
+            {
+                new() { Id = "0x12", Val = "22.3 mm" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var rain = device.Sensors.FirstOrDefault(s => s.Name == "mrain_piezo");
+        Assert.That(rain, Is.Not.Null);
+        Assert.That((double)rain!.Value!, Is.EqualTo(22.3).Within(0.01));
+        Assert.That(rain.UnitOfMeasurement, Is.EqualTo("mm"));
+    }
+
+    [Test]
+    public void Map_PiezoRain_RainInInches_PassesThrough()
+    {
+        // If gateway is configured for imperial, it sends "0.87 in" — passthrough preserves that.
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            PiezoRain = new List<PiezoRainItem>
+            {
+                new() { Id = "0x12", Val = "0.87 in" }
+            }
+        };
+
+        var device = data.Map(isMetric: false, calculateValues: false);
+
+        var rain = device.Sensors.FirstOrDefault(s => s.Name == "mrain_piezo");
+        Assert.That(rain, Is.Not.Null);
+        Assert.That((double)rain!.Value!, Is.EqualTo(0.87).Within(0.001));
+        Assert.That(rain.UnitOfMeasurement, Is.EqualTo("in"));
+    }
 }
