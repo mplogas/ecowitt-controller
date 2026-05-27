@@ -226,7 +226,9 @@ public static class LiveDataExtension
             "maxdailygust"   => SensorBuilder.BuildDoubleSensor("maxdailygust",   "Max Daily Gust",         rawValue, unit, SensorType.WindSpeed),
             "solarradiation" => SensorBuilder.BuildDoubleSensor("solarradiation", "Solar Radiation",        rawValue, "W/m²", SensorType.Irradiance),
             "uv"             => SensorBuilder.BuildIntSensor   ("uv",             "UV Index",               rawValue),
-            "windrun"        => SensorBuilder.BuildDoubleSensor("windrun",        "Wind Run",               rawValue, unit, SensorType.Distance),
+            // windrun: gateway sends unitless value (e.g. "81"); no way to determine km vs mi from the
+            // response. Drop the device_class so HA doesn't warn about a missing unit for distance.
+            "windrun"        => SensorBuilder.BuildDoubleSensor("windrun",        "Wind Run",               rawValue, unit, SensorType.None),
             "vpd"            => SensorBuilder.BuildDoubleSensor("vpd",            "Vapor Pressure Deficit", rawValue, unit, SensorType.Pressure),
             _                => null
         };
