@@ -45,21 +45,22 @@ public class LiveDataExtensionTest
     }
 
     [Test]
-    public void Map_ChSoil_ProducesSoilMoistureVoltageBatteryPerChannel()
+    public void Map_ChSoil_ProducesSoilMoistureAndVoltagePerChannel()
     {
         var data = LoadFixture("livedata-gw3000-prod.json");
 
         var device = data.Map(isMetric: true, calculateValues: false);
 
-        // 16 channels, each producing moisture + battery + voltage = 48 soil sensors
+        // 16 channels, each producing moisture + voltage = 32 soil sensors. The voltage sensor
+        // is named soilbatt{ch} to match the push payload's semantics (voltage in V).
         var soilSensors = device.Sensors.Where(s => s.Name.StartsWith("soil")).ToList();
-        Assert.That(soilSensors.Count, Is.EqualTo(48), "expected 48 soil sensors (16 channels x 3 fields)");
+        Assert.That(soilSensors.Count, Is.EqualTo(32), "expected 32 soil sensors (16 channels x 2 fields)");
 
         var ch16Moisture = device.Sensors.FirstOrDefault(s => s.Name == "soilmoisture16");
         Assert.That(ch16Moisture, Is.Not.Null);
         Assert.That((double)ch16Moisture!.Value!, Is.EqualTo(43.0).Within(0.01));
 
-        var ch16Voltage = device.Sensors.FirstOrDefault(s => s.Name == "soilbattvolt16");
+        var ch16Voltage = device.Sensors.FirstOrDefault(s => s.Name == "soilbatt16");
         Assert.That(ch16Voltage, Is.Not.Null);
         Assert.That((double)ch16Voltage!.Value!, Is.EqualTo(1.60).Within(0.01));
     }

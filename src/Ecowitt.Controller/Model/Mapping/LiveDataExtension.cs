@@ -5,10 +5,16 @@ namespace Ecowitt.Controller.Model.Mapping;
 
 public static class LiveDataExtension
 {
-    // isMetric is kept for API parity with ApiDataExtension.Map. Under unit-passthrough, livedata
-    // sensors carry whatever unit the gateway returned, so isMetric has no effect inside Map itself.
+    // isMetric and calculateValues are kept for API parity with ApiDataExtension.Map but have
+    // no effect here: livedata sensors carry the unit the gateway returned, and the gateway
+    // already provides derived values (dewpoint via 0x03, feelslike via id 4). Recomputing them
+    // with CalculateGatewayAddons risks producing values in the wrong unit because individual
+    // sensors may differ from the controller's isMetric setting under passthrough.
     public static Device Map(this GatewayLiveData data, bool isMetric = true, bool calculateValues = true)
     {
+        _ = isMetric;
+        _ = calculateValues;
+
         var device = new Device
         {
             IpAddress = data.IpAddress,
@@ -23,8 +29,6 @@ public static class LiveDataExtension
         if (data.Co2 != null) MapCo2(data.Co2, device.Sensors);
         if (data.PiezoRain != null) MapPiezoRain(data.PiezoRain, device.Sensors);
         if (data.CommonList != null) MapCommonList(data.CommonList, device.Sensors);
-
-        if (calculateValues) SensorBuilder.CalculateGatewayAddons(ref device, isMetric);
 
         return device;
     }
@@ -64,12 +68,10 @@ public static class LiveDataExtension
                 if (moisture != null) sensors.Add(moisture);
             }
 
-            // soilbatt — battery level 0-5
-            var batt = SensorBuilder.BuildBatterySensor($"soilbatt{ch}", $"Soil Battery {ch}", StripUnit(r.Battery));
-            if (batt != null) sensors.Add(batt);
-
-            // soilbattvolt — diagnostic voltage sensor
-            var voltage = SensorBuilder.BuildVoltageSensor($"soilbattvolt{ch}", $"Soil Battery Voltage {ch}", StripUnit(r.Voltage), isDiag: true);
+            // soilbatt is voltage in the push payload (gateway sends "1.4V"); livedata gives both a
+            // 0-5 level and the actual voltage. The voltage is the authoritative reading and matches
+            // push semantics — emit only that, named soilbatt{ch} to stay continuous across modes.
+            var voltage = SensorBuilder.BuildVoltageSensor($"soilbatt{ch}", $"Soil Battery {ch}", StripUnit(r.Voltage), isDiag: true);
             if (voltage != null) sensors.Add(voltage);
         }
     }
@@ -126,7 +128,7 @@ public static class LiveDataExtension
             AddDoubleIfValid(sensors, "co2",            "CO2",             StripUnit(r.Co2),       "ppm",   SensorType.CarbonDioxide);
             AddDoubleIfValid(sensors, "co2_24h",        "CO2 24h",         StripUnit(r.Co2_24H),   "ppm",   SensorType.CarbonDioxide);
 
-            var batt = SensorBuilder.BuildBatterySensor("co2_batt", "CO2 Battery", StripUnit(r.Battery));
+            var batt = SensorBuilder.BuildBatterySensor("co2_batt", "CO2 Battery", StripUnit(r.Battery), withMultiplier: true);
             if (batt != null) sensors.Add(batt);
         }
     }
@@ -161,7 +163,7 @@ public static class LiveDataExtension
 
         if (!string.IsNullOrEmpty(last.Battery))
         {
-            var batt = SensorBuilder.BuildBatterySensor("ws90batt", "WS90 Battery", StripUnit(last.Battery));
+            var batt = SensorBuilder.BuildBatterySensor("ws90batt", "WS90 Battery", StripUnit(last.Battery), withMultiplier: true);
             if (batt != null) sensors.Add(batt);
         }
         if (!string.IsNullOrEmpty(last.Voltage))

@@ -150,7 +150,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
 
                 if (_deviceStore.UpsertGateway(updatedGateway))
                 {
-                    _logger.LogDebug("gateway added: {Serialize})", JsonSerializer.Serialize(storedGateway));
+                    _logger.LogDebug("gateway added: {Serialize}", JsonSerializer.Serialize(updatedGateway));
                     await EmitHomeAssistantDiscovery(updatedGateway);
                     await EmitGatewayFull(updatedGateway);
                 }
