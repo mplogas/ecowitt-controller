@@ -10,7 +10,7 @@ using SlimMessageBus;
 
 namespace Ecowitt.Controller.Service.Orchestrator;
 
-public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<SubdeviceApiAggregate>
+public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>, IConsumer<MqttConnectionEvent>, IConsumer<HomeAssistantStatusEvent>, IConsumer<SubdeviceApiCommand>, IConsumer<GatewayApiData>, IConsumer<GatewayLiveData>, IConsumer<SubdeviceApiAggregate>
 {
     private readonly ILogger<Dispatcher> _logger;
     private readonly IDeviceStore _deviceStore;
@@ -55,21 +55,22 @@ public partial class Dispatcher : BackgroundService, IConsumer<MqttServiceEvent>
 
     private async Task EmitHttpConfig()
     {
+        var subdeviceHosts = _ecowittOptions.Gateways
+            .Where(gw => gw.Subdevices)
+            .Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password))
+            .ToList();
+
+        var liveDataHosts = _ecowittOptions.Gateways
+            .Where(gw => gw.IngestMode == IngestMode.Poll)
+            .Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password))
+            .ToList();
+
         var httpConfig = new HttpConfig
         {
-            Hosts = _ecowittOptions.Gateways.Where(gw => gw.Subdevices).Select(gw => new HttpHost(gw.Ip, gw.Username, gw.Password)).ToList(),
-            PollingInterval = _ecowittOptions.PollingInterval
-        };
-
-        await _messageBus.Publish(httpConfig);
-    }
-
-    private async Task EmitHttpConfig(List<HttpHost> hosts)
-    {
-        var httpConfig = new HttpConfig
-        {
-            Hosts = hosts,
-            PollingInterval = _ecowittOptions.PollingInterval
+            Hosts = subdeviceHosts,
+            PollingInterval = _ecowittOptions.PollingInterval,
+            LiveDataHosts = liveDataHosts,
+            LiveDataInterval = _ecowittOptions.LiveDataInterval
         };
 
         await _messageBus.Publish(httpConfig);

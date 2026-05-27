@@ -27,4 +27,10 @@
       <ProjectReference Include="..\Ecowitt.Controller\Ecowitt.Controller.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Fixtures\*.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

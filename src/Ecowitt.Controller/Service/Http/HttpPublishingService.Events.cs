@@ -8,7 +8,13 @@ namespace Ecowitt.Controller.Service.Http
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Starting SubdeviceService");
+            var subdeviceLoop = SubdevicePollingLoop(stoppingToken);
+            var liveDataLoop = LiveDataPollingLoop(stoppingToken);
+            await Task.WhenAll(subdeviceLoop, liveDataLoop);
+        }
 
+        private async Task SubdevicePollingLoop(CancellationToken stoppingToken)
+        {
             using var timer = new PeriodicTimer(TimeSpan.FromSeconds(_config.PollingInterval));
             try
             {

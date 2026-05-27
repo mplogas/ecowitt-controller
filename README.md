@@ -85,9 +85,11 @@ Full configuration with all options and their defaults:
 | `mqtt` | `reconnectAttempts` | `2` | Reconnect retry count |
 | `mqtt` | `useMqtt311` | `false` | Use MQTT 3.1.1 instead of MQTT 5.0 |
 | `ecowitt` | `pollingInterval` | `30` | Subdevice polling interval (seconds) |
+| `ecowitt` | `liveDataInterval` | `5` | Gateway livedata polling interval (seconds), used when a gateway is in `Poll` mode |
 | `ecowitt` | `calculateValues` | `true` | Generate calculated sensor values |
 | `ecowitt` | `gateways` | `[]` | Gateway definitions (name, ip, credentials, subdevices) |
 | `ecowitt.gateways[]` | `subdevices` | `false` | Enable subdevice polling (only GW1200, GW2000, GW3000) |
+| `ecowitt.gateways[]` | `ingestMode` | `Push` | `Push` (accept legacy `/data/report` HTTP push, default) or `Poll` (poll `get_livedata_info` on `liveDataInterval`; only GW1200/2000/3000). When `Poll`, push payloads from this gateway IP are dropped. |
 | `controller` | `precision` | `2` | Decimal places for floating-point values |
 | `controller` | `unit` | `metric` | `metric` or `imperial` |
 | `controller` | `homeassistantdiscovery` | `true` | Publish HA MQTT discovery messages |

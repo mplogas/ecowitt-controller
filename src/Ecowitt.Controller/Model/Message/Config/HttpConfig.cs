@@ -4,6 +4,8 @@ public class HttpConfig
 {
     public List<HttpHost> Hosts { get; set; } = new List<HttpHost>();
     public int PollingInterval { get; set; } = 5;
+    public List<HttpHost> LiveDataHosts { get; set; } = new List<HttpHost>();
+    public int LiveDataInterval { get; set; } = 5;
 }
 
 public class HttpHost
