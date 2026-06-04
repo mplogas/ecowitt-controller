@@ -384,4 +384,16 @@ public class SensorBuilderTest
         Assert.That(sensor, Is.Not.Null);
         Assert.That(sensor!.SensorCategory, Is.EqualTo(SensorCategory.Diagnostic));
     }
+
+    [Test]
+    public void BuildSensor_Wfc02Rssi_NoSignalStrengthDeviceClass()
+    {
+        // wfc02rssi is a 0-4 quality level, not dBm — must NOT use the signal_strength device class
+        // (HA requires dBm/dB and warns on a unitless signal_strength entity). gw_rssi (dBm) keeps it.
+        var sensor = SensorBuilder.BuildSensor("wfc02rssi", "4");
+        Assert.That(sensor, Is.Not.Null);
+        Assert.That(sensor!.SensorType, Is.EqualTo(SensorType.None));
+        Assert.That(sensor.UnitOfMeasurement, Is.EqualTo(string.Empty));
+        Assert.That(sensor.SensorCategory, Is.EqualTo(SensorCategory.Diagnostic));
+    }
 }
