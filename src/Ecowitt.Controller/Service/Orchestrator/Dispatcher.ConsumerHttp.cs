@@ -94,11 +94,21 @@ namespace Ecowitt.Controller.Service.Orchestrator
             if (message.Mode.HasValue) subdevice.StagedRunConfig.Mode = message.Mode.Value;
             if (message.Duration.HasValue) subdevice.StagedRunConfig.DurationMinutes = message.Duration.Value;
             if (message.Volume.HasValue) subdevice.StagedRunConfig.VolumeLiters = message.Volume.Value;
-            _deviceStore.UpsertGateway(gw);
+            if (!_deviceStore.UpsertGateway(gw))
+            {
+                _logger.LogWarning("failed to update gateway {GwIp} in the store after staged run config merge", gw.IpAddress);
+            }
 
             if (!message.Start) return;
 
             var staged = subdevice.StagedRunConfig;
+            var stagedValue = staged.Mode == RunModeKey.Volume ? staged.VolumeLiters : staged.DurationMinutes;
+            if (stagedValue <= 0)
+            {
+                _logger.LogWarning("Ignoring start for subdevice {Id}: {Mode} value is {Value} (must be > 0)", message.Id, staged.Mode, stagedValue);
+                return;
+            }
+
             var cmd = staged.Mode == RunModeKey.Volume
                 ? new SubdeviceApiCommand { Cmd = Command.Start, Id = message.Id, Duration = staged.VolumeLiters, Unit = DurationUnit.Liters }
                 : new SubdeviceApiCommand { Cmd = Command.Start, Id = message.Id, Duration = staged.DurationMinutes, Unit = DurationUnit.Minutes };
