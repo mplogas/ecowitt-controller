@@ -91,7 +91,14 @@ namespace Ecowitt.Controller.Service.Orchestrator
 
             // Merge non-null partials into the staged config. The subdevice is held by reference
             // in the store, so the mutation is visible; UpsertGateway re-stores defensively.
-            if (message.Mode.HasValue) subdevice.StagedRunConfig.Mode = message.Mode.Value;
+            // Reject a mode the device doesn't support (the direct-MQTT path bypasses the HA select).
+            if (message.Mode.HasValue)
+            {
+                if (RunModeRegistry.IsApplicable(subdevice.Model, subdevice.HasFlowMeter, message.Mode.Value))
+                    subdevice.StagedRunConfig.Mode = message.Mode.Value;
+                else
+                    _logger.LogWarning("Ignoring run mode {Mode} for subdevice {Id} ({Model}): not supported by the device", message.Mode.Value, message.Id, subdevice.Model);
+            }
             if (message.Duration.HasValue) subdevice.StagedRunConfig.DurationMinutes = message.Duration.Value;
             if (message.Volume.HasValue) subdevice.StagedRunConfig.VolumeLiters = message.Volume.Value;
             if (!_deviceStore.UpsertGateway(gw))
@@ -102,6 +109,13 @@ namespace Ecowitt.Controller.Service.Orchestrator
             if (!message.Start) return;
 
             var staged = subdevice.StagedRunConfig;
+            // Belt-and-suspenders: never fire a run whose mode the device can't honor (a volume run
+            // on a flow-less valve has no liters to count and would run indefinitely).
+            if (!RunModeRegistry.IsApplicable(subdevice.Model, subdevice.HasFlowMeter, staged.Mode))
+            {
+                _logger.LogWarning("Ignoring start for subdevice {Id}: staged mode {Mode} not applicable to {Model}", message.Id, staged.Mode, subdevice.Model);
+                return;
+            }
             var stagedValue = staged.Mode == RunModeKey.Volume ? staged.VolumeLiters : staged.DurationMinutes;
             if (stagedValue <= 0)
             {

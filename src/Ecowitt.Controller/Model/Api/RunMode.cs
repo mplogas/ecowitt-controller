@@ -50,4 +50,14 @@ public static class RunModeRegistry
         if (SupportsVolume(model, hasFlowMeter)) modes.Add(Volume);
         return modes;
     }
+
+    // Is this run mode valid for the device? Enforced in the dispatcher because the direct-MQTT
+    // path can stage a mode the HA select never offered (e.g. Volume on a flow-less valve, which
+    // would run forever with no liters to count — the stuck-open hazard this feature avoids).
+    public static bool IsApplicable(SubdeviceModel model, bool hasFlowMeter, RunModeKey mode) => mode switch
+    {
+        RunModeKey.Duration => SupportsDuration(model),
+        RunModeKey.Volume => SupportsVolume(model, hasFlowMeter),
+        _ => false
+    };
 }

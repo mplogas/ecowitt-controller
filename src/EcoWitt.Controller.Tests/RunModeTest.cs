@@ -62,4 +62,16 @@ public class RunModeTest
         var modes = RunModeRegistry.ApplicableModes(SubdeviceModel.AC1100, hasFlowMeter: false);
         Assert.That(modes.Select(m => m.Key), Is.EqualTo(new[] { RunModeKey.Duration }));
     }
+
+    [Test]
+    public void IsApplicable_GatesVolumeByCapability()
+    {
+        // Duration is universal for controllable devices.
+        Assert.That(RunModeRegistry.IsApplicable(SubdeviceModel.AC1100, hasFlowMeter: false, RunModeKey.Duration), Is.True);
+        // Volume requires flow: AC1100 never; WFC02 only with flow; WFC01 always.
+        Assert.That(RunModeRegistry.IsApplicable(SubdeviceModel.AC1100, hasFlowMeter: false, RunModeKey.Volume), Is.False);
+        Assert.That(RunModeRegistry.IsApplicable(SubdeviceModel.WFC02, hasFlowMeter: false, RunModeKey.Volume), Is.False);
+        Assert.That(RunModeRegistry.IsApplicable(SubdeviceModel.WFC02, hasFlowMeter: true, RunModeKey.Volume), Is.True);
+        Assert.That(RunModeRegistry.IsApplicable(SubdeviceModel.WFC01, hasFlowMeter: false, RunModeKey.Volume), Is.True);
+    }
 }
