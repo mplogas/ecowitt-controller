@@ -7,6 +7,11 @@ namespace Ecowitt.Controller.Service.Mqtt
 {
     public partial class MqttService
     {
+        private static readonly System.Text.Json.JsonSerializerOptions CommandJsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+        };
         public async Task StartedAsync(CancellationToken cancellationToken)
         {
             await _messageBus.Publish(new MqttServiceEvent { EventType = MqttServiceEventType.Started }, cancellationToken: cancellationToken);
@@ -63,7 +68,7 @@ namespace Ecowitt.Controller.Service.Mqtt
                 // direct commands via mqtt
                 try
                 {
-                    var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(payload);
+                    var cmd = JsonSerializer.Deserialize<SubdeviceApiCommand>(payload, CommandJsonOptions);
                     if (cmd == null)
                     {
                         _logger.LogWarning("Failed to deserialize command from topic {Topic}", topic);

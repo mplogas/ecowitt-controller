@@ -63,10 +63,13 @@ Same payload format as gateway sensors.
 
 ### Subdevice Commands (direct MQTT)
 - **`<base>/+/subdevices/+/cmd`** — Accepts JSON commands for subdevice control.
-  ```json
-  { "cmd": 0, "id": 12345, "duration": 20, "unit": 1, "alwaysOn": false }
+  ```jsonc
+  { "cmd": "Start", "id": 12345, "duration": 20, "unit": "Minutes" }
+  // cmd: Start | Stop. unit: Seconds | Minutes | Hours | Liters (or 0|1|2|3).
+  // duration is in the chosen unit; the controller normalizes time to seconds
+  // and volume to deciliters for the gateway. Omit duration/unit for an
+  // always-on Start.
   ```
-  `cmd`: `0` = Start, `1` = Stop. `unit`: `0` = Seconds, `1` = Minutes, `2` = Hours, `3` = Liters.
 
 ### Subdevice Commands (Home Assistant)
 - **`<base>/+/subdevices/+/cmd/homeassistant`** — Simplified command topic for HA switches. Payload is plain text `ON` or `OFF`.
