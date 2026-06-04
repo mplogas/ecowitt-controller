@@ -35,11 +35,7 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 return;
             }
 
-            // HA sends bare ON/OFF without duration — default to always-on
-            if (message.Cmd == Command.Start && !message.Duration.HasValue)
-            {
-                message.AlwaysOn = true;
-            }
+            GuardRunCommand(message);
 
             await _messageBus.Publish(new SubdeviceCommandDispatch
             {
@@ -48,6 +44,40 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 Model = subdevice.Model
             });
         }
+
+        // Clamp/default a parameterized run command in place. Scoped to runs that carry a Unit;
+        // a bare Start (no Unit) is left on the existing always-on path. Clamping here (user units,
+        // before the adapter's multiply) makes downstream overflow impossible.
+        internal static void GuardRunCommand(SubdeviceApiCommand message)
+        {
+            if (message.Cmd != Command.Start) return;
+
+            if (message.Unit.HasValue)
+            {
+                var (_, max, def) = BoundsFor(message.Unit.Value);
+                var v = message.Duration ?? 0;
+                message.Duration = v <= 0 ? def : Math.Min(v, max);
+            }
+            else if (!message.Duration.HasValue)
+            {
+                message.AlwaysOn = true; // existing always-on behavior (HA switch ON)
+            }
+        }
+
+        // Bounds/default in the command's own unit. Time units share the same physical cap
+        // (1440 min = 24 h = 86400 s); volume uses the Volume mode bounds.
+        private static (int min, int max, int def) BoundsFor(DurationUnit unit) => unit switch
+        {
+            DurationUnit.Seconds => (1, 86400, 180),
+            DurationUnit.Minutes => (RunModeRegistry.ByKey(RunModeKey.Duration).Min,
+                                     RunModeRegistry.ByKey(RunModeKey.Duration).Max,
+                                     RunModeRegistry.ByKey(RunModeKey.Duration).Default),
+            DurationUnit.Hours   => (1, 24, 1),
+            DurationUnit.Liters  => (RunModeRegistry.ByKey(RunModeKey.Volume).Min,
+                                     RunModeRegistry.ByKey(RunModeKey.Volume).Max,
+                                     RunModeRegistry.ByKey(RunModeKey.Volume).Default),
+            _ => (1, 86400, 180)
+        };
 
         public async Task OnHandle(GatewayApiData message, CancellationToken cancellationToken)
         {
