@@ -69,6 +69,29 @@ flowchart LR
     HTTP -->|POST /parse_quick_cmd_iot| GW[Ecowitt Gateway]
 ```
 
+### Run modes (duration / volume)
+
+The valve/plug run-mode entities (`select` + `number` + `button`) feed a separate
+staging path. `MqttService` translates each entity change into a `SubdeviceRunConfig`
+message; `Dispatcher` merges it into the subdevice's `StagedRunConfig` (held in
+`DeviceStore`) and, on the Start button, validates mode applicability + value
+bounds, assembles a `SubdeviceApiCommand`, and routes it through the **same shared
+guard** as the direct path before dispatch. Capability gating (Duration universal;
+Volume only for flow-capable valves) and the unit→gateway conversion
+(minutes→seconds `val_type:0`, liters→deciliters `val_type:3`) are enforced
+controller-side so the device self-closes at the target — the direct-MQTT path
+cannot bypass them.
+
+```mermaid
+flowchart LR
+    HA[HA select / number / button] -->|MQTT cmd/#| MQTT[MqttService]
+    MQTT -->|SubdeviceRunConfig| BUS[(Message Bus)]
+    BUS --> DISP[Dispatcher]
+    DISP -->|merge -> DeviceStore staged config| DISP
+    DISP -->|on Start: guard + SubdeviceCommandDispatch| BUS
+    BUS --> HTTP[HttpPublishingService]
+```
+
 ## Per-gateway Concurrency
 
 All HTTP traffic to a given gateway — subdevice polling, livedata polling (when in Poll mode), and command dispatch — runs through `HttpPublishingService` and serializes through a `ConcurrentDictionary<string, SemaphoreSlim>` keyed by gateway IP. At most one HTTP request per gateway is in flight at any moment. Different gateways still get full parallelism. A separate 350ms `Task.Delay` between subdevice payload calls handles rate-limiting (a separate contract from concurrency).
@@ -100,7 +123,12 @@ flowchart LR
     MQTT --> MCE[mqtt-connection-event] --> DISP
     MQTT --> HAS[home-assistant-status] --> DISP
     MQTT --> SAC[subdevice-api-command] --> DISP
+    MQTT --> SRC[subdevice-run-config] --> DISP
 ```
+
+`subdevice-api-command` carries the HA switch (ON/OFF) and direct-MQTT commands.
+`subdevice-run-config` carries the run-mode entities (select/number/button) as
+partial staged-config updates plus a Start flag.
 
 ### Dispatcher to HttpPublishingService
 
@@ -130,10 +158,10 @@ flowchart LR
 ASP.NET endpoint at `POST /data/report`. Receives form-encoded weather data from Push-mode gateways and publishes `GatewayApiData` onto the bus. For Poll-mode gateways, the request is accepted (200 OK) but the payload is dropped by Dispatcher at the bus boundary — no DataController logic needs to know about IngestMode.
 
 ### Dispatcher
-Central orchestrator. Consumes messages from both HTTP and MQTT services, manages the `DeviceStore` (thread-safe in-memory state), performs change detection via `DeNoiserHelper`, and emits data and discovery messages. For Poll-mode gateways it also drops any incoming `GatewayApiData` push payload (the IngestMode filter lives here, not in DataController). Split across partial classes for HTTP consumers, MQTT consumers, and orchestration logic.
+Central orchestrator. Consumes messages from both HTTP and MQTT services, manages the `DeviceStore` (thread-safe in-memory state), performs change detection via `DeNoiserHelper`, and emits data and discovery messages. For Poll-mode gateways it also drops any incoming `GatewayApiData` push payload (the IngestMode filter lives here, not in DataController). Owns run-mode policy: stages `SubdeviceRunConfig` updates onto the subdevice, validates mode applicability + value bounds in a shared guard (so the direct-MQTT path can't bypass the HA-side constraints), and fires the assembled command on Start. Split across partial classes for HTTP consumers, MQTT consumers, and orchestration logic.
 
 ### MqttService
-Connects to the MQTT broker, publishes sensor data and Home Assistant discovery payloads, subscribes to HA status topic for re-emission on HA restart, and forwards subdevice commands from HA switches onto the bus as `SubdeviceApiCommand` messages. Split across partial classes for consumer, publisher, discovery, and events.
+Connects to the MQTT broker, publishes sensor data and Home Assistant discovery payloads (including the run-mode `select`/`number`/`button` entities for controllable subdevices), subscribes to HA status topic for re-emission on HA restart, and forwards subdevice commands onto the bus — HA switch / direct JSON as `SubdeviceApiCommand`, and run-mode entity changes as `SubdeviceRunConfig`. A single `<base>/+/subdevices/+/cmd/#` subscription covers all subdevice command topics. Split across partial classes for consumer, publisher, discovery, and events.
 
 ### HttpPublishingService
 Owns all outbound HTTP traffic to gateways. Runs two `PeriodicTimer` loops in parallel — one for subdevice polling (`get_iot_device_list` + `parse_quick_cmd_iot`), one for livedata polling (`get_livedata_info`) on Poll-mode gateways — plus a `SubdeviceCommandDispatch` bus consumer that issues start/stop commands. All three call sites acquire a per-gateway `SemaphoreSlim` to serialize requests to the same device.

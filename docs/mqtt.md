@@ -72,7 +72,17 @@ Same payload format as gateway sensors.
   ```
 
 ### Subdevice Commands (Home Assistant)
-- **`<base>/+/subdevices/+/cmd/homeassistant`** — Simplified command topic for HA switches. Payload is plain text `ON` or `OFF`.
+- **`<base>/+/subdevices/+/cmd/homeassistant`** — Simplified command topic for HA switches. Payload is plain text `ON` or `OFF` (always-on run / stop).
+
+### Subdevice Run Modes (Home Assistant)
+Controllable subdevices (WFC01/WFC02/AC1100) expose duration/volume run controls in addition to the on/off switch. The controller **stages** the selected mode and value, then fires the run when the Start button is pressed — the device self-closes at the duration/volume target.
+
+- **`<base>/+/subdevices/+/cmd/mode`** — selected run mode. Payload: `Duration` or `Volume`.
+- **`<base>/+/subdevices/+/cmd/set/duration`** — run duration in minutes (plain integer).
+- **`<base>/+/subdevices/+/cmd/set/volume`** — run volume in liters (plain integer; flow-capable valves only).
+- **`<base>/+/subdevices/+/cmd/start`** — start a run using the currently staged mode + value.
+
+All subdevice command topics (the four above plus `cmd` and `cmd/homeassistant`) are covered by a single `<base>/+/subdevices/+/cmd/#` subscription. A run mode the device doesn't support (e.g. `Volume` on a flow-less valve) is rejected; a `Start` with a missing/invalid value falls back to a safe default (3 min / 5 L).
 
 ## Home Assistant Discovery
 
@@ -83,6 +93,9 @@ When `controller.homeassistantdiscovery` is enabled, discovery configs are publi
 - **`homeassistant/sensor/<device_name>_<sensor_name>/config`** — Sensor entities
 - **`homeassistant/binary_sensor/<device_name>_<sensor_name>/config`** — Binary sensor entities (rain state, running state, etc.)
 - **`homeassistant/switch/<subdevice_nickname>/config`** — Switch entities for controllable subdevices
+- **`homeassistant/number/<subdevice_nickname>_<param>/config`** — Run Duration / Run Volume inputs (`entity_category: config`)
+- **`homeassistant/select/<subdevice_nickname>/config`** — Run Mode selector (published only when 2+ modes apply)
+- **`homeassistant/button/<subdevice_nickname>/config`** — Start Run button
 
 ### Discovery Payload Structure
 
