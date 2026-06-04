@@ -94,6 +94,8 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
             await PublishSubdeviceDiscovery(gateway, subdevice);
             if (subdevice.Model is SubdeviceModel.WFC01 or SubdeviceModel.AC1100 or SubdeviceModel.WFC02)
                 await PublishSubdeviceSwitchDiscovery(gateway, subdevice);
+            if (subdevice.Model is SubdeviceModel.WFC01 or SubdeviceModel.AC1100 or SubdeviceModel.WFC02)
+                await PublishSubdeviceRunModeDiscovery(gateway, subdevice);
             foreach (var sensor in subdevice.Sensors)
             {
                 await PublishSensorDiscovery(gateway, subdevice, sensor);

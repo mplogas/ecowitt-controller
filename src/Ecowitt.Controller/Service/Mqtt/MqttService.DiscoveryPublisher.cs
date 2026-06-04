@@ -1,5 +1,6 @@
 ﻿
 using Ecowitt.Controller.Model;
+using Ecowitt.Controller.Model.Api;
 using Ecowitt.Controller.Model.Discovery;
 using MQTTnet;
 using MQTTnet.Protocol;
@@ -48,6 +49,58 @@ namespace Ecowitt.Controller.Service.Mqtt
                 DiscoveryBuilder.BuildSwitchConfig(device, _origin, "switch", id, statetopic, cmdTopic, valueTemplate: valueTemplate);
 
             await PublishDiscoveryMessage("switch", $"switch/{MqttPathBuilder.SanitizeSegment(subdevice.Nickname)}", config);
+        }
+
+        private async Task PublishSubdeviceRunModeDiscovery(Device gw, Ecowitt.Controller.Model.Subdevice subdevice)
+        {
+            var modes = RunModeRegistry.ApplicableModes(subdevice.Model, subdevice.HasFlowMeter);
+            if (modes.Count == 0) return;
+
+            var device = DiscoveryBuilder.BuildDevice(subdevice.Nickname, subdevice.Model.ToString(), "Ecowitt",
+                subdevice.Model.ToString(), subdevice.Version.ToString(), DiscoveryBuilder.BuildIdentifier(gw.Name));
+            var baseTopic = $"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceTopic(gw.Name, subdevice.Id.ToString())}";
+            var nick = MqttPathBuilder.SanitizeSegment(subdevice.Nickname);
+
+            // Mode select — only when 2+ modes apply.
+            if (modes.Count > 1)
+            {
+                var selId = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, "runmode");
+                var selCfg = DiscoveryBuilder.BuildSelectConfig(device, _origin, "Run Mode", selId,
+                    commandTopic: $"{baseTopic}/cmd/mode",
+                    options: modes.Select(m => m.HaLabel).ToList());
+                await PublishDiscoveryMessage("select", $"select/{nick}", selCfg);
+            }
+
+            // One number per applicable mode (config category).
+            foreach (var m in modes)
+            {
+                var param = m.Key == RunModeKey.Volume ? "volume" : "duration";
+                var unit = m.Key == RunModeKey.Volume ? "L" : "min";
+                var numId = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, $"run{param}");
+                var numCfg = DiscoveryBuilder.BuildNumberConfig(device, _origin, $"Run {m.HaLabel}", numId,
+                    commandTopic: $"{baseTopic}/cmd/set/{param}",
+                    min: m.Min, max: m.Max, step: 1, unitOfMeasurement: unit, entityCategory: "config");
+                await PublishDiscoveryMessage("number", $"number/{nick}_{param}", numCfg);
+            }
+
+            // Start button.
+            var btnId = DiscoveryBuilder.BuildIdentifier(subdevice.Nickname, "runstart");
+            var btnCfg = DiscoveryBuilder.BuildButtonConfig(device, _origin, "Start Run", btnId,
+                commandTopic: $"{baseTopic}/cmd/start");
+            await PublishDiscoveryMessage("button", $"button/{nick}", btnCfg);
+
+            // Publish the CURRENT staged values (retained) so HA reflects them and they survive a
+            // controller restart. Must use the staged config, NOT m.Default — otherwise a discovery
+            // re-emission (e.g. on HA restart) would clobber a user's staged value back to default.
+            var staged = subdevice.StagedRunConfig;
+            if (modes.Count > 1)
+                await Publish($"{baseTopic}/cmd/mode", RunModeRegistry.ByKey(staged.Mode).HaLabel, true);
+            foreach (var m in modes)
+            {
+                var param = m.Key == RunModeKey.Volume ? "volume" : "duration";
+                var current = m.Key == RunModeKey.Volume ? staged.VolumeLiters : staged.DurationMinutes;
+                await Publish($"{baseTopic}/cmd/set/{param}", current.ToString(), true);
+            }
         }
 
         private async Task PublishSensorDiscovery(Device gw, ISensor sensor)
