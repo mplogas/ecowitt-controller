@@ -118,6 +118,8 @@ public class Program
             // mqttservice -> statemachine (subdevice commands)
             smb.Produce<SubdeviceApiCommand>(x => x.DefaultTopic("subdevice-api-command"));
             smb.Consume<SubdeviceApiCommand>(x => x.Topic("subdevice-api-command").WithConsumer<Dispatcher>());
+            smb.Produce<SubdeviceRunConfig>(x => x.DefaultTopic("subdevice-run-config"));
+            smb.Consume<SubdeviceRunConfig>(x => x.Topic("subdevice-run-config").WithConsumer<Dispatcher>());
 
             smb.AddServicesFromAssembly(Assembly.GetExecutingAssembly());
         });

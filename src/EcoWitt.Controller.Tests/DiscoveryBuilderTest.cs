@@ -142,6 +142,51 @@ public class DiscoveryBuilderTest
         Assert.That(config.StateTopic, Does.Contain("running"));
     }
 
+    [Test]
+    public void BuildNumberConfig_SetsRangeAndCommandTopic()
+    {
+        var device = DiscoveryBuilder.BuildDevice("valve");
+        var origin = DiscoveryBuilder.BuildOrigin();
+
+        var cfg = DiscoveryBuilder.BuildNumberConfig(device, origin, "Run Duration", "id_dur",
+            commandTopic: "ecowitt/gw/subdevices/1/cmd/set/duration",
+            min: 1, max: 1440, step: 1, unitOfMeasurement: "min", entityCategory: "config");
+
+        Assert.That(cfg.CommandTopic, Is.EqualTo("ecowitt/gw/subdevices/1/cmd/set/duration"));
+        Assert.That(cfg.Min, Is.EqualTo(1));
+        Assert.That(cfg.Max, Is.EqualTo(1440));
+        Assert.That(cfg.Step, Is.EqualTo(1));
+        Assert.That(cfg.UnitOfMeasurement, Is.EqualTo("min"));
+        Assert.That(cfg.SensorCategory, Is.EqualTo("config"));
+    }
+
+    [Test]
+    public void BuildSelectConfig_SetsOptions()
+    {
+        var device = DiscoveryBuilder.BuildDevice("valve");
+        var origin = DiscoveryBuilder.BuildOrigin();
+
+        var cfg = DiscoveryBuilder.BuildSelectConfig(device, origin, "Run Mode", "id_mode",
+            commandTopic: "ecowitt/gw/subdevices/1/cmd/mode",
+            options: new List<string> { "Duration", "Volume" });
+
+        Assert.That(cfg.Options, Is.EqualTo(new List<string> { "Duration", "Volume" }));
+        Assert.That(cfg.CommandTopic, Is.EqualTo("ecowitt/gw/subdevices/1/cmd/mode"));
+    }
+
+    [Test]
+    public void BuildButtonConfig_SetsPayloadPress()
+    {
+        var device = DiscoveryBuilder.BuildDevice("valve");
+        var origin = DiscoveryBuilder.BuildOrigin();
+
+        var cfg = DiscoveryBuilder.BuildButtonConfig(device, origin, "Start Run", "id_start",
+            commandTopic: "ecowitt/gw/subdevices/1/cmd/start", payloadPress: "PRESS");
+
+        Assert.That(cfg.PayloadPress, Is.EqualTo("PRESS"));
+        Assert.That(cfg.CommandTopic, Is.EqualTo("ecowitt/gw/subdevices/1/cmd/start"));
+    }
+
     // Device class mapping
     [TestCase(SensorType.Temperature, "temperature")]
     [TestCase(SensorType.Humidity, "humidity")]

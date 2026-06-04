@@ -35,16 +35,105 @@ namespace Ecowitt.Controller.Service.Orchestrator
                 return;
             }
 
-            // HA sends bare ON/OFF without duration — default to always-on
-            if (message.Cmd == Command.Start && !message.Duration.HasValue)
-            {
-                message.AlwaysOn = true;
-            }
+            GuardRunCommand(message);
 
             await _messageBus.Publish(new SubdeviceCommandDispatch
             {
                 GatewayIp = gw.IpAddress,
                 Command = message,
+                Model = subdevice.Model
+            });
+        }
+
+        // Clamp/default a parameterized run command in place. Scoped to runs that carry a Unit;
+        // a bare Start (no Unit) is left on the existing always-on path. Clamping here (user units,
+        // before the adapter's multiply) makes downstream overflow impossible.
+        internal static void GuardRunCommand(SubdeviceApiCommand message)
+        {
+            if (message.Cmd != Command.Start) return;
+
+            if (message.Unit.HasValue)
+            {
+                var (_, max, def) = BoundsFor(message.Unit.Value);
+                var v = message.Duration ?? 0;
+                message.Duration = v <= 0 ? def : Math.Min(v, max);
+            }
+            else if (!message.Duration.HasValue)
+            {
+                message.AlwaysOn = true; // existing always-on behavior (HA switch ON)
+            }
+        }
+
+        // Bounds/default in the command's own unit. Time units share the same physical cap
+        // (1440 min = 24 h = 86400 s); volume uses the Volume mode bounds.
+        private static (int min, int max, int def) BoundsFor(DurationUnit unit) => unit switch
+        {
+            DurationUnit.Seconds => (1, 86400, 180),
+            DurationUnit.Minutes => (RunModeRegistry.ByKey(RunModeKey.Duration).Min,
+                                     RunModeRegistry.ByKey(RunModeKey.Duration).Max,
+                                     RunModeRegistry.ByKey(RunModeKey.Duration).Default),
+            DurationUnit.Hours   => (1, 24, 1),
+            DurationUnit.Liters  => (RunModeRegistry.ByKey(RunModeKey.Volume).Min,
+                                     RunModeRegistry.ByKey(RunModeKey.Volume).Max,
+                                     RunModeRegistry.ByKey(RunModeKey.Volume).Default),
+            _ => (1, 86400, 180)
+        };
+
+        public async Task OnHandle(SubdeviceRunConfig message, CancellationToken cancellationToken)
+        {
+            var gw = _deviceStore.GetGatewayBySubdeviceId(message.Id);
+            var subdevice = gw?.Subdevices.FirstOrDefault(sd => sd.Id == message.Id);
+            if (gw == null || subdevice == null)
+            {
+                _logger.LogWarning("SubdeviceRunConfig for unknown subdevice {Id}", message.Id);
+                return;
+            }
+
+            // Merge non-null partials into the staged config. The subdevice is held by reference
+            // in the store, so the mutation is visible; UpsertGateway re-stores defensively.
+            // Reject a mode the device doesn't support (the direct-MQTT path bypasses the HA select).
+            if (message.Mode.HasValue)
+            {
+                if (RunModeRegistry.IsApplicable(subdevice.Model, subdevice.HasFlowMeter, message.Mode.Value))
+                    subdevice.StagedRunConfig.Mode = message.Mode.Value;
+                else
+                    _logger.LogWarning("Ignoring run mode {Mode} for subdevice {Id} ({Model}): not supported by the device", message.Mode.Value, message.Id, subdevice.Model);
+            }
+            if (message.Duration.HasValue) subdevice.StagedRunConfig.DurationMinutes = message.Duration.Value;
+            if (message.Volume.HasValue) subdevice.StagedRunConfig.VolumeLiters = message.Volume.Value;
+            if (!_deviceStore.UpsertGateway(gw))
+            {
+                _logger.LogWarning("failed to update gateway {GwIp} in the store after staged run config merge", gw.IpAddress);
+            }
+
+            if (!message.Start) return;
+
+            var staged = subdevice.StagedRunConfig;
+            // Belt-and-suspenders: never fire a run whose mode the device can't honor (a volume run
+            // on a flow-less valve has no liters to count and would run indefinitely).
+            if (!RunModeRegistry.IsApplicable(subdevice.Model, subdevice.HasFlowMeter, staged.Mode))
+            {
+                _logger.LogWarning("Ignoring start for subdevice {Id}: staged mode {Mode} not applicable to {Model}", message.Id, staged.Mode, subdevice.Model);
+                return;
+            }
+            var stagedValue = staged.Mode == RunModeKey.Volume ? staged.VolumeLiters : staged.DurationMinutes;
+            if (stagedValue <= 0)
+            {
+                _logger.LogWarning("Ignoring start for subdevice {Id}: {Mode} value is {Value} (must be > 0)", message.Id, staged.Mode, stagedValue);
+                return;
+            }
+
+            var cmd = staged.Mode == RunModeKey.Volume
+                ? new SubdeviceApiCommand { Cmd = Command.Start, Id = message.Id, Duration = staged.VolumeLiters, Unit = DurationUnit.Liters }
+                : new SubdeviceApiCommand { Cmd = Command.Start, Id = message.Id, Duration = staged.DurationMinutes, Unit = DurationUnit.Minutes };
+
+            GuardRunCommand(cmd); // same guard as the direct path
+            _logger.LogInformation("Starting {Mode} run for subdevice {Id}", staged.Mode, message.Id);
+
+            await _messageBus.Publish(new SubdeviceCommandDispatch
+            {
+                GatewayIp = gw.IpAddress,
+                Command = cmd,
                 Model = subdevice.Model
             });
         }

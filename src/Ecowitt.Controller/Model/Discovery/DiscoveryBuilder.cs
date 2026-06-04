@@ -229,6 +229,69 @@ public static class DiscoveryBuilder
         return result;
     }
 
+    public static Config BuildNumberConfig(Device device, Origin origin, string name, string uniqueId,
+        string commandTopic, double min, double max, double step,
+        string? stateTopic = null, string? unitOfMeasurement = null, string? entityCategory = null,
+        string mode = "box", bool? retain = true, int? qos = 1)
+    {
+        var result = new Config
+        {
+            Device = device,
+            Origin = origin,
+            Name = name,
+            UniqueId = uniqueId,
+            DefaultEntityId = uniqueId,
+            CommandTopic = commandTopic,
+            Min = min,
+            Max = max,
+            Step = step,
+            Mode = mode,
+            Retain = retain,
+            Qos = qos
+        };
+        if (!string.IsNullOrWhiteSpace(stateTopic)) result.StateTopic = stateTopic;
+        if (!string.IsNullOrWhiteSpace(unitOfMeasurement)) result.UnitOfMeasurement = unitOfMeasurement;
+        if (!string.IsNullOrWhiteSpace(entityCategory)) result.SensorCategory = entityCategory;
+        return result;
+    }
+
+    public static Config BuildSelectConfig(Device device, Origin origin, string name, string uniqueId,
+        string commandTopic, List<string> options, string? stateTopic = null,
+        bool? retain = true, int? qos = 1)
+    {
+        var result = new Config
+        {
+            Device = device,
+            Origin = origin,
+            Name = name,
+            UniqueId = uniqueId,
+            DefaultEntityId = uniqueId,
+            CommandTopic = commandTopic,
+            Options = options,
+            Retain = retain,
+            Qos = qos
+        };
+        if (!string.IsNullOrWhiteSpace(stateTopic)) result.StateTopic = stateTopic;
+        return result;
+    }
+
+    public static Config BuildButtonConfig(Device device, Origin origin, string name, string uniqueId,
+        string commandTopic, string payloadPress = "PRESS", bool? retain = false, int? qos = 1)
+    {
+        return new Config
+        {
+            Device = device,
+            Origin = origin,
+            Name = name,
+            UniqueId = uniqueId,
+            DefaultEntityId = uniqueId,
+            CommandTopic = commandTopic,
+            PayloadPress = payloadPress,
+            Retain = retain,
+            Qos = qos
+        };
+    }
+
     public static string BuildIdentifier(string name, string type = "config")
     {
         return $"ec_{name.Replace(' ', '-').ToLowerInvariant()}_{type.Replace(' ', '-').ToLowerInvariant()}";

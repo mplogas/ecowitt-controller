@@ -49,4 +49,17 @@ public class Config
     public string? StateOn { get; set; }
     [JsonPropertyName("state_off")]
     public string? StateOff { get; set; }
+
+    [JsonPropertyName("min")]
+    public double? Min { get; set; }
+    [JsonPropertyName("max")]
+    public double? Max { get; set; }
+    [JsonPropertyName("step")]
+    public double? Step { get; set; }
+    [JsonPropertyName("mode")]
+    public string? Mode { get; set; }
+    [JsonPropertyName("options")]
+    public List<string>? Options { get; set; }
+    [JsonPropertyName("payload_press")]
+    public string? PayloadPress { get; set; }
 }   

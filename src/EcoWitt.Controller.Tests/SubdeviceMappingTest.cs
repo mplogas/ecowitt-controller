@@ -104,12 +104,12 @@ public class SubdeviceMappingTest
         }
 
         Assert.That(subdevices, Has.Count.EqualTo(2));
-        
+
         var wfc = subdevices.FirstOrDefault(sd => sd.Model == 1);
         Assert.That(wfc.Payload, Is.EqualTo(json_device_wfc));
-        
+
         var subDevice = wfc.Map();
-        
+
         Assert.That(subDevice.Id, Is.EqualTo(13398));
         Assert.That(subDevice.Model, Is.EqualTo(SubdeviceModel.WFC01));
         Assert.That(subDevice.Version, Is.EqualTo(113));
@@ -117,5 +117,52 @@ public class SubdeviceMappingTest
         Assert.That(subDevice.Nickname, Is.EqualTo("WFC01-00003456"));
         Assert.That(subDevice.Availability, Is.EqualTo(true));
         Assert.That(subDevice.Sensors, Has.Count.EqualTo(15));
+    }
+
+    [Test]
+    public void Map_WFC02_ParsesFlowMeterCapability()
+    {
+        var apiData = new Ecowitt.Controller.Model.Api.SubdeviceApiData
+        {
+            Id = 11131, Model = 3, GwIp = "192.168.0.1",
+            Payload = "{\"command\":[{\"model\":3,\"id\":11131,\"nickname\":\"WFC02-X\",\"flowmeter\":1,\"valve\":1}]}"
+        };
+
+        var sd = apiData.Map(isMetric: true, calculateValues: false);
+
+        Assert.That(sd.HasFlowMeter, Is.True);
+        // flowmeter must also produce the "Flowmeter Available" binary_sensor — not silently dropped
+        Assert.That(sd.Sensors.Any(s => s.Name == "flowmeter"), Is.True,
+            "flowmeter field must produce a sensor via SensorBuilder, not be swallowed by continue");
+    }
+
+    [Test]
+    public void Map_AC1100_NoFlowMeterField_DefaultsFalse()
+    {
+        var apiData = new Ecowitt.Controller.Model.Api.SubdeviceApiData
+        {
+            Id = 10695, Model = 2, GwIp = "192.168.0.1",
+            Payload = "{\"command\":[{\"model\":2,\"id\":10695,\"nickname\":\"AC1100-X\",\"always_on\":1}]}"
+        };
+
+        var sd = apiData.Map(isMetric: true, calculateValues: false);
+
+        Assert.That(sd.HasFlowMeter, Is.False);
+    }
+
+    [Test]
+    public void Map_StagedRunConfig_InitializesToDefaults()
+    {
+        var apiData = new Ecowitt.Controller.Model.Api.SubdeviceApiData
+        {
+            Id = 11131, Model = 3, GwIp = "192.168.0.1",
+            Payload = "{\"command\":[{\"model\":3,\"id\":11131,\"nickname\":\"WFC02-X\",\"flowmeter\":1}]}"
+        };
+
+        var sd = apiData.Map(isMetric: true, calculateValues: false);
+
+        Assert.That(sd.StagedRunConfig.Mode, Is.EqualTo(Ecowitt.Controller.Model.Api.RunModeKey.Duration));
+        Assert.That(sd.StagedRunConfig.DurationMinutes, Is.EqualTo(3));
+        Assert.That(sd.StagedRunConfig.VolumeLiters, Is.EqualTo(5));
     }
 }

@@ -49,7 +49,13 @@ public static class ApiDataExtension
                         result.Nickname = propertyValue;
                         continue;
                     }
-                    
+
+                    if (propertyName.Equals("flowmeter", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        result.HasFlowMeter = propertyValue.Trim() == "1";
+                        // fall through: let SensorBuilder also build the "Flowmeter Available" binary_sensor
+                    }
+
                     var sensor = SensorBuilder.BuildSensor(propertyName, propertyValue, isMetric);
                     if (sensor != null)
                     {

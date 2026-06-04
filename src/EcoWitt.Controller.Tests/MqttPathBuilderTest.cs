@@ -108,4 +108,18 @@ public class MqttPathBuilderTest
     {
         Assert.That(MqttPathBuilder.SanitizeSegment("a/b+c#d E"), Is.EqualTo("a-b-c-d-e"));
     }
+
+    [Test]
+    public void BuildSubdeviceCommandSubtree_IsWildcard()
+    {
+        Assert.That(MqttPathBuilder.BuildMqttSubdeviceCommandSubtree(), Is.EqualTo("+/subdevices/+/cmd/#"));
+    }
+
+    [Test]
+    public void BuildSubdeviceRunTopics_AreUnderCmdSubtree()
+    {
+        Assert.That(MqttPathBuilder.BuildMqttSubdeviceModeTopic("gw", "1"), Is.EqualTo("gw/subdevices/1/cmd/mode"));
+        Assert.That(MqttPathBuilder.BuildMqttSubdeviceSetTopic("gw", "1", "duration"), Is.EqualTo("gw/subdevices/1/cmd/set/duration"));
+        Assert.That(MqttPathBuilder.BuildMqttSubdeviceStartTopic("gw", "1"), Is.EqualTo("gw/subdevices/1/cmd/start"));
+    }
 }

@@ -8,7 +8,8 @@ A .NET 10 bridge that connects Ecowitt weather stations and IoT subdevices to MQ
 - Two ingestion modes per gateway: **Push** (legacy `/data/report`, works with any Ecowitt-protocol station) or **Poll** (`get_livedata_info` API, for IoT-capable gateways)
 - Automatic discovery of new sensors and subdevices
 - Bidirectional communication with subdevices (AC1100, WFC01, WFC02)
-- Home Assistant MQTT discovery (devices, sensors, switches)
+- Valve/plug run modes in Home Assistant — duration or volume runs that the **device self-closes** (no fragile HA timers), exposed as select + number + button entities, capability-gated per device
+- Home Assistant MQTT discovery (devices, sensors, switches, numbers, selects, buttons)
 - Metric/imperial unit conversion (Push mode) — Poll mode passes the gateway's configured display unit through to HA verbatim
 - Change-detection filtering to reduce MQTT noise
 

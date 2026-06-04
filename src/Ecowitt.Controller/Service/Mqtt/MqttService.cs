@@ -66,7 +66,6 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
         }
 
         await _client.SubscribeAsync(HaStatusTopic);
-        await _client.SubscribeAsync($"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
         _logger.LogInformation("Subscribed to Home Assistant");
     }
     
@@ -79,7 +78,6 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
         }
 
         await _client.UnsubscribeAsync(HaStatusTopic);
-        await _client.UnsubscribeAsync($"{_mqttConfig?.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceHACommandTopic()}");
         _logger.LogInformation("Unsubscribed from Home Assistant");
     }
 
@@ -96,6 +94,7 @@ public partial class MqttService : BackgroundService, IHostedLifecycleService, I
             await PublishSubdeviceDiscovery(gateway, subdevice);
             if (subdevice.Model is SubdeviceModel.WFC01 or SubdeviceModel.AC1100 or SubdeviceModel.WFC02)
                 await PublishSubdeviceSwitchDiscovery(gateway, subdevice);
+            await PublishSubdeviceRunModeDiscovery(gateway, subdevice);
             foreach (var sensor in subdevice.Sensors)
             {
                 await PublishSensorDiscovery(gateway, subdevice, sensor);
