@@ -52,6 +52,26 @@ public static class MqttPathBuilder
         return "+/subdevices/+/cmd/homeassistant";
     }
 
+    public static string BuildMqttSubdeviceCommandSubtree()
+    {
+        return "+/subdevices/+/cmd/#";
+    }
+
+    public static string BuildMqttSubdeviceModeTopic(string gwName, string subdeviceName)
+    {
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/cmd/mode";
+    }
+
+    public static string BuildMqttSubdeviceSetTopic(string gwName, string subdeviceName, string param)
+    {
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/cmd/set/{SanitizeSegment(param)}";
+    }
+
+    public static string BuildMqttSubdeviceStartTopic(string gwName, string subdeviceName)
+    {
+        return $"{SanitizeSegment(gwName)}/subdevices/{SanitizeSegment(subdeviceName)}/cmd/start";
+    }
+
     public static string SanitizeSegment(string input)
     {
         return input

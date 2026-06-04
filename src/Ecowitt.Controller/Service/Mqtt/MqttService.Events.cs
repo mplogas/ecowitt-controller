@@ -1,4 +1,5 @@
 ﻿using Ecowitt.Controller.Model.Api;
+using Ecowitt.Controller.Model.Message.Data;
 using Ecowitt.Controller.Model.Message.Event;
 using MQTTnet;
 using System.Text.Json;
@@ -63,6 +64,29 @@ namespace Ecowitt.Controller.Service.Mqtt
                     _logger.LogWarning("Invalid subdevice id in topic {Topic}", topic);
                 }
             }
+            else if (topic.EndsWith("/cmd/mode"))
+            {
+                if (TryGetSubdeviceId(topic, out var id) &&
+                    Enum.TryParse<RunModeKey>(payload, ignoreCase: true, out var mode))
+                {
+                    await _messageBus.Publish(new SubdeviceRunConfig { Id = id, Mode = mode });
+                }
+            }
+            else if (topic.EndsWith("/cmd/set/duration"))
+            {
+                if (TryGetSubdeviceId(topic, out var id) && int.TryParse(payload, out var minutes))
+                    await _messageBus.Publish(new SubdeviceRunConfig { Id = id, Duration = minutes });
+            }
+            else if (topic.EndsWith("/cmd/set/volume"))
+            {
+                if (TryGetSubdeviceId(topic, out var id) && int.TryParse(payload, out var liters))
+                    await _messageBus.Publish(new SubdeviceRunConfig { Id = id, Volume = liters });
+            }
+            else if (topic.EndsWith("/cmd/start"))
+            {
+                if (TryGetSubdeviceId(topic, out var id))
+                    await _messageBus.Publish(new SubdeviceRunConfig { Id = id, Start = true });
+            }
             else
             {
                 // direct commands via mqtt
@@ -81,6 +105,14 @@ namespace Ecowitt.Controller.Service.Mqtt
                     _logger.LogError(e, "Failed to deserialize command from topic {Topic}: {Payload}", topic, payload);
                 }
             }
+        }
+
+        private static bool TryGetSubdeviceId(string topic, out int id)
+        {
+            id = 0;
+            var parts = topic.Split('/');
+            var idx = Array.IndexOf(parts, "subdevices");
+            return idx >= 0 && idx + 1 < parts.Length && int.TryParse(parts[idx + 1], out id);
         }
 
         private async Task ClientOnDisconnectedAsync(MqttClientDisconnectedEventArgs arg)

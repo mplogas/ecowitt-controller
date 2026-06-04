@@ -51,7 +51,7 @@ namespace Ecowitt.Controller.Service.Mqtt
                 optionsBuilder.WithCredentials(_mqttConfig.User, _mqttConfig.Password);
 
             await _client.ConnectAsync(optionsBuilder.Build());
-            await _client.SubscribeAsync($"{_mqttConfig.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceCommandTopic()}");
+            await _client.SubscribeAsync($"{_mqttConfig.BaseTopic}/{MqttPathBuilder.BuildMqttSubdeviceCommandSubtree()}");
 
             if (_mqttConfig.HomeAssistantDiscovery) await SubscribeHomeAssistant();
         }
