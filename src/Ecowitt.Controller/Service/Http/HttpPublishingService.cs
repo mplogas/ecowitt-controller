@@ -152,9 +152,10 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
             switch (command.Cmd)
             {
                 case Command.Start:
-                    var val = command.Duration ?? 0;
-                    var valType = (int)(command.Unit ?? DurationUnit.Minutes);
                     var alwaysOn = command.AlwaysOn == true || !command.Duration.HasValue ? 1 : 0;
+                    var (valType, val) = alwaysOn == 1
+                        ? (0, 0)
+                        : ToGatewayRun(command.Duration ?? 0, command.Unit ?? DurationUnit.Minutes);
                     payload = new
                     {
                         command = new[]
@@ -199,6 +200,21 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
         {
             if (acquired) sem.Release();
         }
+    }
+
+    // Maps a user run value + unit to the gateway-native (val_type, val).
+    // Time is always normalized to seconds (val_type=0) — the gateway/app never use val_type 1/2.
+    // Volume is liters in deciliter resolution (val_type=3, val = liters × 10), verified on a WFC02.
+    internal static (int valType, int val) ToGatewayRun(int duration, DurationUnit unit)
+    {
+        return unit switch
+        {
+            DurationUnit.Seconds => (0, duration),
+            DurationUnit.Minutes => (0, duration * 60),
+            DurationUnit.Hours   => (0, duration * 3600),
+            DurationUnit.Liters  => (3, duration * 10),
+            _                    => (0, duration)
+        };
     }
 
     private HttpClient CreateHttpClient(HttpHost host)
