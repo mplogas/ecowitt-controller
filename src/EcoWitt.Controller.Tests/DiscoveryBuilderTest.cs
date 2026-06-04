@@ -59,7 +59,7 @@ public class DiscoveryBuilderTest
     {
         var origin = DiscoveryBuilder.BuildOrigin();
         Assert.That(origin.Name, Is.EqualTo("Ecowitt Controller"));
-        Assert.That(origin.Sw, Is.EqualTo("v2.0.0"));
+        Assert.That(origin.Sw, Is.EqualTo("v2.0.5"));
         Assert.That(origin.Url, Does.Contain("github.com"));
     }
 
