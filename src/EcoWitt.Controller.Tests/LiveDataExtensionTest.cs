@@ -371,4 +371,47 @@ public class LiveDataExtensionTest
         Assert.That((double)rain!.Value!, Is.EqualTo(0.87).Within(0.001));
         Assert.That(rain.UnitOfMeasurement, Is.EqualTo("in"));
     }
+
+    [Test]
+    public void Map_PiezoRain_RainRateUnit_CanonicalizedToMmPerH()
+    {
+        // Gateway sends rain rate as "1.2 mm/Hr"; HA's precipitation_intensity device class
+        // rejects "mm/Hr" and requires "mm/h". Canonicalize on the way out.
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            PiezoRain = new List<PiezoRainItem>
+            {
+                new() { Id = "0x0E", Val = "1.2 mm/Hr" }
+            }
+        };
+
+        var device = data.Map(isMetric: true, calculateValues: false);
+
+        var rate = device.Sensors.FirstOrDefault(s => s.Name == "rrain_piezo");
+        Assert.That(rate, Is.Not.Null);
+        Assert.That((double)rate!.Value!, Is.EqualTo(1.2).Within(0.01));
+        Assert.That(rate.UnitOfMeasurement, Is.EqualTo("mm/h"));
+    }
+
+    [Test]
+    public void Map_PiezoRain_RainRateUnit_ImperialCanonicalizedToInPerH()
+    {
+        var data = new GatewayLiveData
+        {
+            IpAddress = "192.168.0.1",
+            TimestampUtc = DateTime.UtcNow,
+            PiezoRain = new List<PiezoRainItem>
+            {
+                new() { Id = "0x0E", Val = "0.05 in/Hr" }
+            }
+        };
+
+        var device = data.Map(isMetric: false, calculateValues: false);
+
+        var rate = device.Sensors.FirstOrDefault(s => s.Name == "rrain_piezo");
+        Assert.That(rate, Is.Not.Null);
+        Assert.That(rate!.UnitOfMeasurement, Is.EqualTo("in/h"));
+    }
 }
