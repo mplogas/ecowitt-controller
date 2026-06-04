@@ -37,7 +37,7 @@ public static class LiveDataExtension
     {
         foreach (var r in readings)
         {
-            var tempUnit = NormalizeTemperatureUnit(r.Unit);
+            var tempUnit = CanonicalizeUnit(r.Unit);
             var temp = SensorBuilder.BuildDoubleSensor("tempinf", "Indoor Temperature", r.Intemp, tempUnit, SensorType.Temperature);
             if (temp != null) sensors.Add(temp);
 
@@ -82,7 +82,7 @@ public static class LiveDataExtension
         {
             if (!int.TryParse(r.Channel, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ch)) continue;
 
-            var tempUnit = NormalizeTemperatureUnit(r.Unit);
+            var tempUnit = CanonicalizeUnit(r.Unit);
             var temp = SensorBuilder.BuildDoubleSensor($"temp{ch}f", $"Channel {ch} Temperature", r.Temp, tempUnit, SensorType.Temperature);
             if (temp != null) sensors.Add(temp);
 
@@ -114,7 +114,7 @@ public static class LiveDataExtension
     {
         foreach (var r in readings)
         {
-            var tempUnit = NormalizeTemperatureUnit(r.Unit);
+            var tempUnit = CanonicalizeUnit(r.Unit);
             var temp = SensorBuilder.BuildDoubleSensor("tf_co2", "CO2 Temperature", r.Temp, tempUnit, SensorType.Temperature);
             if (temp != null) sensors.Add(temp);
 
@@ -153,7 +153,7 @@ public static class LiveDataExtension
 
             var (val, unit) = SplitValueAndUnit(r.Val);
             var type = propertyName == "rrain_piezo" ? SensorType.PrecipitationIntensity : SensorType.Precipitation;
-            var sensor = SensorBuilder.BuildDoubleSensor(propertyName, RainAliasFor(propertyName), val, unit, type);
+            var sensor = SensorBuilder.BuildDoubleSensor(propertyName, RainAliasFor(propertyName), val, CanonicalizeUnit(unit), type);
             if (sensor != null) sensors.Add(sensor);
         }
 
@@ -218,9 +218,9 @@ public static class LiveDataExtension
     {
         return propertyName switch
         {
-            "tempf"          => SensorBuilder.BuildDoubleSensor("tempf",          "Outdoor Temperature",    rawValue, NormalizeTemperatureUnit(unit), SensorType.Temperature),
-            "dewpoint"       => SensorBuilder.BuildDoubleSensor("dewpoint",       "Dew Point",              rawValue, NormalizeTemperatureUnit(unit), SensorType.Temperature),
-            "feelslike"      => SensorBuilder.BuildDoubleSensor("feelslike",      "Feels Like",             rawValue, NormalizeTemperatureUnit(unit), SensorType.Temperature),
+            "tempf"          => SensorBuilder.BuildDoubleSensor("tempf",          "Outdoor Temperature",    rawValue, CanonicalizeUnit(unit), SensorType.Temperature),
+            "dewpoint"       => SensorBuilder.BuildDoubleSensor("dewpoint",       "Dew Point",              rawValue, CanonicalizeUnit(unit), SensorType.Temperature),
+            "feelslike"      => SensorBuilder.BuildDoubleSensor("feelslike",      "Feels Like",             rawValue, CanonicalizeUnit(unit), SensorType.Temperature),
             "humidity"       => SensorBuilder.BuildDoubleSensor("humidity",       "Outdoor Humidity",       rawValue, "%", SensorType.Humidity),
             "winddir"        => SensorBuilder.BuildIntSensor   ("winddir",        "Wind Direction",         rawValue, "°"),
             "windspeedmph"   => SensorBuilder.BuildDoubleSensor("windspeedmph",   "Wind Speed",             rawValue, unit, SensorType.WindSpeed),
@@ -261,12 +261,16 @@ public static class LiveDataExtension
 
     private static string StripUnit(string raw) => SplitValueAndUnit(raw).Value;
 
-    // HA's device_class:temperature requires "°C"/"°F"/"K". The Ecowitt gateway sends bare "C" or "F"
-    // in the separate `unit` field. Prepend the degree symbol; passthrough anything else.
-    private static string NormalizeTemperatureUnit(string unit) => unit switch
+    // Maps Ecowitt gateway unit strings to HA-canonical units where they differ, so HA device_class
+    // validation accepts them. Single source of truth for the known mismatches; everything else passes
+    // through verbatim (unit-passthrough remains the default).
+    private static string CanonicalizeUnit(string unit) => unit switch
     {
-        "C" => "°C",
+        "C" => "°C",        // device_class:temperature requires °C/°F/K (gateway sends bare C/F)
         "F" => "°F",
+        "W/m2" => "W/m²",   // device_class:irradiance / display consistency
+        "mm/Hr" => "mm/h",  // device_class:precipitation_intensity rejects mm/Hr
+        "in/Hr" => "in/h",
         _ => unit
     };
 

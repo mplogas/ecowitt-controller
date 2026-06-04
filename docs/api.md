@@ -111,7 +111,7 @@ Retrieves all current sensor readings from the gateway.
 }
 ```
 
-**Value format and unit passthrough:** Values come either as `"<number> <unit>"` (e.g. `"21.60 km/h"`, `"22.3 mm"`, `"8 km"`) or as a bare number with the unit in a sibling field (e.g. `wh25.unit = "C"`). The unit suffix reflects whatever the user has configured in WSView for that quantity — Ecowitt's API respects the gateway display setting. The controller parses both forms and passes the unit string straight through to HA's `unit_of_measurement`; no source-side conversion is performed. Two minor normalizations: bare `"C"`/`"F"` get the degree symbol prefixed (HA's `device_class: temperature` requires `°C`/`°F`/`K`), and solar `"W/m2"` is rewritten as `"W/m²"` for cross-mode visual consistency.
+**Value format and unit passthrough:** Values come either as `"<number> <unit>"` (e.g. `"21.60 km/h"`, `"22.3 mm"`, `"8 km"`) or as a bare number with the unit in a sibling field (e.g. `wh25.unit = "C"`). The unit suffix reflects whatever the user has configured in WSView for that quantity — Ecowitt's API respects the gateway display setting. The controller parses both forms and passes the unit string straight through to HA's `unit_of_measurement`; no source-side conversion is performed. A small `CanonicalizeUnit` map handles the gateway unit strings that HA's `device_class` validation rejects: `"C"`/`"F"` → `"°C"`/`"°F"` (temperature), `"W/m2"` → `"W/m²"` (irradiance), and `"mm/Hr"`/`"in/Hr"` → `"mm/h"`/`"in/h"` (precipitation_intensity). Everything else passes through verbatim.
 
 **Sensor ID mapping** (`common_list`):
 
