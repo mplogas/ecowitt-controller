@@ -79,8 +79,40 @@ namespace Ecowitt.Controller.Service.Orchestrator
             _ => (1, 86400, 180)
         };
 
-        public Task OnHandle(SubdeviceRunConfig message, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        public async Task OnHandle(SubdeviceRunConfig message, CancellationToken cancellationToken)
+        {
+            var gw = _deviceStore.GetGatewayBySubdeviceId(message.Id);
+            var subdevice = gw?.Subdevices.FirstOrDefault(sd => sd.Id == message.Id);
+            if (gw == null || subdevice == null)
+            {
+                _logger.LogWarning("SubdeviceRunConfig for unknown subdevice {Id}", message.Id);
+                return;
+            }
+
+            // Merge non-null partials into the staged config. The subdevice is held by reference
+            // in the store, so the mutation is visible; UpsertGateway re-stores defensively.
+            if (message.Mode.HasValue) subdevice.StagedRunConfig.Mode = message.Mode.Value;
+            if (message.Duration.HasValue) subdevice.StagedRunConfig.DurationMinutes = message.Duration.Value;
+            if (message.Volume.HasValue) subdevice.StagedRunConfig.VolumeLiters = message.Volume.Value;
+            _deviceStore.UpsertGateway(gw);
+
+            if (!message.Start) return;
+
+            var staged = subdevice.StagedRunConfig;
+            var cmd = staged.Mode == RunModeKey.Volume
+                ? new SubdeviceApiCommand { Cmd = Command.Start, Id = message.Id, Duration = staged.VolumeLiters, Unit = DurationUnit.Liters }
+                : new SubdeviceApiCommand { Cmd = Command.Start, Id = message.Id, Duration = staged.DurationMinutes, Unit = DurationUnit.Minutes };
+
+            GuardRunCommand(cmd); // same guard as the direct path
+            _logger.LogInformation("Starting {Mode} run for subdevice {Id}", staged.Mode, message.Id);
+
+            await _messageBus.Publish(new SubdeviceCommandDispatch
+            {
+                GatewayIp = gw.IpAddress,
+                Command = cmd,
+                Model = subdevice.Model
+            });
+        }
 
         public async Task OnHandle(GatewayApiData message, CancellationToken cancellationToken)
         {
