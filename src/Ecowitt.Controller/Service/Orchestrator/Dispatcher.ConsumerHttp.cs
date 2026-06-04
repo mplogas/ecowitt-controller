@@ -79,6 +79,9 @@ namespace Ecowitt.Controller.Service.Orchestrator
             _ => (1, 86400, 180)
         };
 
+        public Task OnHandle(SubdeviceRunConfig message, CancellationToken cancellationToken)
+            => Task.CompletedTask;
+
         public async Task OnHandle(GatewayApiData message, CancellationToken cancellationToken)
         {
             // Drop push payloads from Poll-mode gateways — they get their data via livedata poll instead.
