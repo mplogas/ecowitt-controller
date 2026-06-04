@@ -131,6 +131,9 @@ public class SubdeviceMappingTest
         var sd = apiData.Map(isMetric: true, calculateValues: false);
 
         Assert.That(sd.HasFlowMeter, Is.True);
+        // flowmeter must also produce the "Flowmeter Available" binary_sensor — not silently dropped
+        Assert.That(sd.Sensors.Any(s => s.Name == "flowmeter"), Is.True,
+            "flowmeter field must produce a sensor via SensorBuilder, not be swallowed by continue");
     }
 
     [Test]

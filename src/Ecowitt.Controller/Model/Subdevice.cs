@@ -1,3 +1,5 @@
+using Ecowitt.Controller.Model.Api;
+
 namespace Ecowitt.Controller.Model;
 
 public class Subdevice
@@ -19,7 +21,7 @@ public class Subdevice
 public class StagedRunConfig
 {
     // POCO defaults — sensible run config before the user touches anything.
-    public Ecowitt.Controller.Model.Api.RunModeKey Mode { get; set; } = Ecowitt.Controller.Model.Api.RunModeKey.Duration;
+    public RunModeKey Mode { get; set; } = RunModeKey.Duration;
     public int DurationMinutes { get; set; } = 3;
     public int VolumeLiters { get; set; } = 5;
 }
