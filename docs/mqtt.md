@@ -66,9 +66,10 @@ Same payload format as gateway sensors.
   ```jsonc
   { "cmd": "Start", "id": 12345, "duration": 20, "unit": "Minutes" }
   // cmd: Start | Stop. unit: Seconds | Minutes | Hours | Liters (or 0|1|2|3).
-  // duration is in the chosen unit; the controller normalizes time to seconds
-  // and volume to deciliters for the gateway. Omit duration/unit for an
-  // always-on Start.
+  // The gateway's val_type selects the unit: Seconds->0, Minutes->1, Liters->3
+  // (volume in deciliter resolution, val = liters x 10). Hours is accepted and
+  // converted to minutes (val_type:1); the documented val_type:2 is unverified.
+  // Omit duration/unit for an always-on Start.
   ```
 
 ### Subdevice Commands (Home Assistant)
