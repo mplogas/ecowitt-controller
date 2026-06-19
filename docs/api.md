@@ -212,14 +212,13 @@ Sensor properties are mapped through `SensorBuilder` (see `Model/Mapping/SensorB
       "model": 1,
       "val": 20,
       "val_type": 1,
-      "position": 100,
-      "always_on": 1
+      "always_on": 0
     }
   ]
 }
 ```
 
-`val_type`: `0` = Seconds, `1` = Minutes, `2` = Hours, `3` = Liters. `always_on = 1` makes the device run continuously until stopped (HA bare-ON without duration uses this default).
+`val_type` is the unit selector and `val` is the value in that unit: `0` = Seconds, `1` = Minutes, `2` = Hours, `3` = Liters (deciliter resolution — `val` = liters × 10). The value is sent in its native unit, not normalized. `always_on = 1` makes the device run continuously until stopped (HA bare-ON without duration uses this default).
 
 **Quick stop command:**
 ```json

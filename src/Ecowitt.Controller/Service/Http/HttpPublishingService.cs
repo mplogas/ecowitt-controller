@@ -163,7 +163,7 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
                             new
                             {
                                 always_on = alwaysOn, val_type = valType, val,
-                                position = 100, cmd = "quick_run",
+                                cmd = "quick_run",
                                 id = command.Id, model = (int)model
                             }
                         }
@@ -202,16 +202,20 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
         }
     }
 
-    // Maps a user run value + unit to the gateway-native (val_type, val).
-    // Time is always normalized to seconds (val_type=0) — the gateway/app never use val_type 1/2.
+    // Maps a user run value + unit to the gateway-native (val_type, val). val_type is the gateway's
+    // unit selector and val is the value IN that unit: 0=Seconds, 1=Minutes, 2=Hours, 3=Liters.
+    // Time must NOT be normalized to seconds — confirmed on a WFC01 (10 s -> {val_type:0, val:10},
+    // 10 min -> {val_type:1, val:10}), and the devices report timed runs back the same way
+    // (read_device shows val_type:1/val:15 for a 15-minute run). Sending minutes as seconds made the
+    // gateway cap/reject the large second count and fall back to a ~3-minute default run.
     // Volume is liters in deciliter resolution (val_type=3, val = liters × 10), verified on a WFC02.
     internal static (int valType, int val) ToGatewayRun(int duration, DurationUnit unit)
     {
         return unit switch
         {
             DurationUnit.Seconds => (0, duration),
-            DurationUnit.Minutes => (0, duration * 60),
-            DurationUnit.Hours   => (0, duration * 3600),
+            DurationUnit.Minutes => (1, duration),
+            DurationUnit.Hours   => (2, duration),
             DurationUnit.Liters  => (3, duration * 10),
             _                    => (0, duration)
         };
