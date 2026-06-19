@@ -51,7 +51,7 @@ public static class DiscoveryBuilder
         return new Origin
         {
             Name = "Ecowitt Controller",
-            Sw = "v2.0.5",
+            Sw = "v2.0.6",
             Url = "https://github.com/mplogas/ecowitt-controller"
         };
     }
