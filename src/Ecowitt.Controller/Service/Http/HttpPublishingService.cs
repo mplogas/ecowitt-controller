@@ -203,19 +203,21 @@ public partial class HttpPublishingService : BackgroundService, IHostedLifecycle
     }
 
     // Maps a user run value + unit to the gateway-native (val_type, val). val_type is the gateway's
-    // unit selector and val is the value IN that unit: 0=Seconds, 1=Minutes, 2=Hours, 3=Liters.
-    // Time must NOT be normalized to seconds — confirmed on a WFC01 (10 s -> {val_type:0, val:10},
-    // 10 min -> {val_type:1, val:10}), and the devices report timed runs back the same way
-    // (read_device shows val_type:1/val:15 for a 15-minute run). Sending minutes as seconds made the
-    // gateway cap/reject the large second count and fall back to a ~3-minute default run.
-    // Volume is liters in deciliter resolution (val_type=3, val = liters × 10), verified on a WFC02.
+    // unit selector and val is the value IN that unit. Only hardware-confirmed encodings are emitted:
+    // val_type 0=Seconds and 1=Minutes (verified on a WFC01: 10 s -> {val_type:0, val:10},
+    // 10 min -> {val_type:1, val:10}; read_device echoes val_type:1/val:15 for a 15-minute run) and
+    // 3=Liters in deciliter resolution (val = liters × 10, verified on a WFC02: 10 L -> val:100).
+    // Time must NOT be normalized to seconds — sending minutes as a large second count makes the
+    // gateway fall back to a ~3-minute default run.
+    // Hours is documented as val_type:2 but unverified and not exposed in the UI, so it is sent as
+    // minutes (the confirmed encoding) rather than emitting the unproven val_type:2.
     internal static (int valType, int val) ToGatewayRun(int duration, DurationUnit unit)
     {
         return unit switch
         {
             DurationUnit.Seconds => (0, duration),
             DurationUnit.Minutes => (1, duration),
-            DurationUnit.Hours   => (2, duration),
+            DurationUnit.Hours   => (1, duration * 60), // confirmed minutes encoding; val_type:2 unverified
             DurationUnit.Liters  => (3, duration * 10),
             _                    => (0, duration)
         };

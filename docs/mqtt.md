@@ -66,8 +66,9 @@ Same payload format as gateway sensors.
   ```jsonc
   { "cmd": "Start", "id": 12345, "duration": 20, "unit": "Minutes" }
   // cmd: Start | Stop. unit: Seconds | Minutes | Hours | Liters (or 0|1|2|3).
-  // duration is sent to the gateway in the chosen unit (val_type selects the unit:
-  // 0=Seconds, 1=Minutes, 2=Hours; volume uses 3=Liters in deciliter resolution).
+  // The gateway's val_type selects the unit: Seconds->0, Minutes->1, Liters->3
+  // (volume in deciliter resolution, val = liters x 10). Hours is accepted and
+  // converted to minutes (val_type:1); the documented val_type:2 is unverified.
   // Omit duration/unit for an always-on Start.
   ```
 

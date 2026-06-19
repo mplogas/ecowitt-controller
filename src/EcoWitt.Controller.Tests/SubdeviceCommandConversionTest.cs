@@ -30,11 +30,13 @@ public class SubdeviceCommandConversionTest
     }
 
     [Test]
-    public void Convert_Hours_ToNativeValType2()
+    public void Convert_Hours_ToMinutesValType1()
     {
+        // val_type:2 (Hours) is documented but unverified and not exposed in the UI,
+        // so hours are sent using the confirmed minutes encoding instead.
         var (valType, val) = HttpPublishingService.ToGatewayRun(1, DurationUnit.Hours);
-        Assert.That(valType, Is.EqualTo(2)); // 2 = Hours
-        Assert.That(val, Is.EqualTo(1));     // value passed through, not converted to seconds
+        Assert.That(valType, Is.EqualTo(1)); // 1 = Minutes (confirmed)
+        Assert.That(val, Is.EqualTo(60));    // 1 h = 60 min
     }
 
     [Test]
